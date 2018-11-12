@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml/harbour-telegrame.qml</file>
+        <file>qml/cover/CoverPage.qml</file>
+        <file>qml/InternationalPhoneCodes.js</file>
+        <file>qml/pages/PageMain.qml</file>
+        <file>qml/pages/PageChat.qml</file>
+        <file>qml/components/DelegateDownloadableImage.qml</file>
+    </qresource>
+</RCC>

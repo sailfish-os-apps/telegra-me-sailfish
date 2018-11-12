@@ -1,0 +1,6 @@
+[submodule "libQtQmlTricks"]
+	path = libQtQmlTricks
+	url = git@gitlab.unique-conception.org:qt-qml-tricks/ui-elements-ng.git
+[submodule "RegionFlags"]
+	path = RegionFlags
+	url = https://github.com/behdad/region-flags.git
