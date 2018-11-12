@@ -47,4 +47,9 @@ Item {
         horizontalAlignment: Image.AlignHCenter;
         anchors.fill: parent;
     }
+    BusyIndicator {
+        size: BusyIndicatorSize.Medium;
+        running: downloading;
+        anchors.centerIn: parent;
+    }
 }

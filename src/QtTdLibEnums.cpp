@@ -38,6 +38,7 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "linkStateNone", QtTdLibObjectType::LINK_STATE_NONE },
         { "localFile", QtTdLibObjectType::LOCAL_FILE },
         { "message", QtTdLibObjectType::MESSAGE },
+        { "messages", QtTdLibObjectType::MESSAGES },
         { "messageAnimation", QtTdLibObjectType::MESSAGE_ANIMATION },
         { "messageAudio", QtTdLibObjectType::MESSAGE_AUDIO },
         { "messageDocument", QtTdLibObjectType::MESSAGE_DOCUMENT },

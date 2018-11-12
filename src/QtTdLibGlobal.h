@@ -32,6 +32,7 @@ public:
 
     Q_INVOKABLE QString urlFromLocalPath (const QString & path) const;
 
+    Q_INVOKABLE QtTdLibFile    * getFileItemById    (const qint32 id) const;
     Q_INVOKABLE QtTdLibUser    * getUserItemById    (const qint32 id) const;
     Q_INVOKABLE QtTdLibChat    * getChatItemById    (const qint64 id) const;
     Q_INVOKABLE QtTdLibMessage * getMessageItemById (const qint64 id) const;

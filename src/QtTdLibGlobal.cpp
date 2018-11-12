@@ -35,6 +35,10 @@ QString QtTdLibGlobal::urlFromLocalPath (const QString & path) const {
     return QUrl::fromLocalFile (path).toString ();
 }
 
+QtTdLibFile * QtTdLibGlobal::getFileItemById (const qint32 id) const {
+    return QtTdLibCollection::allFiles.value (id, Q_NULLPTR);
+}
+
 QtTdLibUser * QtTdLibGlobal::getUserItemById (const qint32 id) const {
     return QtTdLibCollection::allUsers.value (id, Q_NULLPTR);
 }
@@ -109,6 +113,13 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             set_connectionState_withJSON (json ["state"], &QtTdLibConnectionState::create);
             break;
         }
+        case QtTdLibObjectType::UPDATE_FILE: {
+            const QJsonObject fileJson { json ["file"].toObject () };
+            const qint32 fileId { QtTdLibId32Helper::fromJsonToCpp (fileJson ["id"]) };
+            if (QtTdLibFile * fileItem = { getFileItemById (fileId) }) {
+                fileItem->updateFromJson (fileJson);
+            }
+        }
         case QtTdLibObjectType::UPDATE_USER: {
             const QJsonObject userJson { json ["user"].toObject () };
             const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (userJson ["id"]) };
@@ -178,6 +189,23 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     chatItem->get_messagesModel ()->append (messageItem);
                 }
                 messageItem->updateFromJson (messageJson);
+            }
+            break;
+        }
+        case QtTdLibObjectType::MESSAGES: {
+            const QJsonArray messagesListJson = json ["messages"].toArray ();
+            for (const QJsonValue & tmp : messagesListJson) {
+                const QJsonObject messageJson { tmp.toObject () };
+                const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["chat_id"]) };
+                if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                    const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["id"]) };
+                    QtTdLibMessage * messageItem { getMessageItemById (messageId) };
+                    if (!messageItem) {
+                        messageItem = new QtTdLibMessage { messageId, this };
+                        chatItem->get_messagesModel ()->prepend (messageItem);
+                    }
+                    messageItem->updateFromJson (messageJson);
+                }
             }
             break;
         }
