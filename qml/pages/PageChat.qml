@@ -184,6 +184,30 @@ Page {
         }
     }
     Component {
+        id: compoMsgSticker;
+
+        DelegateDownloadableImage {
+            id: delegateMsgSticker;
+            size: (page.width * 0.35);
+            fileItem: (stickerItem ? stickerItem.sticker : null);
+            background: false;
+            implicitWidth: (stickerItem
+                            ? ((stickerItem.width > stickerItem.height)
+                               ? size
+                               : (stickerItem.width * size / stickerItem.height))
+                            : 0);
+            implicitHeight: (stickerItem
+                             ? ((stickerItem.height > stickerItem.width)
+                                ? size
+                                : (stickerItem.height * size / stickerItem.width))
+                             : 0);
+
+            property TD_MessageSticker messageContentItem : null;
+
+            readonly property TD_Sticker stickerItem : (messageContentItem ? messageContentItem.sticker : null);
+        }
+    }
+    Component {
         id: compoMsgUnsupported;
 
         Label {
@@ -321,6 +345,7 @@ Page {
                                         case TD_ObjectType.MESSAGE_TEXT:     return compoMsgText;
                                         case TD_ObjectType.MESSAGE_PHOTO:    return compoMsgPhoto;
                                         case TD_ObjectType.MESSAGE_DOCUMENT: return compoMsgDocument;
+                                        case TD_ObjectType.MESSAGE_STICKER:  return compoMsgSticker;
                                         }
                                     }
                                     return compoMsgUnsupported;

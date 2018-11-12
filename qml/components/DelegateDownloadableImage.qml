@@ -13,6 +13,7 @@ Item {
 
     property int size : Theme.iconSizeMedium;
 
+    property bool background : true;
     property bool autoDownload : true;
 
     property TD_File fileItem : null;
@@ -36,6 +37,7 @@ Item {
     Rectangle {
         color: "gray";
         opacity: 0.35;
+        visible: background;
         anchors.fill: parent;
     }
     Image {
