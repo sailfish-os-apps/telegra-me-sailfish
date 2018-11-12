@@ -257,7 +257,7 @@ Page {
                     anchors.centerIn: parent;
                 }
                 Loader {
-                    active: (currentMedia === delegateMsgVideo.localFileItem);
+                    active: (currentMedia && delegateMsgVideo.localFileItem && currentMedia === delegateMsgVideo.localFileItem);
                     sourceComponent: Video {
                         id: playerVideo;
                         smooth: true;
@@ -396,7 +396,7 @@ Page {
                         anchors.centerIn: parent;
                     }
                     Loader {
-                        active: (currentMedia === delegateMsgAudio.localFileItem);
+                        active: (currentMedia && delegateMsgAudio.localFileItem && currentMedia === delegateMsgAudio.localFileItem);
                         sourceComponent: MouseArea {
                             onClicked: {
                                 if (playerAudio.playbackState === MediaPlayer.PlayingState) {
@@ -458,8 +458,144 @@ Page {
                     property bool playing   : false;
                 }
             }
-
          }
+    }
+    Component {
+        id: compoMsgAnimation;
+
+        Item {
+            id: delegateMsgAnimation;
+            implicitHeight: placeholderAnim.height;
+            Component.onCompleted: { download (); }
+            onDownloadableChanged: { download (); }
+            onDownloadingChanged:  { download (); }
+            onDownloadedChanged:   { download (); }
+
+            property TD_MessageAnimation messageContentItem : null;
+
+            readonly property TD_FormattedText captionItem   : (messageContentItem ? messageContentItem.caption   : null);
+            readonly property TD_Animation     animationItem : (messageContentItem ? messageContentItem.animation : null);
+            readonly property TD_File          fileItem      : (animationItem      ? animationItem.animation      : null);
+            readonly property TD_LocalFile     localFileItem : (fileItem           ? fileItem.local               : null);
+            readonly property TD_PhotoSize     photoSizeItem : (animationItem      ? animationItem.thumbnail      : null);
+
+            readonly property bool             downloadable  : (localFileItem && localFileItem.canBeDownloaded);
+            readonly property bool             downloading   : (localFileItem && localFileItem.isDownloadingActive);
+            readonly property bool             downloaded    : (localFileItem && localFileItem.isDownloadingCompleted);
+
+            function download () {
+                if (downloadable && !downloading && !downloaded ) {
+                    TD_Global.send ({
+                                        "@type" : "downloadFile",
+                                        "file_id" : fileItem.id,
+                                        "priority" : 1,
+                                    });
+                }
+            }
+
+            Item {
+                id: placeholderAnim;
+                implicitWidth: (delegateMsgAnimation.animationItem ? Math.min (delegateMsgAnimation.animationItem.width, delegateMsgAnimation.width) : 1);
+                implicitHeight: (delegateMsgAnimation.animationItem ? delegateMsgAnimation.animationItem.height * width / delegateMsgAnimation.animationItem.width : 1);
+                ExtraAnchors.topLeftCorner: parent;
+
+                DelegateDownloadableImage {
+                    fileItem: (delegateMsgAnimation.photoSizeItem ? delegateMsgAnimation.photoSizeItem.photo : null);
+                    anchors.fill: parent;
+                }
+                Loader {
+                    id: loaderAnim;
+                    sourceComponent: {
+                        if (delegateMsgAnimation.animationItem) {
+                            switch (delegateMsgAnimation.animationItem.mimeType) {
+                            case "video/mp4": return compoAnimationVideo;
+                            case "image/gif": return compoAnimationGif;
+                            }
+                        }
+                        return null;
+                    }
+                    anchors.fill: parent;
+                }
+                ProgressCircle {
+                    value: (delegateMsgAnimation.localFileItem
+                            ? (delegateMsgAnimation.localFileItem.downloadedSize / Math.max (delegateMsgAnimation.fileItem.size, 1) )
+                            : 0);
+                    visible: delegateMsgAnimation.downloading;
+                    implicitWidth: BusyIndicatorSize.Medium;
+                    implicitHeight: BusyIndicatorSize.Medium;
+                    anchors.centerIn: parent;
+                }
+                Image {
+                    source: "image://theme/icon-m-cloud-download?#FFFFFF";
+                    visible: (!delegateMsgAnimation.downloaded && !delegateMsgAnimation.downloading && delegateMsgAnimation.downloadable);
+                    anchors.centerIn: parent;
+                }
+            }
+            Component {
+                id: compoAnimationGif;
+
+                AnimatedImage {
+                    cache: true;
+                    smooth: true;
+                    mipmap: true;
+                    source: (delegateMsgAnimation.localFileItem && delegateMsgAnimation.localFileItem.path !== ""
+                             ? TD_Global.urlFromLocalPath (delegateMsgAnimation.localFileItem.path)
+                             : "");
+                    fillMode: Image.PreserveAspectFit;
+                    antialiasing: true;
+                    asynchronous: true;
+                    verticalAlignment: Image.AlignVCenter;
+                    horizontalAlignment: Image.AlignLeft;
+                    anchors.fill: parent;
+
+                    MouseArea {
+                        anchors.fill: parent;
+                        onClicked: { parent.paused = !parent.paused; }
+                    }
+                    Image {
+                        source: "image://theme/icon-m-play?#FFFFFF";
+                        visible: (delegateMsgAnimation.downloaded && parent.paused);
+                        anchors.centerIn: parent;
+                    }
+                }
+            }
+            Component {
+                id: compoAnimationVideo;
+
+                Video {
+                    muted: true;
+                    smooth: true;
+                    source: (delegateMsgAnimation.localFileItem && delegateMsgAnimation.localFileItem.path !== ""
+                             ? TD_Global.urlFromLocalPath (delegateMsgAnimation.localFileItem.path)
+                             : "");
+                    autoLoad: false;
+                    autoPlay: false;
+                    fillMode: VideoOutput.PreserveAspectFit;
+                    antialiasing: true;
+                    anchors.fill: parent;
+                    onStopped: {
+                        play ();
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent;
+                        onClicked: {
+                            if (parent.playbackState !== MediaPlayer.PlayingState) {
+                                parent.play ();
+                            }
+                            else {
+                                parent.pause ();
+                            }
+                        }
+                    }
+                    Image {
+                        source: "image://theme/icon-m-play?#FFFFFF";
+                        visible: (delegateMsgAnimation.downloaded && parent.playbackState !== MediaPlayer.PlayingState);
+                        anchors.centerIn: parent;
+                    }
+                }
+            }
+        }
     }
     Component {
         id: compoMsgUnsupported;
@@ -596,12 +732,13 @@ Page {
                                 sourceComponent: {
                                     if (messageItem && messageItem.content) {
                                         switch (messageItem.content.typeOf) {
-                                        case TD_ObjectType.MESSAGE_TEXT:     return compoMsgText;
-                                        case TD_ObjectType.MESSAGE_PHOTO:    return compoMsgPhoto;
-                                        case TD_ObjectType.MESSAGE_DOCUMENT: return compoMsgDocument;
-                                        case TD_ObjectType.MESSAGE_STICKER:  return compoMsgSticker;
-                                        case TD_ObjectType.MESSAGE_VIDEO:    return compoMsgVideo;
-                                        case TD_ObjectType.MESSAGE_AUDIO:    return compoMsgAudio;
+                                        case TD_ObjectType.MESSAGE_TEXT:      return compoMsgText;
+                                        case TD_ObjectType.MESSAGE_PHOTO:     return compoMsgPhoto;
+                                        case TD_ObjectType.MESSAGE_DOCUMENT:  return compoMsgDocument;
+                                        case TD_ObjectType.MESSAGE_STICKER:   return compoMsgSticker;
+                                        case TD_ObjectType.MESSAGE_VIDEO:     return compoMsgVideo;
+                                        case TD_ObjectType.MESSAGE_AUDIO:     return compoMsgAudio;
+                                        case TD_ObjectType.MESSAGE_ANIMATION: return compoMsgAnimation;
                                         }
                                     }
                                     return compoMsgUnsupported;

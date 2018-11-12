@@ -44,7 +44,7 @@ Item {
     Image {
         id: img;
         cache: true;
-        source: (downloaded ? TD_Global.urlFromLocalPath (local.path) : "");
+        source: (downloaded && local.path !== "" ? TD_Global.urlFromLocalPath (local.path) : "");
         fillMode: Image.PreserveAspectFit;
         sourceSize: Qt.size (width, height);
         asynchronous: false;
