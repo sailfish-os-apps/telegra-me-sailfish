@@ -127,6 +127,28 @@ QString QtTdLibGlobal::formatTime (const int msecs, const bool showHours) const 
             : MINI.arg (minutes, 2, 10, ZERO).arg (seconds, 2, 10, ZERO));
 }
 
+QVariantList QtTdLibGlobal::parseWaveform (const QString & bytes) const {
+    QVariantList ret { };
+    ret.reserve (100);
+    const QByteArray tmp = QByteArray::fromBase64 (bytes.toLatin1 ());
+    if ((tmp.count () * 8 / 5) >= 100) {
+        for (int pos = 0; pos < 100; ++pos) {
+            int value = 0;
+            for (int bit = 0; bit < 5; ++bit) {
+                const int offset = (bit + pos * 5);
+                if ((tmp.at (offset / 8) >> (offset % 8)) & 0x1) {
+                    value |= (0x1 << bit);
+                }
+                else {
+                    value &= ~(0x1 << bit);
+                }
+            }
+            ret.append (value);
+        }
+    }
+    return ret;
+}
+
 QString QtTdLibGlobal::urlFromLocalPath (const QString & path) const {
     return QUrl::fromLocalFile (path).toString ();
 }

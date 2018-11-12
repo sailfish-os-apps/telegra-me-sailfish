@@ -33,6 +33,8 @@ public:
     Q_INVOKABLE QString formatSize (const int bytes) const;
     Q_INVOKABLE QString formatTime (const int msecs, const bool showHours = true) const;
 
+    Q_INVOKABLE QVariantList parseWaveform (const QString & bytes) const;
+
     Q_INVOKABLE QString urlFromLocalPath (const QString & path) const;
 
     Q_INVOKABLE QString getSvgIconForMimeType (const QString & type) const;

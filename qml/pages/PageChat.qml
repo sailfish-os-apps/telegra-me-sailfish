@@ -326,6 +326,9 @@ Page {
             readonly property TD_LocalFile localFileItem : (fileItem           ? fileItem.local                : null);
             readonly property TD_PhotoSize photoSizeItem : (audioItem          ? audioItem.albumCoverThumbnail : null);
 
+            property int  remaining : 0;
+            property bool playing   : false;
+
             Label {
                 text: (delegateMsgAudio.audioItem
                        ? delegateMsgAudio.audioItem.fileName
@@ -444,21 +447,17 @@ Page {
                     }
                 }
                 Label {
-                    id: lblAudioTime;
                     text: (delegateMsgAudio.audioItem
-                           ? (playing
-                              ? ("-" + TD_Global.formatTime ((remaining), false))
+                           ? (delegateMsgAudio.playing
+                              ? ("-" + TD_Global.formatTime (delegateMsgAudio.remaining, false))
                               : TD_Global.formatTime ((delegateMsgAudio.audioItem.duration * 1000), false))
-                           : "");
-                    color: Theme.secondaryColor;
+                           : "--:--");
+                    color: (delegateMsgAudio.playing ? Theme.highlightColor : Theme.secondaryColor);
                     font.pixelSize: Theme.fontSizeSmall;
                     anchors.verticalCenter: parent.verticalCenter;
-
-                    property int  remaining : 0;
-                    property bool playing   : false;
                 }
             }
-         }
+        }
     }
     Component {
         id: compoMsgAnimation;
@@ -592,6 +591,188 @@ Page {
                         source: "image://theme/icon-m-play?#FFFFFF";
                         visible: (delegateMsgAnimation.downloaded && parent.playbackState !== MediaPlayer.PlayingState);
                         anchors.centerIn: parent;
+                    }
+                }
+            }
+        }
+    }
+    Component {
+        id: compoMsgVoiceNote;
+
+        ColumnContainer {
+            id: delegateMsgVoiceNote;
+            spacing: Theme.paddingSmall;
+
+            property TD_MessageVoiceNote messageContentItem : null;
+
+            readonly property TD_FormattedText captionItem   : (messageContentItem ? messageContentItem.caption   : null);
+            readonly property TD_VoiceNote     voiceNoteItem : (messageContentItem ? messageContentItem.voiceNote : null);
+            readonly property TD_File          fileItem      : (voiceNoteItem      ? voiceNoteItem.voice          : null);
+            readonly property TD_LocalFile     localFileItem : (fileItem           ? fileItem.local               : null);
+
+            property bool playing   : false;
+            property real progress  : 0.0;
+            property int  remaining : 0;
+
+            Label {
+                text: (delegateMsgVoiceNote.captionItem ? delegateMsgVoiceNote.captionItem.text : "");
+                visible: (text !== "");
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            RowContainer {
+                spacing: Theme.paddingMedium;
+                ExtraAnchors.horizontalFill: parent;
+
+                MouseArea {
+                    implicitWidth: Theme.itemSizeMedium;
+                    implicitHeight: Theme.itemSizeMedium;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        if (delegateMsgVoiceNote.localFileItem) {
+                            if (delegateMsgVoiceNote.localFileItem.canBeDownloaded &&
+                                    !delegateMsgVoiceNote.localFileItem.isDownloadingActive &&
+                                    !delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
+                                TD_Global.send ({
+                                                    "@type" : "downloadFile",
+                                                    "file_id" : delegateMsgVoiceNote.fileItem.id,
+                                                    "priority" : 1,
+                                                }); // START DOWNLOAD
+                            }
+                            else if (delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
+                                currentMedia = delegateMsgVoiceNote.localFileItem;
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                        radius: Theme.paddingSmall;
+                        opacity: 0.15;
+                        anchors.fill: parent;
+                    }
+                    Loader {
+                        active: (currentMedia && delegateMsgVoiceNote.localFileItem && currentMedia === delegateMsgVoiceNote.localFileItem);
+                        sourceComponent: MouseArea {
+                            anchors.fill: parent;
+                            onClicked: {
+                                if (playerVoiceNote.playbackState !== MediaPlayer.PlayingState) {
+                                    playerVoiceNote.play ();
+                                }
+                                else {
+                                    playerVoiceNote.pause ();
+                                }
+                            }
+
+                            Image {
+                                source: (playerVoiceNote.playbackState !== MediaPlayer.PlayingState
+                                         ? "image://theme/icon-m-play?#FFFFFF"
+                                         : "image://theme/icon-m-pause?#FFFFFF");
+                                anchors.centerIn: parent;
+                            }
+                            MediaPlayer {
+                                id: playerVoiceNote;
+                                source: (delegateMsgVoiceNote.localFileItem && delegateMsgVoiceNote.localFileItem.path !== ""
+                                         ? TD_Global.urlFromLocalPath (delegateMsgVoiceNote.localFileItem.path)
+                                         : "");
+                                autoLoad: true;
+                                autoPlay: true;
+                            }
+                            Binding {
+                                target: delegateMsgVoiceNote;
+                                property: "progress";
+                                value: (playerVoiceNote.duration ? playerVoiceNote.position / playerVoiceNote.duration : 0.0);
+                            }
+                            Binding {
+                                target: delegateMsgVoiceNote;
+                                property: "remaining";
+                                value: (playerVoiceNote.duration - playerVoiceNote.position);
+                            }
+                            Binding {
+                                target: delegateMsgVoiceNote;
+                                property: "playing";
+                                value: (playerVoiceNote.playbackState === MediaPlayer.PlayingState);
+                            }
+                        }
+                        anchors.fill: parent;
+                    }
+                    Image {
+                        source: "image://theme/icon-m-play?#FFFFFF";
+                        visible: (delegateMsgVoiceNote.localFileItem &&
+                                  delegateMsgVoiceNote.localFileItem.isDownloadingCompleted &&
+                                  (!currentMedia ||
+                                   !delegateMsgVoiceNote.localFileItem ||
+                                   currentMedia !== delegateMsgVoiceNote.localFileItem));
+                        anchors.centerIn: parent;
+                    }
+                    ProgressCircle {
+                        value: (delegateMsgVoiceNote.localFileItem && delegateMsgVoiceNote.fileItem
+                                ? (delegateMsgVoiceNote.localFileItem.downloadedSize / Math.max (delegateMsgVoiceNote.fileItem.size, 1) )
+                                : 0);
+                        visible: (delegateMsgVoiceNote.localFileItem && delegateMsgVoiceNote.localFileItem.isDownloadingActive);
+                        implicitWidth: BusyIndicatorSize.Medium;
+                        implicitHeight: BusyIndicatorSize.Medium;
+                        anchors.centerIn: parent;
+                    }
+                    Image {
+                        source: "image://theme/icon-m-cloud-download?#FFFFFF";
+                        visible: (delegateMsgVoiceNote.localFileItem &&
+                                  delegateMsgVoiceNote.localFileItem.canBeDownloaded &&
+                                  !delegateMsgVoiceNote.localFileItem.isDownloadingCompleted &&
+                                  !delegateMsgVoiceNote.localFileItem.isDownloadingActive);
+                        anchors.centerIn: parent;
+                    }
+                }
+                ColumnContainer {
+                    spacing: 1;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    Container.horizontalStretch: 1;
+
+                    RowContainer {
+                        spacing: 1;
+
+                        Repeater {
+                            model: (delegateMsgVoiceNote.voiceNoteItem && delegateMsgVoiceNote.voiceNoteItem.waveform !== ""
+                                    ? TD_Global.parseWaveform (delegateMsgVoiceNote.voiceNoteItem.waveform)
+                                    : 0);
+                            delegate: Rectangle {
+                                color: ((model.index / 100) <= delegateMsgVoiceNote.progress ? Theme.highlightColor : Theme.secondaryColor);
+                                implicitWidth: 3;
+                                implicitHeight: (modelData * 2);
+                                anchors.bottom: parent.bottom;
+                            }
+                        }
+                        Rectangle {
+                            color: Theme.primaryColor;
+                            implicitHeight: 1;
+                            ExtraAnchors.bottomDock: parent;
+
+                            Rectangle {
+                                color: Theme.highlightColor;
+                                implicitWidth: (parent.width * delegateMsgVoiceNote.progress);
+                                ExtraAnchors.leftDock: parent;
+                            }
+                        }
+                    }
+                    Label {
+                        text: (delegateMsgVoiceNote.voiceNoteItem
+                               ?  (delegateMsgVoiceNote.playing
+                                   ? qsTr ("(Listening...)")
+                                   : (delegateMsgVoiceNote.messageContentItem.isListened
+                                      ? qsTr ("(Listened)")
+                                      : qsTr ("(Not listened yet)")))
+                               : "");
+                        color: Theme.secondaryColor;
+                        font.pixelSize: Theme.fontSizeSmall;
+                    }
+                    Label {
+                        text: (delegateMsgVoiceNote.voiceNoteItem
+                               ? (delegateMsgVoiceNote.playing
+                                  ? ("-" + TD_Global.formatTime (delegateMsgVoiceNote.remaining, false))
+                                  : TD_Global.formatTime ((delegateMsgVoiceNote.voiceNoteItem.duration * 1000), false))
+                               : "--:--");
+                        color: (delegateMsgVoiceNote.playing ? Theme.highlightColor : Theme.primaryColor);
+                        font.pixelSize: Theme.fontSizeSmall;
                     }
                 }
             }
@@ -732,13 +913,14 @@ Page {
                                 sourceComponent: {
                                     if (messageItem && messageItem.content) {
                                         switch (messageItem.content.typeOf) {
-                                        case TD_ObjectType.MESSAGE_TEXT:      return compoMsgText;
-                                        case TD_ObjectType.MESSAGE_PHOTO:     return compoMsgPhoto;
-                                        case TD_ObjectType.MESSAGE_DOCUMENT:  return compoMsgDocument;
-                                        case TD_ObjectType.MESSAGE_STICKER:   return compoMsgSticker;
-                                        case TD_ObjectType.MESSAGE_VIDEO:     return compoMsgVideo;
-                                        case TD_ObjectType.MESSAGE_AUDIO:     return compoMsgAudio;
-                                        case TD_ObjectType.MESSAGE_ANIMATION: return compoMsgAnimation;
+                                        case TD_ObjectType.MESSAGE_TEXT:       return compoMsgText;
+                                        case TD_ObjectType.MESSAGE_PHOTO:      return compoMsgPhoto;
+                                        case TD_ObjectType.MESSAGE_DOCUMENT:   return compoMsgDocument;
+                                        case TD_ObjectType.MESSAGE_STICKER:    return compoMsgSticker;
+                                        case TD_ObjectType.MESSAGE_VIDEO:      return compoMsgVideo;
+                                        case TD_ObjectType.MESSAGE_AUDIO:      return compoMsgAudio;
+                                        case TD_ObjectType.MESSAGE_ANIMATION:  return compoMsgAnimation;
+                                        case TD_ObjectType.MESSAGE_VOICE_NOTE: return compoMsgVoiceNote;
                                         }
                                     }
                                     return compoMsgUnsupported;
