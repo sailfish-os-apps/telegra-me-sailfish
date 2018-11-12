@@ -23,6 +23,7 @@ Item {
     readonly property bool            downloadable : (local && local.canBeDownloaded);
     readonly property bool            downloading  : (local && local.isDownloadingActive);
     readonly property bool            downloaded   : (local && local.isDownloadingCompleted);
+    readonly property bool            valid        : (img.status === Image.Ready);
 
     function download (force) {
         if ((autoDownload || force) && downloadable && !downloading && !downloaded ) {
@@ -41,6 +42,7 @@ Item {
         anchors.fill: parent;
     }
     Image {
+        id: img;
         cache: true;
         source: (downloaded ? TD_Global.urlFromLocalPath (local.path) : "");
         fillMode: Image.PreserveAspectFit;

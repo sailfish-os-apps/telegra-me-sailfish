@@ -111,6 +111,22 @@ QString QtTdLibGlobal::formatSize (const int bytes) const {
     }
 }
 
+QString QtTdLibGlobal::formatTime (const int msecs, const bool showHours) const {
+    static const QString FULL { "%1:%2:%3" };
+    static const QString MINI { "%1:%2" };
+    static const QChar   ZERO { '0' };
+    int seconds { msecs / 1000 }, hours { 0 }, minutes { 0 };
+    if (showHours) {
+        hours = (seconds / 3600);
+        seconds -= (hours * 3600);
+    }
+    minutes = (seconds / 60);
+    seconds -= (minutes * 60);
+    return (showHours
+            ? FULL.arg (hours, 2, 10, ZERO).arg (minutes, 2, 10, ZERO).arg (seconds, 2, 10, ZERO)
+            : MINI.arg (minutes, 2, 10, ZERO).arg (seconds, 2, 10, ZERO));
+}
+
 QString QtTdLibGlobal::urlFromLocalPath (const QString & path) const {
     return QUrl::fromLocalFile (path).toString ();
 }

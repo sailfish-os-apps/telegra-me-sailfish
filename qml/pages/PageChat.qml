@@ -1,4 +1,5 @@
-import QtQuick 2.6
+import QtQuick 2.6;
+import QtMultimedia 5.6;
 import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
@@ -9,6 +10,8 @@ Page {
     allowedOrientations: Orientation.All;
 
     property TD_Chat currentChat : null;
+
+    property TD_LocalFile currentMedia : null;
 
     Component {
         id: compoMsgText;
@@ -208,6 +211,257 @@ Page {
         }
     }
     Component {
+        id: compoMsgVideo;
+
+        ColumnContainer {
+            id: delegateMsgVideo;
+
+            property TD_MessageVideo messageContentItem : null;
+
+            readonly property TD_Video     videoItem     : (messageContentItem ? messageContentItem.video : null);
+            readonly property TD_File      fileItem      : (videoItem          ? videoItem.video          : null);
+            readonly property TD_LocalFile localFileItem : (fileItem           ? fileItem.local           : null);
+            readonly property TD_PhotoSize photoSizeItem : (videoItem          ? videoItem.thumbnail      : null);
+
+            Label {
+                text: (delegateMsgVideo.captionItem ? delegateMsgVideo.captionItem.text : "");
+                visible: (text !== "");
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            MouseArea {
+                width: (delegateMsgVideo.videoItem ? Math.min (delegateMsgVideo.videoItem.width, delegateMsgVideo.width) : 1);
+                Container.forcedHeight: (delegateMsgVideo.videoItem ? delegateMsgVideo.videoItem.height * width / delegateMsgVideo.videoItem.width : 1);
+                onClicked: {
+                    if (delegateMsgVideo.localFileItem) {
+                        if (delegateMsgVideo.localFileItem.canBeDownloaded && !delegateMsgVideo.localFileItem.isDownloadingActive && !delegateMsgVideo.localFileItem.isDownloadingCompleted) {
+                            TD_Global.send ({
+                                                "@type" : "downloadFile",
+                                                "file_id" : delegateMsgVideo.fileItem.id,
+                                                "priority" : 1,
+                                            }); // START DOWNLOAD
+                        }
+                        else if (delegateMsgVideo.localFileItem.isDownloadingCompleted) {
+                            currentMedia = delegateMsgVideo.localFileItem;
+                        }
+                    }
+                }
+
+                DelegateDownloadableImage {
+                    fileItem: (delegateMsgVideo.photoSizeItem ? delegateMsgVideo.photoSizeItem.photo : null);
+                    anchors.fill: parent;
+                }
+                Image {
+                    source: "image://theme/icon-m-play?#FFFFFF";
+                    visible: (delegateMsgVideo.localFileItem && delegateMsgVideo.localFileItem.isDownloadingCompleted);
+                    anchors.centerIn: parent;
+                }
+                Loader {
+                    active: (currentMedia === delegateMsgVideo.localFileItem);
+                    sourceComponent: Video {
+                        id: playerVideo;
+                        smooth: true;
+                        source: (delegateMsgVideo.localFileItem && delegateMsgVideo.localFileItem.path !== ""
+                                 ? TD_Global.urlFromLocalPath (delegateMsgVideo.localFileItem.path)
+                                 : "");
+                        autoLoad: true;
+                        autoPlay: true;
+                        fillMode: VideoOutput.PreserveAspectFit;
+                        antialiasing: true;
+                        anchors.fill: parent;
+
+                        Image {
+                            source: "image://theme/icon-m-play?#FFFFFF";
+                            visible: (playerVideo.playbackState !== MediaPlayer.PlayingState);
+                            anchors.centerIn: parent;
+                        }
+                        MouseArea {
+                            anchors.fill: parent;
+                            onClicked: {
+                                if (playerVideo.playbackState === MediaPlayer.PlayingState) {
+                                    playerVideo.pause ();
+                                }
+                                else {
+                                    playerVideo.play ();
+                                }
+                            }
+                        }
+                        Rectangle {
+                            color: Theme.highlightColor;
+                            implicitWidth: (playerVideo.duration > 0 ? parent.width * playerVideo.position / playerVideo.duration : 0);
+                            implicitHeight: Theme.paddingSmall;
+                            ExtraAnchors.bottomLeftCorner: parent;
+                        }
+                    }
+                    anchors.fill: parent;
+                }
+                Image {
+                    source: "image://theme/icon-m-cloud-download?#FFFFFF";
+                    visible: (delegateMsgVideo.localFileItem &&
+                              delegateMsgVideo.localFileItem.canBeDownloaded &&
+                              !delegateMsgVideo.localFileItem.isDownloadingActive &&
+                              !delegateMsgVideo.localFileItem.isDownloadingCompleted);
+                    anchors.centerIn: parent;
+                }
+                ProgressCircle {
+                    value: (delegateMsgVideo.localFileItem ? delegateMsgVideo.localFileItem.downloadedSize / Math.max (delegateMsgVideo.fileItem.size, 1) : 0);
+                    visible: (delegateMsgVideo.localFileItem && delegateMsgVideo.localFileItem.isDownloadingActive);
+                    implicitWidth: BusyIndicatorSize.Large;
+                    implicitHeight: BusyIndicatorSize.Large;
+                    anchors.centerIn: parent;
+                }
+            }
+        }
+    }
+    Component {
+        id: compoMsgAudio;
+
+        ColumnContainer {
+            id: delegateMsgAudio;
+
+            property TD_MessageAudio messageContentItem : null;
+
+            readonly property TD_Audio     audioItem     : (messageContentItem ? messageContentItem.audio      : null);
+            readonly property TD_File      fileItem      : (audioItem          ? audioItem.audio               : null);
+            readonly property TD_LocalFile localFileItem : (fileItem           ? fileItem.local                : null);
+            readonly property TD_PhotoSize photoSizeItem : (audioItem          ? audioItem.albumCoverThumbnail : null);
+
+            Label {
+                text: (delegateMsgAudio.audioItem
+                       ? delegateMsgAudio.audioItem.fileName
+                       : "");
+                elide: Text.ElideRight;
+                font.pixelSize: Theme.fontSizeSmall;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            Label {
+                text: (delegateMsgAudio.audioItem
+                       ? (delegateMsgAudio.audioItem.title !== ""
+                          ? delegateMsgAudio.audioItem.title
+                          : "")
+                       : "");
+                visible: (text !== "");
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                font.bold: true;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            Label {
+                text: (delegateMsgAudio.audioItem
+                       ? (delegateMsgAudio.audioItem.performer !== ""
+                          ? delegateMsgAudio.audioItem.performer
+                          : "")
+                       : "");
+                visible: (text !== "");
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                font.bold: true;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            RowContainer {
+                spacing: Theme.paddingMedium;
+
+                MouseArea {
+                    implicitWidth: (Theme.iconSizeExtraLarge * 2);
+                    implicitHeight: (Theme.iconSizeExtraLarge * 2);
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        if (delegateMsgAudio.localFileItem) {
+                            if (delegateMsgAudio.localFileItem.canBeDownloaded && !delegateMsgAudio.localFileItem.isDownloadingActive && !delegateMsgAudio.localFileItem.isDownloadingCompleted) {
+                                TD_Global.send ({
+                                                    "@type" : "downloadFile",
+                                                    "file_id" : delegateMsgAudio.fileItem.id,
+                                                    "priority" : 1,
+                                                }); // START DOWNLOAD
+                            }
+                            else if (delegateMsgAudio.localFileItem.isDownloadingCompleted) {
+                                currentMedia = delegateMsgAudio.localFileItem;
+                            }
+                        }
+                    }
+
+                    Image {
+                        source: "qrc:///images/cd-box.svg";
+                        visible: !imgAlbumCover.valid;
+                        fillMode: Image.PreserveAspectFit;
+                        anchors.fill: parent;
+                    }
+                    DelegateDownloadableImage {
+                        id: imgAlbumCover;
+                        fileItem: (delegateMsgAudio.photoSizeItem ? delegateMsgAudio.photoSizeItem.photo : null);
+                        background: false;
+                        anchors.fill: parent;
+                    }
+                    Image {
+                        source: "image://theme/icon-m-play?#FFFFFF";
+                        visible: (currentMedia !== delegateMsgAudio.localFileItem && delegateMsgAudio.localFileItem.isDownloadingCompleted);
+                        anchors.centerIn: parent;
+                    }
+                    Loader {
+                        active: (currentMedia === delegateMsgAudio.localFileItem);
+                        sourceComponent: MouseArea {
+                            onClicked: {
+                                if (playerAudio.playbackState === MediaPlayer.PlayingState) {
+                                    playerAudio.pause ();
+                                }
+                                else {
+                                    playerAudio.play ();
+                                }
+                            }
+
+                            Image {
+                                source: (playerAudio.playbackState !== MediaPlayer.PlayingState
+                                         ? "image://theme/icon-m-play?#FFFFFF"
+                                         : "image://theme/icon-m-pause?#FFFFFF");
+                                anchors.centerIn: parent;
+                            }
+                            MediaPlayer {
+                                id: playerAudio;
+                                source: (delegateMsgAudio.localFileItem && delegateMsgAudio.localFileItem.path !== ""
+                                         ? TD_Global.urlFromLocalPath (delegateMsgAudio.localFileItem.path)
+                                         : "");
+                                autoLoad: true;
+                                autoPlay: true;
+                            }
+                            Binding {
+                                target: lblAudioTime;
+                                property: "remaining";
+                                value: (playerAudio.duration - playerAudio.position);
+                            }
+                            Binding {
+                                target: lblAudioTime;
+                                property: "playing";
+                                value: (playerAudio.playbackState === MediaPlayer.PlayingState);
+                            }
+                        }
+                        anchors.fill: parent;
+                    }
+                    Image {
+                        source: "image://theme/icon-m-cloud-download?#FFFFFF";
+                        visible: (delegateMsgAudio.localFileItem &&
+                                  delegateMsgAudio.localFileItem.canBeDownloaded &&
+                                  !delegateMsgAudio.localFileItem.isDownloadingActive &&
+                                  !delegateMsgAudio.localFileItem.isDownloadingCompleted);
+                        anchors.centerIn: parent;
+                    }
+                }
+                Label {
+                    id: lblAudioTime;
+                    text: (delegateMsgAudio.audioItem
+                           ? (playing
+                              ? ("-" + TD_Global.formatTime ((remaining), false))
+                              : TD_Global.formatTime ((delegateMsgAudio.audioItem.duration * 1000), false))
+                           : "");
+                    color: Theme.secondaryColor;
+                    font.pixelSize: Theme.fontSizeSmall;
+                    anchors.verticalCenter: parent.verticalCenter;
+
+                    property int  remaining : 0;
+                    property bool playing   : false;
+                }
+            }
+
+         }
+    }
+    Component {
         id: compoMsgUnsupported;
 
         Label {
@@ -346,6 +600,8 @@ Page {
                                         case TD_ObjectType.MESSAGE_PHOTO:    return compoMsgPhoto;
                                         case TD_ObjectType.MESSAGE_DOCUMENT: return compoMsgDocument;
                                         case TD_ObjectType.MESSAGE_STICKER:  return compoMsgSticker;
+                                        case TD_ObjectType.MESSAGE_VIDEO:    return compoMsgVideo;
+                                        case TD_ObjectType.MESSAGE_AUDIO:    return compoMsgAudio;
                                         }
                                     }
                                     return compoMsgUnsupported;

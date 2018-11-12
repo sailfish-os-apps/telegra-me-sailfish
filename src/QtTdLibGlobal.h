@@ -31,6 +31,7 @@ public:
     Q_INVOKABLE void send (const QJsonObject & json) const;
 
     Q_INVOKABLE QString formatSize (const int bytes) const;
+    Q_INVOKABLE QString formatTime (const int msecs, const bool showHours = true) const;
 
     Q_INVOKABLE QString urlFromLocalPath (const QString & path) const;
 
