@@ -37,6 +37,7 @@ Page {
 
             Label {
                 text: (delegateMsgPhoto.captionItem ? delegateMsgPhoto.captionItem.text : "");
+                visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 ExtraAnchors.horizontalFill: parent;
             }
@@ -44,6 +45,141 @@ Page {
                 width: (delegateMsgPhoto.photoSizeItem ? Math.min (delegateMsgPhoto.photoSizeItem .width, delegateMsgPhoto.width) : 1);
                 fileItem: (delegateMsgPhoto.photoSizeItem ? delegateMsgPhoto.photoSizeItem.photo : null);
                 Container.forcedHeight: (delegateMsgPhoto.photoSizeItem ? delegateMsgPhoto.photoSizeItem.height * width / delegateMsgPhoto.photoSizeItem.width : 1);
+            }
+        }
+    }
+    Component {
+        id: compoMsgDocument;
+
+        ColumnContainer {
+            id: delegateMsgDocument;
+
+            property TD_MessageDocument messageContentItem : null;
+
+            readonly property TD_FormattedText captionItem   : (messageContentItem  ? messageContentItem.caption  : null);
+            readonly property TD_Document      documentItem  : (messageContentItem  ? messageContentItem.document : null);
+            readonly property TD_File          fileItem      : (documentItem        ? documentItem.document       : null);
+            readonly property TD_LocalFile     localFileItem : (fileItem            ? fileItem.local              : null);
+
+            readonly property string size : {
+                if (localFileItem && fileItem) {
+                    if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // TO BE DOWNLOADED
+                        return "(%1)".arg (TD_Global.formatSize (fileItem.expectedSize));
+                    }
+                    else if (localFileItem.canBeDownloaded && localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // DOWNLOADING
+                        return "(%1 / %2)".arg (TD_Global.formatSize (localFileItem.downloadedSize)).arg (TD_Global.formatSize (fileItem.expectedSize));
+                    }
+                    else if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && localFileItem.isDownloadingCompleted) { // DOWNLOADED
+                        return "(%1)".arg (TD_Global.formatSize (localFileItem.downloadedSize));
+                    }
+                    else { }
+                }
+                return "";
+            }
+
+            readonly property string status : {
+                if (localFileItem && fileItem) {
+                    if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // TO BE DOWNLOADED
+                        return qsTr ("Click to download")
+                    }
+                    else if (localFileItem.canBeDownloaded && localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // DOWNLOADING
+                        return qsTr ("Downloading, please wait...");
+                    }
+                    else if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && localFileItem.isDownloadingCompleted) { // DOWNLOADED
+                        return qsTr ("Downloaded, click to open");
+                    }
+                    else { }
+                }
+                return "";
+            }
+
+            function click () {
+                if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // TO BE DOWNLOADED
+                    TD_Global.send ({
+                                        "@type" : "downloadFile",
+                                        "file_id" : fileItem.id,
+                                        "priority" : 1,
+                                    }); // START DOWNLOAD
+                }
+                else if (localFileItem.canBeDownloaded && localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // DOWNLOADING
+                    // TODO : STOP DOWNLOAD ?
+                }
+                else if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && localFileItem.isDownloadingCompleted) { // DOWNLOADED
+                    Qt.openUrlExternally (TD_Global.urlFromLocalPath (localFileItem.path));  // OPEN FILE
+                }
+                else { }
+            }
+
+            Label {
+                text: (delegateMsgDocument.captionItem ? delegateMsgDocument.captionItem.text : "");
+                visible: (text !== "");
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            RowContainer {
+                spacing: Theme.paddingMedium;
+                ExtraAnchors.horizontalFill: parent;
+
+                MouseArea {
+                    anchors.fill: parent;
+                    Container.ignored: true;
+                    onClicked: {
+                        delegateMsgDocument.click ();
+                    }
+
+                    Rectangle {
+                        color: "transparent";
+                        border {
+                            width: 1;
+                            color: Theme.secondaryColor;
+                        }
+                        anchors {
+                            fill: parent;
+                            margins: -Theme.paddingSmall;
+                        }
+                    }
+                }
+                Image {
+                    source: (delegateMsgDocument.documentItem
+                             ? "qrc:///symbols/filetypes/%1.svg".arg (TD_Global.getSvgIconForMimeType (delegateMsgDocument.documentItem.mimeType))
+                             : "");
+                    sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                    anchors.verticalCenter: parent.verticalCenter;
+                }
+                ColumnContainer {
+                    anchors.verticalCenter: parent.verticalCenter;
+                    Container.horizontalStretch: 1;
+
+                    Label {
+                        text: (delegateMsgDocument.documentItem ? delegateMsgDocument.documentItem.fileName : "");
+                        elide: Text.ElideMiddle;
+                        font.underline: true;
+                        ExtraAnchors.horizontalFill: parent;
+                    }
+                    Label {
+                        text: delegateMsgDocument.size;
+                        color: Theme.secondaryColor;
+                        font.pixelSize: Theme.fontSizeSmall;
+
+                        BusyIndicator {
+                            size: BusyIndicatorSize.ExtraSmall;
+                            running: (delegateMsgDocument.localFileItem && delegateMsgDocument.localFileItem.isDownloadingActive);
+                            anchors {
+                                left: parent.right;
+                                margins: Theme.paddingMedium;
+                                verticalCenter: parent.verticalCenter;
+                            }
+                        }
+                    }
+                }
+            }
+            Label {
+                text: delegateMsgDocument.status;
+                color: Theme.secondaryColor;
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                font.italic: true;
+                font.pixelSize: Theme.fontSizeSmall;
+                ExtraAnchors.horizontalFill: parent;
             }
         }
     }
@@ -64,9 +200,11 @@ Page {
         contentWidth: width;
         contentHeight: layoutMessages.height;
         anchors.fill: parent;
-        onContentYChanged: { timerAutoMoveMove.restart (); }
+        onContentYChanged: {
+            timerAutoMoveMove.restart ();
+        }
 
-        property int autoMoveMode : stayFree;
+        property int autoMoveMode : stayAtBottom;
 
         readonly property int stayFree     : 0;
         readonly property int stayAtTop    : 1;
@@ -141,6 +279,12 @@ Page {
                     readonly property TD_Message messageItem : modelData;
                     readonly property TD_User    userItem    : (messageItem ? TD_Global.getUserItemById (messageItem.senderUserId) : null);
 
+                    Binding {
+                        target: loaderMsgContent.item;
+                        property: "messageContentItem";
+                        value: delegateMsg.messageItem.content;
+                        when: (loaderMsgContent.item && delegateMsg.messageItem && delegateMsg.messageItem.content);
+                    }
                     Rectangle {
                         color: Theme.highlightColor;
                         radius: Theme.paddingSmall;
@@ -174,20 +318,14 @@ Page {
                                 sourceComponent: {
                                     if (messageItem && messageItem.content) {
                                         switch (messageItem.content.typeOf) {
-                                        case TD_ObjectType.MESSAGE_TEXT:  return compoMsgText;
-                                        case TD_ObjectType.MESSAGE_PHOTO: return compoMsgPhoto;
+                                        case TD_ObjectType.MESSAGE_TEXT:     return compoMsgText;
+                                        case TD_ObjectType.MESSAGE_PHOTO:    return compoMsgPhoto;
+                                        case TD_ObjectType.MESSAGE_DOCUMENT: return compoMsgDocument;
                                         }
                                     }
                                     return compoMsgUnsupported;
                                 }
                                 ExtraAnchors.horizontalFill: parent;
-
-                                Binding {
-                                    target: loaderMsgContent.item;
-                                    property: "messageContentItem";
-                                    value: delegateMsg.messageItem.content;
-                                    when: (loaderMsgContent.item && delegateMsg.messageItem && delegateMsg.messageItem.content);
-                                }
                             }
                             Label {
                                 text: Qt.formatDateTime (new Date (delegateMsg.messageItem.date * 1000));

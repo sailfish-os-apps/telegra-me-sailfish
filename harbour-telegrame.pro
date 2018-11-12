@@ -75,7 +75,10 @@ HEADERS += \
 
 RESOURCES += \
     $$PWD/qml.qrc \
-    flags.qrc
+    flags.qrc \
+    icons.qrc \
+    symbols.qrc \
+    images.qrc
 
 OTHER_FILES += \
     $$PWD/$${TARGET}.desktop \

@@ -30,7 +30,11 @@ public:
 
     Q_INVOKABLE void send (const QJsonObject & json) const;
 
+    Q_INVOKABLE QString formatSize (const int bytes) const;
+
     Q_INVOKABLE QString urlFromLocalPath (const QString & path) const;
+
+    Q_INVOKABLE QString getSvgIconForMimeType (const QString & type) const;
 
     Q_INVOKABLE QtTdLibFile    * getFileItemById    (const qint32 id) const;
     Q_INVOKABLE QtTdLibUser    * getUserItemById    (const qint32 id) const;
@@ -41,6 +45,8 @@ protected:
     void onFrame (const QJsonObject & json);
 
 private:
+    const QHash<QString, QString> m_svgIconForMimetype;
+
     QtTdLibJsonWrapper * m_tdLibJsonWrapper;
 };
 

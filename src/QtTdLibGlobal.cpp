@@ -7,6 +7,66 @@
 QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     : QObject { parent }
     , m_chatsList { new QQmlObjectListModel<QtTdLibChat> { this } }
+    , m_svgIconForMimetype {
+{ "image/png", "image" },
+{ "image/jpeg", "image" },
+{ "image/gif", "image" },
+{ "image/svg", "drawing" },
+{ "image/svg+xml", "drawing" },
+{ "application/vnd.oasis.opendocument.graphics", "drawing" },
+{ "audio/mpeg", "sound" },
+{ "audio/x-wav", "sound" },
+{ "audio/midi", "sound" },
+{ "video/mp4", "video" },
+{ "text/x-csrc", "code" },
+{ "text/x-chdr", "code" },
+{ "text/x-c++src", "code" },
+{ "text/x-c++hdr", "code" },
+{ "text/x-qml", "code" },
+{ "text/x-java", "code" },
+{ "text/css", "code" },
+{ "application/javascript", "code" },
+{ "application/xml", "xml" },
+{ "application/x-shellscript", "script" },
+{ "application/x-perl", "script" },
+{ "application/x-object", "binary" },
+{ "application/octet-stream", "binary" },
+{ "application/x-cd-image", "disk-image" },
+{ "application/zip", "archive" },
+{ "application/x-xz-compressed-tar", "archive" },
+{ "application/x-compressed-tar", "archive" },
+{ "application/x-rar", "archive" },
+{ "application/x-rpm", "archive" },
+{ "application/gzip", "archive" },
+{ "application/vnd.debian.binary-package", "archive" },
+{ "application/vnd.android.package-archive", "archive" },
+{ "application/x-7z-compressed", "archive" },
+{ "application/x-bzip-compressed-tar", "archive" },
+{ "text/x-makefile", "text" },
+{ "text/x-log", "text" },
+{ "text/x-theme", "text" },
+{ "text/csv", "text" },
+{ "text/plain", "text" },
+{ "text/vcard", "text" },
+{ "text/markdown", "text" },
+{ "application/json", "text" },
+{ "application/pdf", "pdf" },
+{ "application/vnd.oasis.opendocument.text", "document" },
+{ "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "document" },
+{ "application/msword", "document" },
+{ "application/vnd.oasis.opendocument.spreadsheet", "spreadsheet" },
+{ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "spreadsheet" },
+{ "application/vnd.ms-excel", "spreadsheet" },
+{ "application/ms-excel", "spreadsheet" },
+{ "application/vnd.oasis.opendocument.presentation", "slideshow" },
+{ "application/vnd.openxmlformats-officedocument.presentationml.presentation", "slideshow" },
+{ "application/vnd.ms-powerpoint", "slideshow" },
+{ "text/html", "webpage" },
+{ "application/sql", "database" },
+{ "application/x-sqlite3", "database" },
+{ "application/x-executable", "executable" },
+{ "application/x-ms-dos-executable", "executable" },
+          }
     , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { this } }
 {
     connect (m_tdLibJsonWrapper, &QtTdLibJsonWrapper::recv, this, &QtTdLibGlobal::onFrame);
@@ -31,8 +91,32 @@ void QtTdLibGlobal::send (const QJsonObject & json) const {
     m_tdLibJsonWrapper->send (json);
 }
 
+QString QtTdLibGlobal::formatSize (const int bytes) const {
+    static constexpr int KIB  { 1024 };
+    static constexpr int MIB  { 1024 * 1024 };
+    static constexpr int GIB  { 1024 * 1024 * 1024 };
+    static const QString SIZE { "%1 %2" };
+    static const QChar   ZERO { '0' };
+    if (bytes > GIB) {
+        return SIZE.arg ((qreal (bytes) / qreal (GIB)), 0, 'f', 3, ZERO).arg (tr ("GiB"));
+    }
+    else if (bytes > MIB) {
+        return SIZE.arg ((qreal (bytes) / qreal (MIB)), 0, 'f', 2, ZERO).arg (tr ("MiB"));
+    }
+    else if (bytes > KIB) {
+        return SIZE.arg ((qreal (bytes) / qreal (KIB)), 0, 'f', 1, ZERO).arg (tr ("KiB"));
+    }
+    else {
+        return SIZE.arg (bytes).arg (tr ("B"));
+    }
+}
+
 QString QtTdLibGlobal::urlFromLocalPath (const QString & path) const {
     return QUrl::fromLocalFile (path).toString ();
+}
+
+QString QtTdLibGlobal::getSvgIconForMimeType (const QString & type) const {
+    return m_svgIconForMimetype.value (type, "file");
 }
 
 QtTdLibFile * QtTdLibGlobal::getFileItemById (const qint32 id) const {

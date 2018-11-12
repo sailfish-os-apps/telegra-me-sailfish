@@ -18,6 +18,7 @@ Item {
     property TD_File fileItem : null;
 
     readonly property TD_LocalFile    local        : (fileItem ? fileItem.local : null);
+    readonly property TD_RemoteFile   remote       : (fileItem ? fileItem.remote : null);
     readonly property bool            downloadable : (local && local.canBeDownloaded);
     readonly property bool            downloading  : (local && local.isDownloadingActive);
     readonly property bool            downloaded   : (local && local.isDownloadingCompleted);
@@ -47,9 +48,11 @@ Item {
         horizontalAlignment: Image.AlignHCenter;
         anchors.fill: parent;
     }
-    BusyIndicator {
-        size: BusyIndicatorSize.Medium;
-        running: downloading;
+    ProgressCircle {
+        value: (local ? local.downloadedSize / Math.max (fileItem.size, 1) : 0);
+        visible: downloading;
+        implicitWidth: BusyIndicatorSize.Medium;
+        implicitHeight: BusyIndicatorSize.Medium;
         anchors.centerIn: parent;
     }
 }
