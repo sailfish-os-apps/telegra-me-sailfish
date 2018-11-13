@@ -1,4 +1,5 @@
 
+#include "QtTdLibChat.h"
 #include "QtTdLibMessage.h"
 
 QtTdLibMessageContent::QtTdLibMessageContent (const QtTdLibObjectType::Type typeOf, QObject * parent)
@@ -32,7 +33,9 @@ void QtTdLibMessageText::updateFromJson (const QJsonObject & json) {
 QtTdLibMessage::QtTdLibMessage (const qint64 id, QObject * parent)
     : QtTdLibAbstractInt53IdObject { QtTdLibObjectType::MESSAGE, id, parent }
 {
-    QtTdLibCollection::allMessages.insert (id, this);
+    if (QtTdLibChat * chatItem = { qobject_cast<QtTdLibChat *> (parent) }) {
+       chatItem->allMessages.insert (id, this);
+    }
 }
 
 void QtTdLibMessage::updateFromJson (const QJsonObject & json) {

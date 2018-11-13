@@ -2,16 +2,58 @@ import QtQuick 2.6;
 import QtMultimedia 5.6;
 import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
+import Qt.labs.folderlistmodel 2.1;
+import QtDocGallery 5.0;
+import Nemo.Thumbnailer 1.0;
 import harbour.Telegrame 1.0;
 import "../components";
 
 Page {
     id: page;
     allowedOrientations: Orientation.All;
+    Component.onCompleted: {
+        loadMoreMessages (15); // FIXME : maybe a better way...
+    }
+
+    property string currentMsgType : "MSGTYPE_01_TEXT";
 
     property TD_Chat currentChat : null;
 
     property TD_LocalFile currentMedia : null;
+
+    property var selectedImagesUrls : ([]);
+
+    property bool groupImagesInAlbums : true;
+
+    readonly property var msgTypes : ({
+                                          "MSGTYPE_01_TEXT"    : { "label" : qsTr ("Text message"),        "type" : TD_ObjectType.MESSAGE_TEXT,       "icon" : "icon-m-text-input" },
+                                          "MSGTYPE_02_ALBUM"   : { "label" : qsTr ("Photo/Video (album)"), "type" : TD_ObjectType.MESSAGE_PHOTO,      "icon" : "icon-m-camera" },
+                                          "MSGTYPE_03_MUSIC"   : { "label" : qsTr ("Music"),               "type" : TD_ObjectType.MESSAGE_AUDIO,      "icon" : "icon-m-music" },
+                                          "MSGTYPE_04_STICKER" : { "label" : qsTr ("Sticker"),             "type" : TD_ObjectType.MESSAGE_STICKER,    "icon" : "icon-m-other" },
+                                          "MSGTYPE_05_ANIM"    : { "label" : qsTr ("GIF animation"),       "type" : TD_ObjectType.MESSAGE_ANIMATION,  "icon" : "icon-m-media" },
+                                          "MSGTYPE_06_VOICE"   : { "label" : qsTr ("Voice note"),          "type" : TD_ObjectType.MESSAGE_VOICE_NOTE, "icon" : "icon-m-mic" },
+                                          "MSGTYPE_07_BUBBLE"  : { "label" : qsTr ("Video bubble"),        "type" : TD_ObjectType.MESSAGE_VIDEO_NOTE, "icon" : "icon-m-video" },
+                                          "MSGTYPE_08_FILE"    : { "label" : qsTr ("File transfer"),       "type" : TD_ObjectType.MESSAGE_DOCUMENT,   "icon" : "icon-m-attach" },
+                                      });
+
+    function downloadFile (fileItem) {
+        TD_Global.send ({
+                            "@type" : "downloadFile",
+                            "file_id" : fileItem.id,
+                            "priority" : 1,
+                        });
+    }
+
+    function loadMoreMessages (count) {
+        TD_Global.send ({
+                            "@type" : "getChatHistory",
+                            "chat_id" :  currentChat.id,
+                            "from_message_id" : currentChat.messagesModel.getFirst ().id, // Identifier of the message starting from which history must be fetched; use 0 to get results from the begining
+                            "offset" : 0, // Specify 0 to get results from exactly the from_message_id or a negative offset to get the specified message and some newer messages
+                            "limit" : count, // The maximum number of messages to be returned; must be positive and can't be greater than 100. If the offset is negative, the limit must be greater than -offset. Fewer messages may be returned than specified by the limit, even if the end of the message history has not been reached
+                            "only_local" : false, // If true, returns only messages that are available locally without sending network requests
+                        });
+    }
 
     Component {
         id: compoMsgText;
@@ -36,7 +78,14 @@ Page {
 
             readonly property TD_Photo         photoItem     : (messageContentItem ? messageContentItem.photo   : null);
             readonly property TD_FormattedText captionItem   : (messageContentItem ? messageContentItem.caption : null);
-            readonly property TD_PhotoSize     photoSizeItem : (photoItem && photoItem.sizes.count > 0 ? photoItem.sizes.getLast () : null);
+            readonly property TD_PhotoSize     photoSizeItem : {
+                var ret = null;
+                if (photoItem && photoItem.sizes.count > 0) {
+                    var tmp = photoItem.sizes.get ("x");
+                    ret = (tmp ? tmp : photoItem.sizes.getLast ());
+                }
+                return ret;
+            }
 
             Label {
                 text: (delegateMsgPhoto.captionItem ? delegateMsgPhoto.captionItem.text : "");
@@ -98,11 +147,7 @@ Page {
 
             function click () {
                 if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // TO BE DOWNLOADED
-                    TD_Global.send ({
-                                        "@type" : "downloadFile",
-                                        "file_id" : fileItem.id,
-                                        "priority" : 1,
-                                    }); // START DOWNLOAD
+                    downloadFile (fileItem); // START DOWNLOAD
                 }
                 else if (localFileItem.canBeDownloaded && localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // DOWNLOADING
                     // TODO : STOP DOWNLOAD ?
@@ -235,11 +280,7 @@ Page {
                 onClicked: {
                     if (delegateMsgVideo.localFileItem) {
                         if (delegateMsgVideo.localFileItem.canBeDownloaded && !delegateMsgVideo.localFileItem.isDownloadingActive && !delegateMsgVideo.localFileItem.isDownloadingCompleted) {
-                            TD_Global.send ({
-                                                "@type" : "downloadFile",
-                                                "file_id" : delegateMsgVideo.fileItem.id,
-                                                "priority" : 1,
-                                            }); // START DOWNLOAD
+                            downloadFile (delegateMsgVideo.fileItem); // START DOWNLOAD
                         }
                         else if (delegateMsgVideo.localFileItem.isDownloadingCompleted) {
                             currentMedia = delegateMsgVideo.localFileItem;
@@ -369,11 +410,7 @@ Page {
                     onClicked: {
                         if (delegateMsgAudio.localFileItem) {
                             if (delegateMsgAudio.localFileItem.canBeDownloaded && !delegateMsgAudio.localFileItem.isDownloadingActive && !delegateMsgAudio.localFileItem.isDownloadingCompleted) {
-                                TD_Global.send ({
-                                                    "@type" : "downloadFile",
-                                                    "file_id" : delegateMsgAudio.fileItem.id,
-                                                    "priority" : 1,
-                                                }); // START DOWNLOAD
+                                downloadFile (delegateMsgAudio.fileItem); // START DOWNLOAD
                             }
                             else if (delegateMsgAudio.localFileItem.isDownloadingCompleted) {
                                 currentMedia = delegateMsgAudio.localFileItem;
@@ -425,12 +462,12 @@ Page {
                                 autoPlay: true;
                             }
                             Binding {
-                                target: lblAudioTime;
+                                target: delegateMsgAudio;
                                 property: "remaining";
                                 value: (playerAudio.duration - playerAudio.position);
                             }
                             Binding {
-                                target: lblAudioTime;
+                                target: delegateMsgAudio;
                                 property: "playing";
                                 value: (playerAudio.playbackState === MediaPlayer.PlayingState);
                             }
@@ -484,11 +521,7 @@ Page {
 
             function download () {
                 if (downloadable && !downloading && !downloaded ) {
-                    TD_Global.send ({
-                                        "@type" : "downloadFile",
-                                        "file_id" : fileItem.id,
-                                        "priority" : 1,
-                                    });
+                    downloadFile (fileItem);
                 }
             }
 
@@ -633,11 +666,7 @@ Page {
                             if (delegateMsgVoiceNote.localFileItem.canBeDownloaded &&
                                     !delegateMsgVoiceNote.localFileItem.isDownloadingActive &&
                                     !delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
-                                TD_Global.send ({
-                                                    "@type" : "downloadFile",
-                                                    "file_id" : delegateMsgVoiceNote.fileItem.id,
-                                                    "priority" : 1,
-                                                }); // START DOWNLOAD
+                                downloadFile (delegateMsgVoiceNote.fileItem); // START DOWNLOAD
                             }
                             else if (delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
                                 currentMedia = delegateMsgVoiceNote.localFileItem;
@@ -795,6 +824,7 @@ Page {
         contentWidth: width;
         contentHeight: layoutMessages.height;
         anchors.fill: parent;
+        anchors.bottomMargin: footerChat.height;
         onContentYChanged: {
             timerAutoMoveMove.restart ();
         }
@@ -836,19 +866,12 @@ Page {
             }
         }
         PullDownMenu {
-            id: pulley;
+            id: pulleyTop;
 
             MenuItem {
                 text: qsTr ("Load 50 older messages...");
                 onClicked: {
-                    TD_Global.send ({
-                                        "@type" : "getChatHistory",
-                                        "chat_id" :  currentChat.id,
-                                        "from_message_id" : currentChat.messagesModel.getFirst ().id, // Identifier of the message starting from which history must be fetched; use 0 to get results from the begining
-                                        "offset" : 0, // Specify 0 to get results from exactly the from_message_id or a negative offset to get the specified message and some newer messages
-                                        "limit" : 50, // The maximum number of messages to be returned; must be positive and can't be greater than 100. If the offset is negative, the limit must be greater than -offset. Fewer messages may be returned than specified by the limit, even if the end of the message history has not been reached
-                                        "only_local" : false, // If true, returns only messages that are available locally without sending network requests
-                                    });
+                    loadMoreMessages (50);
                 }
             }
         }
@@ -864,10 +887,10 @@ Page {
                 model: (currentChat ? currentChat.messagesModel : 0);
                 delegate: Item {
                     id: delegateMsg;
-                    implicitHeight: (layoutMsg.height + layoutMsg.anchors.margins * 2);
+                    implicitHeight: (layoutMsg.height + layoutMsg.anchors.margins * 1.5);
                     anchors {
-                        leftMargin: (delegateMsg.messageItem.isOutgoing ? Theme.paddingLarge * 5 : Theme.paddingMedium);
-                        rightMargin: (!delegateMsg.messageItem.isOutgoing ? Theme.paddingLarge * 5 : Theme.paddingMedium);
+                        leftMargin: (!delegateMsg.messageItem.isOutgoing ? Theme.paddingLarge * 5 : Theme.paddingMedium);
+                        rightMargin: (delegateMsg.messageItem.isOutgoing ? Theme.paddingLarge * 5 : Theme.paddingMedium);
                     }
                     ExtraAnchors.horizontalFill: parent;
 
@@ -900,7 +923,7 @@ Page {
                             autoDownload: true;
                         }
                         ColumnContainer {
-                            spacing: Theme.paddingSmall;
+                            spacing: 1;
                             Container.horizontalStretch: 1;
 
                             Label {
@@ -911,8 +934,8 @@ Page {
                             Loader {
                                 id: loaderMsgContent;
                                 sourceComponent: {
-                                    if (messageItem && messageItem.content) {
-                                        switch (messageItem.content.typeOf) {
+                                    if (delegateMsg.messageItem && delegateMsg.messageItem.content) {
+                                        switch (delegateMsg.messageItem.content.typeOf) {
                                         case TD_ObjectType.MESSAGE_TEXT:       return compoMsgText;
                                         case TD_ObjectType.MESSAGE_PHOTO:      return compoMsgPhoto;
                                         case TD_ObjectType.MESSAGE_DOCUMENT:   return compoMsgDocument;
@@ -939,9 +962,207 @@ Page {
             }
         }
     }
+    Item {
+        id: footerChat;
+        implicitHeight: (layoutFooter.height + layoutFooter.anchors.margins * 2);
+        ExtraAnchors.bottomDock: parent;
+
+        ColumnContainer {
+            id: layoutFooter;
+            verticalSpacing: 1;
+            anchors.margins: 1;
+            ExtraAnchors.topDock: parent;
+
+            RowContainer {
+                visible: (currentMsgType === "MSGTYPE_01_TEXT");
+                anchors.margins: Theme.paddingSmall;
+                ExtraAnchors.horizontalFill: parent;
+                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+
+                Item {
+                    implicitHeight: Math.min (inputMsg.implicitHeight, Theme.itemSizeLarge * 2);
+                    anchors.bottom: parent.bottom;
+                    anchors.margins: Theme.paddingSmall;
+                    Container.horizontalStretch: 1;
+
+                    TextArea {
+                        id: inputMsg;
+                        labelVisible: false;
+                        placeholderText: qsTr ("Text message");
+                        autoScrollEnabled: true;
+                        anchors.fill: parent;
+                    }
+                }
+                RectangleButton {
+                    icon: "icon-m-enter";
+                    size: Theme.iconSizeMedium;
+                    enabled: (inputMsg.text.trim () !== "");
+                    implicitWidth: Theme.itemSizeSmall;
+                    implicitHeight: Theme.itemSizeSmall;
+                    anchors.bottom: parent.bottom;
+                    anchors.margins: Theme.paddingSmall;
+                    onClicked: {
+                        var tmp = inputMsg.text.trim ();
+                        if (tmp !== "") {
+                            TD_Global.send ({
+                                                "@type" : "sendMessage",
+                                                "chat_id" : currentChat.id,
+                                                "reply_to_message_id" : 0,
+                                                "disable_notification" : false,
+                                                "from_background" : false,
+                                                "reply_markup" : null,
+                                                "input_message_content" : {
+                                                    "@type" : "inputMessageText",
+                                                    "disable_web_page_preview" : false,
+                                                    "clear_draft" : false,
+                                                    "text" :  TD_Global.exec ({
+                                                                                  "@type" : "parseTextEntities",
+                                                                                  "text" : tmp,
+                                                                                  "parse_mode" : {
+                                                                                      "@type" : "textParseModeMarkdown",
+                                                                                  }
+                                                                              })
+                                                }
+                                            });
+                            flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
+                        }
+                        inputMsg.text = "";
+                    }
+                }
+            }
+            RowContainer {
+                visible: (currentMsgType === "MSGTYPE_02_ALBUM");
+                spacing: Theme.paddingMedium;
+                anchors.margins: Theme.paddingSmall;
+                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                ExtraAnchors.horizontalFill: parent;
+
+                Label {
+                    text: (selectedImagesUrls.length > 0
+                           ? (groupImagesInAlbums
+                              ? qsTr ("Send %1 images as an album").arg (selectedImagesUrls.length)
+                              : qsTr ("Send %1 images separately").arg (selectedImagesUrls.length))
+                           : qsTr ("No image selected"));
+                    color: (selectedImagesUrls.length > 0 ? Theme.highlightColor : Theme.secondaryColor);
+                    anchors.verticalCenter: parent.verticalCenter;
+                    Container.horizontalStretch: 1;
+                }
+                RectangleButton {
+                    icon: "icon-m-levels";
+                    size: Theme.iconSizeMedium;
+                    active: groupImagesInAlbums;
+                    implicitWidth: Theme.itemSizeSmall;
+                    implicitHeight: Theme.itemSizeSmall;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        groupImagesInAlbums = !groupImagesInAlbums;
+                    }
+                }
+                RectangleButton {
+                    icon: "icon-m-enter";
+                    size: Theme.iconSizeMedium;
+                    enabled: (selectedImagesUrls.length > 0);
+                    implicitWidth: Theme.itemSizeSmall;
+                    implicitHeight: Theme.itemSizeSmall;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        if (selectedImagesUrls.length > 0) {
+                            TD_Global.sendMessagePhoto (selectedImagesUrls, currentChat, groupImagesInAlbums);
+                            flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
+                        }
+                        selectedImagesUrls = [];
+                    }
+                }
+            }
+            RowContainer {
+                visible: (currentMsgType === "MSGTYPE_02_ALBUM");
+                anchors.margins: 1;
+                ExtraAnchors.horizontalFill: parent;
+                Container.forcedHeight: (Theme.itemSizeHuge * 2);
+
+                GridView {
+                    clip: true;
+                    cellWidth: (width / 4);
+                    cellHeight: cellWidth;
+                    anchors.fill: parent;
+                    model: DocumentGalleryModel {
+                        id: galleryModel;
+                        rootType: DocumentGallery.Image;
+                        properties: ["url", "dateTaken"];
+                        autoUpdate: true;
+                        sortProperties: ["-dateTaken"];
+                    }
+                    delegate: MouseArea {
+                        id: delegatePhoto;
+                        implicitWidth: GridView.view.cellWidth;
+                        implicitHeight: GridView.view.cellHeight;
+                        onClicked: {
+                            var tmp = selectedImagesUrls;
+                            if (idx < 0) {
+                                tmp.push (model.url);
+                            }
+                            else {
+                                tmp.splice (idx, 1);
+                            }
+                            selectedImagesUrls = tmp;
+                        }
+
+                        readonly property int idx : selectedImagesUrls.indexOf (model.url);
+
+                        Thumbnail {
+                            source: model.url;
+                            sourceSize: Qt.size (width, height);
+                            anchors.fill: parent;
+                            anchors.margins: 1;
+
+                            Rectangle {
+                                color: "transparent";
+                                visible: (delegatePhoto.idx >= 0);
+                                border {
+                                    width: 3;
+                                    color: Theme.highlightColor;
+                                }
+                                anchors.fill: parent;
+                            }
+                        }
+                    }
+
+                    VerticalScrollDecorator { flickable: parent; }
+                }
+            }
+            GridContainer {
+                id: selectorMsgType;
+                cols: capacity;
+                capacity: layoutItemsCount;
+                horizontalSpacing: 1;
+                ExtraAnchors.horizontalFill: parent;
+                Container.forcedHeight: (Theme.itemSizeSmall * 0.85);
+
+                Repeater {
+                    model: Object.getOwnPropertyNames (msgTypes);
+                    delegate: MouseArea {
+                        onClicked: {
+                            currentMsgType = modelData;
+                        }
+
+                        Rectangle {
+                            color: (currentMsgType === modelData ? Theme.highlightColor : Theme.primaryColor);
+                            opacity: 0.05;
+                            anchors.fill: parent;
+                        }
+                        Image {
+                            source: "image://theme/%1?%2".arg (msgTypes [modelData]["icon"]).arg (currentMsgType === modelData ? Theme.highlightColor : Theme.primaryColor);
+                            sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                            anchors.centerIn: parent;
+                        }
+                    }
+                }
+            }
+        }
+    }
     MouseArea {
         id: headerChat;
-        opacity: (pulley.active ? 0.0 : 1.0);
+        opacity: (pulleyTop.active ? 0.0 : 1.0);
         implicitHeight: (Math.max (headerIcon.height, headerText.height) + Theme.paddingMedium * 2);
         ExtraAnchors.topDock: parent;
 

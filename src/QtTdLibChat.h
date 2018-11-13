@@ -88,6 +88,10 @@ class QtTdLibChat : public QtTdLibAbstractInt53IdObject {
 public:
     explicit QtTdLibChat (const qint64 id = 0, QObject * parent = Q_NULLPTR);
 
+    QHash<qint64, QtTdLibMessage *> allMessages;
+
+    Q_INVOKABLE QtTdLibMessage * getMessageItemById (const qint64 id) const;
+
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 

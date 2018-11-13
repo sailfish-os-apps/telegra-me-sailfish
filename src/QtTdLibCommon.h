@@ -221,10 +221,9 @@ template<>        struct IsCollectable<QtTdLibFile>    { static constexpr bool V
 template<>        struct IsCollectable<QtTdLibChat>    { static constexpr bool VALUE { true }; };
 template<>        struct IsCollectable<QtTdLibMessage> { static constexpr bool VALUE { true }; };
 
-extern QHash<qint32, QtTdLibUser *>    allUsers;
-extern QHash<qint32, QtTdLibFile *>    allFiles;
-extern QHash<qint64, QtTdLibChat *>    allChats;
-extern QHash<qint64, QtTdLibMessage *> allMessages;
+extern QHash<qint32, QtTdLibUser *> allUsers;
+extern QHash<qint32, QtTdLibFile *> allFiles;
+extern QHash<qint64, QtTdLibChat *> allChats;
 
 }
 

@@ -86,6 +86,8 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "updateChatReadOutbox", QtTdLibObjectType::UPDATE_CHAT_READ_OUTBOX },
         { "updateChatReadInbox", QtTdLibObjectType::UPDATE_CHAT_READ_INBOX },
         { "updateChatLastMessage", QtTdLibObjectType::UPDATE_CHAT_LAST_MESSAGE },
+        { "updateDeleteMessages", QtTdLibObjectType::UPDATE_DELETE_MESSAGES },
+        { "updateMessageSendSucceeded", QtTdLibObjectType::UPDATE_MESSAGE_SEND_SUCCEEDED  },
         { "updateFile", QtTdLibObjectType::UPDATE_FILE },
         { "webPage", QtTdLibObjectType::WEB_PAGE },
         { "video", QtTdLibObjectType::VIDEO },

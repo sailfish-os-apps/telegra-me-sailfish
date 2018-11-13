@@ -6,5 +6,6 @@
         <file>qml/pages/PageMain.qml</file>
         <file>qml/pages/PageChat.qml</file>
         <file>qml/components/DelegateDownloadableImage.qml</file>
+        <file>qml/components/RectangleButton.qml</file>
     </qresource>
 </RCC>

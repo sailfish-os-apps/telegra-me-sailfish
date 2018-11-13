@@ -17,6 +17,10 @@ QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
     QtTdLibCollection::allChats.insert (id, this);
 }
 
+QtTdLibMessage * QtTdLibChat::getMessageItemById (const qint64 id) const {
+    return allMessages.value (id, Q_NULLPTR);
+}
+
 void QtTdLibChat::updateFromJson (const QJsonObject & json) {
     set_unreadCount_withJSON             (json ["unread_count"]);
     set_unreadMentionCount_withJSON      (json ["unread_mention_count"]);

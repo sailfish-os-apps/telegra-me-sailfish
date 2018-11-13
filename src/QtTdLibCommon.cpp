@@ -6,10 +6,9 @@
 #include "QtTdLibChat.h"
 #include "QtTdLibMessage.h"
 
-QHash<qint32, QtTdLibUser *>    QtTdLibCollection::allUsers { };
-QHash<qint32, QtTdLibFile *>    QtTdLibCollection::allFiles { };
-QHash<qint64, QtTdLibChat *>    QtTdLibCollection::allChats { };
-QHash<qint64, QtTdLibMessage *> QtTdLibCollection::allMessages { };
+QHash<qint32, QtTdLibUser *> QtTdLibCollection::allUsers { };
+QHash<qint32, QtTdLibFile *> QtTdLibCollection::allFiles { };
+QHash<qint64, QtTdLibChat *> QtTdLibCollection::allChats { };
 
 QtTdLibAbstractObject::QtTdLibAbstractObject (const QtTdLibObjectType::Type typeOf, QObject * parent)
     : QObject  { parent }
