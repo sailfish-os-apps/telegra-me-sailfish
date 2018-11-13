@@ -7,5 +7,7 @@
         <file>qml/pages/PageChat.qml</file>
         <file>qml/components/DelegateDownloadableImage.qml</file>
         <file>qml/components/RectangleButton.qml</file>
+        <file>qml/components/HelperFileState.qml</file>
+        <file>qml/components/WrapperVideoPlayer.qml</file>
     </qresource>
 </RCC>

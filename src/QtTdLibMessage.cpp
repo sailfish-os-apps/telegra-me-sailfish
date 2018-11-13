@@ -6,17 +6,17 @@ QtTdLibMessageContent::QtTdLibMessageContent (const QtTdLibObjectType::Type type
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibMessageContent * QtTdLibMessageContent::create (const QJsonObject & json, QObject * parent) {
+QtTdLibMessageContent * QtTdLibMessageContent::createXXX (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
-        case QtTdLibObjectType::MESSAGE_ANIMATION:  return new QtTdLibMessageAnimation { parent };
-        case QtTdLibObjectType::MESSAGE_AUDIO:      return new QtTdLibMessageAudio     { parent };
-        case QtTdLibObjectType::MESSAGE_DOCUMENT:   return new QtTdLibMessageDocument  { parent };
-        case QtTdLibObjectType::MESSAGE_PHOTO:      return new QtTdLibMessagePhoto     { parent };
-        case QtTdLibObjectType::MESSAGE_STICKER:    return new QtTdLibMessageSticker   { parent };
-        case QtTdLibObjectType::MESSAGE_TEXT:       return new QtTdLibMessageText      { parent };
-        case QtTdLibObjectType::MESSAGE_VIDEO:      return new QtTdLibMessageVideo     { parent };
-        case QtTdLibObjectType::MESSAGE_VIDEO_NOTE: return new QtTdLibMessageVideoNote { parent };
-        case QtTdLibObjectType::MESSAGE_VOICE_NOTE: return new QtTdLibMessageVoiceNote { parent };
+        case QtTdLibObjectType::MESSAGE_ANIMATION:  return QtTdLibMessageAnimation::create (json, parent);
+        case QtTdLibObjectType::MESSAGE_AUDIO:      return QtTdLibMessageAudio::create     (json, parent);
+        case QtTdLibObjectType::MESSAGE_DOCUMENT:   return QtTdLibMessageDocument::create  (json, parent);
+        case QtTdLibObjectType::MESSAGE_PHOTO:      return QtTdLibMessagePhoto::create     (json, parent);
+        case QtTdLibObjectType::MESSAGE_STICKER:    return QtTdLibMessageSticker::create   (json, parent);
+        case QtTdLibObjectType::MESSAGE_TEXT:       return QtTdLibMessageText::create      (json, parent);
+        case QtTdLibObjectType::MESSAGE_VIDEO:      return QtTdLibMessageVideo::create     (json, parent);
+        case QtTdLibObjectType::MESSAGE_VIDEO_NOTE: return QtTdLibMessageVideoNote::create (json, parent);
+        case QtTdLibObjectType::MESSAGE_VOICE_NOTE: return QtTdLibMessageVoiceNote::create (json, parent);
         default: return Q_NULLPTR;
     }
 }
@@ -26,8 +26,8 @@ QtTdLibMessageText::QtTdLibMessageText (QObject * parent)
 { }
 
 void QtTdLibMessageText::updateFromJson (const QJsonObject & json) {
-    set_text_withJSON    (json ["text"],     &QtTdLibAbstractObject::create<QtTdLibFormattedText>);
-    set_webPage_withJSON (json ["web_page"], &QtTdLibAbstractObject::create<QtTdLibWebPage>);
+    set_text_withJSON    (json ["text"],     &QtTdLibFormattedText::create);
+    set_webPage_withJSON (json ["web_page"], &QtTdLibWebPage::create);
 }
 
 QtTdLibMessage::QtTdLibMessage (const qint64 id, QObject * parent)
@@ -47,7 +47,7 @@ void QtTdLibMessage::updateFromJson (const QJsonObject & json) {
     set_views_withJSON            (json ["views"]);
     set_replyToMessageId_withJSON (json ["reply_to_message_id"]);
     set_mediaAlbumId_withJSON     (json ["media_album_id"]);
-    set_content_withJSON          (json ["content"], &QtTdLibMessageContent::create);
+    set_content_withJSON          (json ["content"], &QtTdLibMessageContent::createXXX);
 }
 
 QtTdLibMessagePhoto::QtTdLibMessagePhoto (QObject * parent)
@@ -55,8 +55,8 @@ QtTdLibMessagePhoto::QtTdLibMessagePhoto (QObject * parent)
 { }
 
 void QtTdLibMessagePhoto::updateFromJson (const QJsonObject & json) {
-    set_caption_withJSON (json ["caption"], &QtTdLibAbstractObject::create<QtTdLibFormattedText>);
-    set_photo_withJSON   (json ["photo"],   &QtTdLibAbstractInt64IdObject::create<QtTdLibPhoto>);
+    set_caption_withJSON (json ["caption"], &QtTdLibFormattedText::create);
+    set_photo_withJSON   (json ["photo"],   &QtTdLibPhoto::create);
 }
 
 QtTdLibMessageDocument::QtTdLibMessageDocument (QObject * parent)
@@ -64,8 +64,8 @@ QtTdLibMessageDocument::QtTdLibMessageDocument (QObject * parent)
 { }
 
 void QtTdLibMessageDocument::updateFromJson (const QJsonObject & json) {
-    set_caption_withJSON  (json ["caption"],  &QtTdLibAbstractObject::create<QtTdLibFormattedText>);
-    set_document_withJSON (json ["document"], &QtTdLibAbstractObject::create<QtTdLibDocument>);
+    set_caption_withJSON  (json ["caption"],  &QtTdLibFormattedText::create);
+    set_document_withJSON (json ["document"], &QtTdLibDocument::create);
 }
 
 QtTdLibMessageSticker::QtTdLibMessageSticker (QObject * parent)
@@ -73,7 +73,7 @@ QtTdLibMessageSticker::QtTdLibMessageSticker (QObject * parent)
 { }
 
 void QtTdLibMessageSticker::updateFromJson (const QJsonObject & json) {
-    set_sticker_withJSON (json ["sticker"], &QtTdLibAbstractObject::create<QtTdLibSticker>);
+    set_sticker_withJSON (json ["sticker"], &QtTdLibSticker::create);
 }
 
 QtTdLibMessageAnimation::QtTdLibMessageAnimation (QObject * parent)
@@ -81,8 +81,8 @@ QtTdLibMessageAnimation::QtTdLibMessageAnimation (QObject * parent)
 { }
 
 void QtTdLibMessageAnimation::updateFromJson (const QJsonObject & json) {
-    set_caption_withJSON   (json ["caption"],   &QtTdLibAbstractObject::create<QtTdLibFormattedText>);
-    set_animation_withJSON (json ["animation"], &QtTdLibAbstractObject::create<QtTdLibAnimation>);
+    set_caption_withJSON   (json ["caption"],   &QtTdLibFormattedText::create);
+    set_animation_withJSON (json ["animation"], &QtTdLibAnimation::create);
 }
 
 QtTdLibMessageVideoNote::QtTdLibMessageVideoNote (QObject * parent)
@@ -91,7 +91,7 @@ QtTdLibMessageVideoNote::QtTdLibMessageVideoNote (QObject * parent)
 
 void QtTdLibMessageVideoNote::updateFromJson (const QJsonObject & json) {
     set_isViewed_withJSON  (json ["is_viewed"]);
-    set_videoNote_withJSON (json ["video_note"], &QtTdLibAbstractObject::create<QtTdLibVideoNote>);
+    set_videoNote_withJSON (json ["video_note"], &QtTdLibVideoNote::create);
 }
 
 QtTdLibMessageVoiceNote::QtTdLibMessageVoiceNote (QObject * parent)
@@ -100,8 +100,8 @@ QtTdLibMessageVoiceNote::QtTdLibMessageVoiceNote (QObject * parent)
 
 void QtTdLibMessageVoiceNote::updateFromJson (const QJsonObject & json) {
     set_isListened_withJSON (json ["is_listened"]);
-    set_caption_withJSON    (json ["caption"],    &QtTdLibAbstractObject::create<QtTdLibFormattedText>);
-    set_voiceNote_withJSON  (json ["voice_note"], &QtTdLibAbstractObject::create<QtTdLibVoiceNote>);
+    set_caption_withJSON    (json ["caption"],    &QtTdLibFormattedText::create);
+    set_voiceNote_withJSON  (json ["voice_note"], &QtTdLibVoiceNote::create);
 }
 
 QtTdLibMessageVideo::QtTdLibMessageVideo (QObject * parent)
@@ -109,8 +109,8 @@ QtTdLibMessageVideo::QtTdLibMessageVideo (QObject * parent)
 { }
 
 void QtTdLibMessageVideo::updateFromJson (const QJsonObject & json) {
-    set_caption_withJSON (json ["caption"], &QtTdLibAbstractObject::create<QtTdLibFormattedText>);
-    set_video_withJSON   (json ["video"],   &QtTdLibAbstractObject::create<QtTdLibVideo>);
+    set_caption_withJSON (json ["caption"], &QtTdLibFormattedText::create);
+    set_video_withJSON   (json ["video"],   &QtTdLibVideo::create);
 }
 
 QtTdLibMessageAudio::QtTdLibMessageAudio (QObject * parent)
@@ -118,6 +118,6 @@ QtTdLibMessageAudio::QtTdLibMessageAudio (QObject * parent)
 { }
 
 void QtTdLibMessageAudio::updateFromJson (const QJsonObject & json) {
-    set_caption_withJSON (json ["caption"], &QtTdLibAbstractObject::create<QtTdLibFormattedText>);
-    set_audio_withJSON   (json ["audio"],   &QtTdLibAbstractObject::create<QtTdLibAudio>);
+    set_caption_withJSON (json ["caption"], &QtTdLibFormattedText::create);
+    set_audio_withJSON   (json ["audio"],   &QtTdLibAudio::create);
 }

@@ -10,73 +10,73 @@ class QtTdLibTextEntityType : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibTextEntityType (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibTextEntityType * create (const QJsonObject & json, QObject * parent);
+    static QtTdLibTextEntityType * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypeMention : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeMention : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeMention> {
     Q_OBJECT
 
 public:
     explicit QtTdLibTextEntityTypeMention (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypeHashtag : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeHashtag : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeHashtag> {
     Q_OBJECT
 
 public:
     explicit QtTdLibTextEntityTypeHashtag (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypeBotCommand : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeBotCommand : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeBotCommand> {
     Q_OBJECT
 
 public:
     explicit QtTdLibTextEntityTypeBotCommand (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypeUrl : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeUrl : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeUrl> {
     Q_OBJECT
 
 public:
     explicit QtTdLibTextEntityTypeUrl (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypeEmailAddress : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeEmailAddress : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeEmailAddress> {
     Q_OBJECT
 
 public:
     explicit QtTdLibTextEntityTypeEmailAddress (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypeBold : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeBold : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeBold> {
     Q_OBJECT
 
 public:
     explicit QtTdLibTextEntityTypeBold (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypeItalic : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeItalic : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeItalic> {
     Q_OBJECT
 
 public:
     explicit QtTdLibTextEntityTypeItalic (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypeCode : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeCode : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeCode> {
     Q_OBJECT
 
 public:
     explicit QtTdLibTextEntityTypeCode (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypePre : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypePre : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypePre> {
     Q_OBJECT
 
 public:
     explicit QtTdLibTextEntityTypePre (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibTextEntityTypePreCode : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypePreCode : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypePreCode> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING (language)
 
@@ -86,7 +86,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibTextEntityTypeTextUrl : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeTextUrl : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeTextUrl> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING (url)
 
@@ -96,7 +96,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibTextEntityTypeMentionName : public QtTdLibTextEntityType {
+class QtTdLibTextEntityTypeMentionName : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeMentionName> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_ID32 (userId)
 
@@ -106,7 +106,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibTextEntity : public QtTdLibAbstractObject {
+class QtTdLibTextEntity : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibTextEntity> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (offset)
     Q_TDLIB_PROPERTY_INT32     (length)
@@ -118,7 +118,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibFormattedText : public QtTdLibAbstractObject {
+class QtTdLibFormattedText : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibFormattedText> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING (text)
     QML_OBJMODEL_PROPERTY  (entities, QtTdLibTextEntity)
@@ -129,7 +129,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibPhotoSize : public QtTdLibAbstractObject {
+class QtTdLibPhotoSize : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibPhotoSize> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING    (type)
     Q_TDLIB_PROPERTY_INT32     (width)
@@ -142,7 +142,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibPhoto : public QtTdLibAbstractInt64IdObject {
+class QtTdLibPhoto : public QtTdLibAbstractInt64IdObject, public FactoryInt64Id<QtTdLibPhoto> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_BOOL (hasStickers)
     QML_OBJMODEL_PROPERTY (sizes,  QtTdLibPhotoSize)
@@ -153,7 +153,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibDocument : public QtTdLibAbstractObject {
+class QtTdLibDocument : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibDocument> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING    (fileName)
     Q_TDLIB_PROPERTY_STRING    (mimeType)
@@ -166,7 +166,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibSticker : public QtTdLibAbstractObject {
+class QtTdLibSticker : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibSticker> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_ID64      (setId)
     Q_TDLIB_PROPERTY_INT32     (width)
@@ -183,7 +183,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibAnimation : public QtTdLibAbstractObject {
+class QtTdLibAnimation : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibAnimation> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (duration)
     Q_TDLIB_PROPERTY_INT32     (width)
@@ -199,7 +199,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibVoiceNote : public QtTdLibAbstractObject {
+class QtTdLibVoiceNote : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibVoiceNote> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (duration)
     Q_TDLIB_PROPERTY_STRING    (mimeType)
@@ -213,7 +213,7 @@ public:
 };
 
 
-class QtTdLibVideoNote : public QtTdLibAbstractObject {
+class QtTdLibVideoNote : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibVideoNote> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (duration)
     Q_TDLIB_PROPERTY_INT32     (length)
@@ -226,7 +226,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibVideo : public QtTdLibAbstractObject {
+class QtTdLibVideo : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibVideo> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (duration)
     Q_TDLIB_PROPERTY_INT32     (width)
@@ -243,7 +243,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibAudio : public QtTdLibAbstractObject {
+class QtTdLibAudio : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibAudio> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (duration)
     Q_TDLIB_PROPERTY_STRING    (title)
@@ -259,7 +259,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibWebPage : public QtTdLibAbstractObject {
+class QtTdLibWebPage : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibWebPage> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING    (url)
     Q_TDLIB_PROPERTY_STRING    (displayUrl)

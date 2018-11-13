@@ -1,6 +1,8 @@
-#ifndef QTTDLIBGLOBAL_H
+﻿#ifndef QTTDLIBGLOBAL_H
 #define QTTDLIBGLOBAL_H
 
+#include <QAudioDecoder>
+#include <QAudioRecorder>
 #include <QObject>
 #include <QQmlEngine>
 
@@ -21,6 +23,9 @@ class QtTdLibGlobal : public QObject {
     Q_TDLIB_PROPERTY_SUBOBJECT (connectionState,       QtTdLibConnectionState)
     Q_TDLIB_PROPERTY_SUBOBJECT (authorizationState, QtTdLibAuthorizationState)
     QML_OBJMODEL_PROPERTY      (chatsList,                        QtTdLibChat)
+    QML_READONLY_VAR_PROPERTY  (recordingDuration,                        int)
+    QML_READONLY_VAR_PROPERTY  (selectedPhotosCount,                      int)
+    QML_READONLY_VAR_PROPERTY  (selectedVideosCount,                      int)
 
 public:
     explicit QtTdLibGlobal (QObject * parent = Q_NULLPTR);
@@ -45,7 +50,23 @@ public:
     Q_INVOKABLE QtTdLibUser * getUserItemById (const qint32 id) const;
     Q_INVOKABLE QtTdLibChat * getChatItemById (const qint64 id) const;
 
-    Q_INVOKABLE void sendMessagePhoto (const QStringList & photoList, QtTdLibChat * chatItem, const bool groupInAlbum = true);
+    Q_INVOKABLE void selectPhoto       (const QString & path, const int width, const int height);
+    Q_INVOKABLE void deselectPhoto     (const QString & path);
+    Q_INVOKABLE bool isPhotoSelected   (const QString & path) const;
+    Q_INVOKABLE void unselectAllPhotos (void);
+
+    Q_INVOKABLE void selectVideo       (const QString & path, const int width, const int height, const int duration);
+    Q_INVOKABLE void deselectVideo     (const QString & path);
+    Q_INVOKABLE bool isVideoSelected   (const QString & path) const;
+    Q_INVOKABLE void unselectAllVideos (void);
+
+    Q_INVOKABLE void sendMessageText      (QtTdLibChat * chatItem, const QString & text);
+    Q_INVOKABLE void sendMessagePhoto     (QtTdLibChat * chatItem, const bool groupInAlbum = true);
+    Q_INVOKABLE void sendMessageVideo     (QtTdLibChat * chatItem, const bool groupInAlbum = true);
+    Q_INVOKABLE void sendMessageVoiceNote (QtTdLibChat * chatItem, const QString & recording);
+
+    Q_INVOKABLE bool    startRecordingAudio  (void);
+    Q_INVOKABLE QString stopRecordingAudio   (void);
 
 protected:
     void onFrame (const QJsonObject & json);
@@ -53,7 +74,23 @@ protected:
 private:
     const QHash<QString, QString> m_svgIconForMimetype;
 
+    struct SelectionPhoto {
+        QString path;
+        int width;
+        int height;
+    };
+    QList<SelectionPhoto *> m_selectedPhotosList;
+
+    struct SelectionVideo {
+        QString path;
+        int width;
+        int height;
+        int duration;
+    };
+    QList<SelectionVideo *> m_selectedVideosList;
+
     QtTdLibJsonWrapper * m_tdLibJsonWrapper;
+    QAudioRecorder * m_audioRecorder;
 };
 
 #endif // QTTDLIBGLOBAL_H

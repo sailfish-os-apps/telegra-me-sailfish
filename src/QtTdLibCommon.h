@@ -124,23 +124,62 @@ struct QtTdLibId64Helper {
     public: TYPE * get_##NAME (void) { return m_##NAME; } \
     public Q_SLOTS: void set_##NAME (TYPE * NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     public: template<class T> void set_##NAME##_withJSON (const QJsonValue & json, T * (* factory) (const QJsonObject &, QObject *)) { \
-        const QJsonObject object { json.toObject () }; \
-        if (m_##NAME != Q_NULLPTR && !m_##NAME->isCompatibleWith (object)) { \
-            if (!QtTdLibCollection::IsCollectable<T>::VALUE) { \
-                m_##NAME->deleteLater (); \
-            } \
-            set_##NAME (Q_NULLPTR); \
-        } \
-        if (m_##NAME == Q_NULLPTR && !object ["@type"].toString ().isEmpty ()) { \
-            set_##NAME (factory (object, (!QtTdLibCollection::IsCollectable<T>::VALUE ? this : Q_NULLPTR))); \
-        } \
-        if (m_##NAME != Q_NULLPTR) { \
-            m_##NAME->updateFromJson (object); \
-        } \
+    const QJsonObject object { json.toObject () }; \
+    if (m_##NAME != Q_NULLPTR && !m_##NAME->isCompatibleWith (object)) { \
+    if (!QtTdLibCollection::IsCollectable<T>::VALUE) { \
+    m_##NAME->deleteLater (); \
+    } \
+    set_##NAME (Q_NULLPTR); \
+    } \
+    if (m_##NAME != Q_NULLPTR) { \
+    m_##NAME->updateFromJson (object); \
+    } \
+    else if (m_##NAME == Q_NULLPTR && !object ["@type"].toString ().isEmpty ()) { \
+    set_##NAME (factory (object, (!QtTdLibCollection::IsCollectable<T>::VALUE ? this : Q_NULLPTR))); \
+    } \
     } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
 
+template<class T> struct FactoryNoId {
+    static T * create (const QJsonObject & json, QObject * parent = Q_NULLPTR) {
+        T * ret { new T { parent } };
+        ret->updateFromJson (json);
+        return ret;
+    }
+};
+
+template<class T> struct FactoryInt32Id {
+    static T * create (const QJsonObject & json, QObject * parent = Q_NULLPTR) {
+        T * ret { new T { QtTdLibId32Helper::fromJsonToCpp (json ["id"]), parent } };
+        ret->updateFromJson (json);
+        return ret;
+    }
+};
+
+template<class T> struct FactoryInt53Id {
+    static T * create (const QJsonObject & json, QObject * parent = Q_NULLPTR) {
+        T * ret { new T { QtTdLibId53Helper::fromJsonToCpp (json ["id"]), parent } };
+        ret->updateFromJson (json);
+        return ret;
+    }
+};
+
+template<class T> struct FactoryInt64Id {
+    static T * create (const QJsonObject & json, QObject * parent = Q_NULLPTR) {
+        T * ret { new T { QtTdLibId64Helper::fromJsonToCpp (json ["id"]), parent } };
+        ret->updateFromJson (json);
+        return ret;
+    }
+};
+
+template<class T> struct FactoryStrId {
+    static T * create (const QJsonObject & json, QObject * parent = Q_NULLPTR) {
+        T * ret { new T { json ["id"].toString (), parent } };
+        ret->updateFromJson (json);
+        return ret;
+    }
+};
 
 class QtTdLibAbstractObject : public QObject {
     Q_OBJECT
@@ -153,8 +192,6 @@ public:
     virtual bool isCompatibleWith (const QJsonObject & json) {
         return (QtTdLibEnums::objectTypeEnumFromJson (json) == m_typeOf);
     }
-
-    template<class T> static T * create (const QJsonObject & json, QObject * parent) { Q_UNUSED (json); return new T { parent }; }
 };
 
 class QtTdLibAbstractInt32IdObject : public QtTdLibAbstractObject {
@@ -164,11 +201,9 @@ class QtTdLibAbstractInt32IdObject : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibAbstractInt32IdObject (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, const qint32 id = 0, QObject * parent = Q_NULLPTR);
 
-    bool isCompatibleWith (const QJsonObject & json) Q_DECL_FINAL {
+   inline bool isCompatibleWith (const QJsonObject & json) Q_DECL_FINAL {
         return (QtTdLibAbstractObject::isCompatibleWith (json) && QtTdLibId32Helper::fromJsonToCpp (json ["id"]) == m_id);
     }
-
-    template<class T> static T * create (const QJsonObject & json, QObject * parent) { return new T { QtTdLibId32Helper::fromJsonToCpp (json ["id"]), parent }; }
 };
 
 class QtTdLibAbstractInt53IdObject : public QtTdLibAbstractObject {
@@ -178,11 +213,9 @@ class QtTdLibAbstractInt53IdObject : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibAbstractInt53IdObject (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, const qint64 id = 0, QObject * parent = Q_NULLPTR);
 
-    bool isCompatibleWith (const QJsonObject & json) Q_DECL_FINAL {
+    inline bool isCompatibleWith (const QJsonObject & json) Q_DECL_FINAL {
         return (QtTdLibAbstractObject::isCompatibleWith (json) && QtTdLibId53Helper::fromJsonToCpp (json ["id"]) == m_id);
     }
-
-    template<class T> static T * create (const QJsonObject & json, QObject * parent) { return new T { QtTdLibId53Helper::fromJsonToCpp (json ["id"]), parent }; }
 };
 
 class QtTdLibAbstractInt64IdObject : public QtTdLibAbstractObject {
@@ -192,11 +225,9 @@ class QtTdLibAbstractInt64IdObject : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibAbstractInt64IdObject (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, const qint64 id = 0, QObject * parent = Q_NULLPTR);
 
-    bool isCompatibleWith (const QJsonObject & json) Q_DECL_FINAL {
+    inline bool isCompatibleWith (const QJsonObject & json) Q_DECL_FINAL {
         return (QtTdLibAbstractObject::isCompatibleWith (json) && QtTdLibId64Helper::fromJsonToCpp (json ["id"]) == m_id);
     }
-
-    template<class T> static T * create (const QJsonObject & json, QObject * parent) { return new T { QtTdLibId64Helper::fromJsonToCpp (json ["id"]), parent }; }
 };
 
 class QtTdLibAbstractStrIdObject : public QtTdLibAbstractObject {
@@ -206,11 +237,9 @@ class QtTdLibAbstractStrIdObject : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibAbstractStrIdObject (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, const QString & id = "", QObject * parent = Q_NULLPTR);
 
-    bool isCompatibleWith (const QJsonObject & json) Q_DECL_FINAL {
+    inline bool isCompatibleWith (const QJsonObject & json) Q_DECL_FINAL {
         return (QtTdLibAbstractObject::isCompatibleWith (json) && json ["id"].toString () == m_id);
     }
-
-    template<class T> static T * create (const QJsonObject & json, QObject * parent) { return new T { json ["id"].toString (), parent }; }
 };
 
 namespace QtTdLibCollection {

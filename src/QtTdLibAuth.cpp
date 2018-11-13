@@ -5,17 +5,17 @@ QtTdLibAuthorizationState::QtTdLibAuthorizationState (const QtTdLibObjectType::T
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibAuthorizationState * QtTdLibAuthorizationState::create (const QJsonObject & json, QObject * parent) {
+QtTdLibAuthorizationState * QtTdLibAuthorizationState::createXXX (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
-        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_TDLIB_PARAMETERS: return new QtTdLibAuthorizationStateWaitTdlibParameters { parent };
-        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_ENCRYPTION_KEY:   return new QtTdLibAuthorizationStateWaitEncryptionKey   { parent };
-        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_PHONE_NUMBER:     return new QtTdLibAuthorizationStateWaitPhoneNumber     { parent };
-        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_CODE:             return new QtTdLibAuthorizationStateWaitCode            { parent };
-        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_PASSWORD:         return new QtTdLibAuthorizationStateWaitPassword        { parent };
-        case QtTdLibObjectType::AUTHORIZATION_STATE_READY:                 return new QtTdLibAuthorizationStateReady               { parent };
-        case QtTdLibObjectType::AUTHORIZATION_STATE_LOGGING_OUT:           return new QtTdLibAuthorizationStateLoggingOut          { parent };
-        case QtTdLibObjectType::AUTHORIZATION_STATE_CLOSING:               return new QtTdLibAuthorizationStateClosing             { parent };
-        case QtTdLibObjectType::AUTHORIZATION_STATE_CLOSED:                return new QtTdLibAuthorizationStateClosed              { parent };
+        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_TDLIB_PARAMETERS: return QtTdLibAuthorizationStateWaitTdlibParameters::create (json, parent);
+        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_ENCRYPTION_KEY:   return QtTdLibAuthorizationStateWaitEncryptionKey::create   (json, parent);
+        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_PHONE_NUMBER:     return QtTdLibAuthorizationStateWaitPhoneNumber::create     (json, parent);
+        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_CODE:             return QtTdLibAuthorizationStateWaitCode::create            (json, parent);
+        case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_PASSWORD:         return QtTdLibAuthorizationStateWaitPassword::create        (json, parent);
+        case QtTdLibObjectType::AUTHORIZATION_STATE_READY:                 return QtTdLibAuthorizationStateReady::create               (json, parent);
+        case QtTdLibObjectType::AUTHORIZATION_STATE_LOGGING_OUT:           return QtTdLibAuthorizationStateLoggingOut::create          (json, parent);
+        case QtTdLibObjectType::AUTHORIZATION_STATE_CLOSING:               return QtTdLibAuthorizationStateClosing::create             (json, parent);
+        case QtTdLibObjectType::AUTHORIZATION_STATE_CLOSED:                return QtTdLibAuthorizationStateClosed::create              (json, parent);
         default: return Q_NULLPTR;
     }
 }
@@ -37,7 +37,7 @@ QtTdLibAuthorizationStateWaitCode::QtTdLibAuthorizationStateWaitCode (QObject * 
 
 void QtTdLibAuthorizationStateWaitCode::updateFromJson (const QJsonObject & json) {
     set_isRegistered_withJSON  (json ["is_registered"]);
-    set_codeInfo_withJSON      (json ["code_info"], &QtTdLibAbstractObject::create<QtTdLibAuthenticationCodeInfo>);
+    set_codeInfo_withJSON      (json ["code_info"], &QtTdLibAuthenticationCodeInfo::create);
 }
 
 QtTdLibAuthorizationStateWaitPassword::QtTdLibAuthorizationStateWaitPassword (QObject * parent)
@@ -66,20 +66,20 @@ QtTdLibAuthenticationCodeInfo::QtTdLibAuthenticationCodeInfo (QObject * parent)
 
 void QtTdLibAuthenticationCodeInfo::updateFromJson (const QJsonObject & json) {
     set_timeout_withJSON  (json ["timeout"]);
-    set_type_withJSON     (json ["type"],      &QtTdLibAuthenticationCodeType::create);
-    set_nextType_withJSON (json ["next_type"], &QtTdLibAuthenticationCodeType::create);
+    set_type_withJSON     (json ["type"],      &QtTdLibAuthenticationCodeType::createXXX);
+    set_nextType_withJSON (json ["next_type"], &QtTdLibAuthenticationCodeType::createXXX);
 }
 
 QtTdLibAuthenticationCodeType::QtTdLibAuthenticationCodeType (const QtTdLibObjectType::Type typeOf, QObject * parent)
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibAuthenticationCodeType * QtTdLibAuthenticationCodeType::create (const QJsonObject & json, QObject * parent) {
+QtTdLibAuthenticationCodeType * QtTdLibAuthenticationCodeType::createXXX (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
-        case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_TELEGRAM_MESSAGE: return new QtTdLibAuthenticationCodeTypeTelegramMessage { parent };
-        case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_SMS:              return new QtTdLibAuthenticationCodeTypeSms             { parent };
-        case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_CALL:             return new QtTdLibAuthenticationCodeTypeCall            { parent };
-        case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_FLASH_CALL:       return new QtTdLibAuthenticationCodeTypeFlashCall       { parent };
+        case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_TELEGRAM_MESSAGE: return QtTdLibAuthenticationCodeTypeTelegramMessage::create (json, parent);
+        case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_SMS:              return QtTdLibAuthenticationCodeTypeSms::create             (json, parent);
+        case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_CALL:             return QtTdLibAuthenticationCodeTypeCall::create            (json, parent);
+        case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_FLASH_CALL:       return QtTdLibAuthenticationCodeTypeFlashCall::create       (json, parent);
         default: return Q_NULLPTR;
     }
 }

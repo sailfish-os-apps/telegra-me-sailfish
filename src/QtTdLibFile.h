@@ -3,7 +3,7 @@
 
 #include "QtTdLibCommon.h"
 
-class QtTdLibLocalFile : public QtTdLibAbstractObject {
+class QtTdLibLocalFile : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibLocalFile> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING (path)
     Q_TDLIB_PROPERTY_BOOL   (canBeDownloaded)
@@ -19,7 +19,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibRemoteFile : public QtTdLibAbstractObject {
+class QtTdLibRemoteFile : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibRemoteFile> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING (id)
     Q_TDLIB_PROPERTY_BOOL   (isUploadingActive)
@@ -32,12 +32,12 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibFile : public QtTdLibAbstractInt32IdObject {
+class QtTdLibFile : public QtTdLibAbstractInt32IdObject, public FactoryInt32Id<QtTdLibFile> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (size)
     Q_TDLIB_PROPERTY_INT32     (expectedSize)
-    Q_TDLIB_PROPERTY_SUBOBJECT (local,    QtTdLibLocalFile)
-    Q_TDLIB_PROPERTY_SUBOBJECT (remote,  QtTdLibRemoteFile)
+    Q_TDLIB_PROPERTY_SUBOBJECT (local,   QtTdLibLocalFile)
+    Q_TDLIB_PROPERTY_SUBOBJECT (remote, QtTdLibRemoteFile)
 
 public:
     explicit QtTdLibFile (const qint32 id = 0, QObject * parent = Q_NULLPTR);

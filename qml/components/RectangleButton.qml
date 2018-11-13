@@ -9,15 +9,16 @@ MouseArea {
     implicitWidth: Theme.itemSizeSmall;
     implicitHeight: Theme.itemSizeSmall;
 
-    property int    size   : Theme.iconSizeMedium;
-    property bool   active : false;
-    property string icon   : "";
+    property int    size    : Theme.iconSizeMedium;
+    property bool   active  : false;
+    property bool   rounded : true;
+    property string icon    : "";
 
     Rectangle {
         color: (active || pressed ? Theme.highlightColor : Theme.primaryColor);
-        radius: Theme.paddingSmall;
+        radius: (rounded ? Theme.paddingSmall : 0);
         opacity: (active ? 0.35 : 0.15);
-        antialiasing: true;
+        antialiasing: rounded;
         anchors.fill: parent;
     }
     Image {

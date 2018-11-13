@@ -4,7 +4,7 @@
 #include "QtTdLibCommon.h"
 #include "QtTdLibFile.h"
 
-class QtTdLibProfilePhoto : public QtTdLibAbstractStrIdObject {
+class QtTdLibProfilePhoto : public QtTdLibAbstractStrIdObject, public FactoryStrId<QtTdLibProfilePhoto> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (big,   QtTdLibFile)
     Q_TDLIB_PROPERTY_SUBOBJECT (small, QtTdLibFile)
@@ -21,24 +21,24 @@ class QtTdLibLinkState : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibLinkState (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibLinkState * create (const QJsonObject & json, QObject * parent);
+    static QtTdLibLinkState * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibLinkStateNone : public QtTdLibLinkState {
+class QtTdLibLinkStateNone : public QtTdLibLinkState, public FactoryNoId<QtTdLibLinkStateNone> {
     Q_OBJECT
 
 public:
     explicit QtTdLibLinkStateNone (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibLinkStateKnowsPhoneNumber : public QtTdLibLinkState {
+class QtTdLibLinkStateKnowsPhoneNumber : public QtTdLibLinkState, public FactoryNoId<QtTdLibLinkStateKnowsPhoneNumber> {
     Q_OBJECT
 
 public:
     explicit QtTdLibLinkStateKnowsPhoneNumber (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibLinkStateIsContact : public QtTdLibLinkState {
+class QtTdLibLinkStateIsContact : public QtTdLibLinkState, public FactoryNoId<QtTdLibLinkStateIsContact> {
     Q_OBJECT
 
 public:
@@ -51,24 +51,24 @@ class QtTdLibUserType : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibUserType (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibUserType * create (const QJsonObject & json, QObject * parent);
+    static QtTdLibUserType * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserTypeRegular : public QtTdLibUserType {
+class QtTdLibUserTypeRegular : public QtTdLibUserType, public FactoryNoId<QtTdLibUserTypeRegular> {
     Q_OBJECT
 
 public:
     explicit QtTdLibUserTypeRegular (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserTypeDeleted : public QtTdLibUserType {
+class QtTdLibUserTypeDeleted : public QtTdLibUserType, public FactoryNoId<QtTdLibUserTypeDeleted> {
     Q_OBJECT
 
 public:
     explicit QtTdLibUserTypeDeleted (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserTypeBot : public QtTdLibUserType {
+class QtTdLibUserTypeBot : public QtTdLibUserType, public FactoryNoId<QtTdLibUserTypeBot> {
     Q_OBJECT
     //can_join_groups:Bool
     //can_read_all_group_messages:Bool
@@ -80,7 +80,7 @@ public:
     explicit QtTdLibUserTypeBot (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserTypeUnknown : public QtTdLibUserType {
+class QtTdLibUserTypeUnknown : public QtTdLibUserType, public FactoryNoId<QtTdLibUserTypeUnknown> {
     Q_OBJECT
 
 public:
@@ -93,17 +93,17 @@ class QtTdLibUserStatus : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibUserStatus (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibUserStatus * create (const QJsonObject & json, QObject * parent);
+    static QtTdLibUserStatus * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserStatusEmpty : public QtTdLibUserStatus {
+class QtTdLibUserStatusEmpty : public QtTdLibUserStatus, public FactoryNoId<QtTdLibUserStatusEmpty> {
     Q_OBJECT
 
 public:
     explicit QtTdLibUserStatusEmpty (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserStatusOnline : public QtTdLibUserStatus {
+class QtTdLibUserStatusOnline : public QtTdLibUserStatus, public FactoryNoId<QtTdLibUserStatusOnline> {
     Q_OBJECT
     //expires:int32
 
@@ -111,7 +111,7 @@ public:
     explicit QtTdLibUserStatusOnline (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserStatusOffline : public QtTdLibUserStatus {
+class QtTdLibUserStatusOffline : public QtTdLibUserStatus, public FactoryNoId<QtTdLibUserStatusOffline> {
     Q_OBJECT
     //was_online:int32
 
@@ -119,28 +119,28 @@ public:
     explicit QtTdLibUserStatusOffline (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserStatusRecently : public QtTdLibUserStatus {
+class QtTdLibUserStatusRecently : public QtTdLibUserStatus, public FactoryNoId<QtTdLibUserStatusRecently> {
     Q_OBJECT
 
 public:
     explicit QtTdLibUserStatusRecently (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserStatusLastWeek : public QtTdLibUserStatus {
+class QtTdLibUserStatusLastWeek : public QtTdLibUserStatus, public FactoryNoId<QtTdLibUserStatusLastWeek> {
     Q_OBJECT
 
 public:
     explicit QtTdLibUserStatusLastWeek (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUserStatusLastMonth : public QtTdLibUserStatus {
+class QtTdLibUserStatusLastMonth : public QtTdLibUserStatus, public FactoryNoId<QtTdLibUserStatusLastMonth> {
     Q_OBJECT
 
 public:
     explicit QtTdLibUserStatusLastMonth (QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibUser : public QtTdLibAbstractInt32IdObject {
+class QtTdLibUser : public QtTdLibAbstractInt32IdObject, public FactoryInt32Id<QtTdLibUser> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING    (phoneNumber)
     Q_TDLIB_PROPERTY_STRING    (username)

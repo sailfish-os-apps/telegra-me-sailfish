@@ -19,21 +19,23 @@ Page {
 
     property TD_Chat currentChat : null;
 
-    property TD_LocalFile currentMedia : null;
-
-    property var selectedImagesUrls : ([]);
+    property TD_MessageContent currentMessageContent : null;
 
     property bool groupImagesInAlbums : true;
+    property bool groupVideosInAlbums : true;
+
+    property string currentRecording : "";
 
     readonly property var msgTypes : ({
                                           "MSGTYPE_01_TEXT"    : { "label" : qsTr ("Text message"),        "type" : TD_ObjectType.MESSAGE_TEXT,       "icon" : "icon-m-text-input" },
-                                          "MSGTYPE_02_ALBUM"   : { "label" : qsTr ("Photo/Video (album)"), "type" : TD_ObjectType.MESSAGE_PHOTO,      "icon" : "icon-m-camera" },
-                                          "MSGTYPE_03_MUSIC"   : { "label" : qsTr ("Music"),               "type" : TD_ObjectType.MESSAGE_AUDIO,      "icon" : "icon-m-music" },
-                                          "MSGTYPE_04_STICKER" : { "label" : qsTr ("Sticker"),             "type" : TD_ObjectType.MESSAGE_STICKER,    "icon" : "icon-m-other" },
-                                          "MSGTYPE_05_ANIM"    : { "label" : qsTr ("GIF animation"),       "type" : TD_ObjectType.MESSAGE_ANIMATION,  "icon" : "icon-m-media" },
-                                          "MSGTYPE_06_VOICE"   : { "label" : qsTr ("Voice note"),          "type" : TD_ObjectType.MESSAGE_VOICE_NOTE, "icon" : "icon-m-mic" },
-                                          "MSGTYPE_07_BUBBLE"  : { "label" : qsTr ("Video bubble"),        "type" : TD_ObjectType.MESSAGE_VIDEO_NOTE, "icon" : "icon-m-video" },
-                                          "MSGTYPE_08_FILE"    : { "label" : qsTr ("File transfer"),       "type" : TD_ObjectType.MESSAGE_DOCUMENT,   "icon" : "icon-m-attach" },
+                                          "MSGTYPE_02_PHOTO"   : { "label" : qsTr ("Photo (album)"),       "type" : TD_ObjectType.MESSAGE_PHOTO,      "icon" : "icon-m-camera" },
+                                          "MSGTYPE_03_VIDEO"   : { "label" : qsTr ("Video"),               "type" : TD_ObjectType.MESSAGE_VIDEO,      "icon" : "icon-m-video" },
+                                          "MSGTYPE_04_MUSIC"   : { "label" : qsTr ("Music"),               "type" : TD_ObjectType.MESSAGE_AUDIO,      "icon" : "icon-m-music" },
+                                          "MSGTYPE_05_STICKER" : { "label" : qsTr ("Sticker"),             "type" : TD_ObjectType.MESSAGE_STICKER,    "icon" : "icon-m-other" },
+                                          "MSGTYPE_06_ANIM"    : { "label" : qsTr ("GIF animation"),       "type" : TD_ObjectType.MESSAGE_ANIMATION,  "icon" : "icon-m-favorite" },
+                                          "MSGTYPE_07_VOICE"   : { "label" : qsTr ("Voice note"),          "type" : TD_ObjectType.MESSAGE_VOICE_NOTE, "icon" : "icon-m-mic" },
+                                          "MSGTYPE_08_BUBBLE"  : { "label" : qsTr ("Video bubble"),        "type" : TD_ObjectType.MESSAGE_VIDEO_NOTE, "icon" : "icon-m-play" },
+                                          "MSGTYPE_09_FILE"    : { "label" : qsTr ("File transfer"),       "type" : TD_ObjectType.MESSAGE_DOCUMENT,   "icon" : "icon-m-attach" },
                                       });
 
     function downloadFile (fileItem) {
@@ -41,6 +43,14 @@ Page {
                             "@type" : "downloadFile",
                             "file_id" : fileItem.id,
                             "priority" : 1,
+                        });
+    }
+
+    function cancelDownloadFile (fileItem) {
+        TD_Global.send ({
+                            "@type" : "cancelDownloadFile",
+                            "file_id" : fileItem.id,
+                            "only_if_pending" : false,
                         });
     }
 
@@ -150,7 +160,7 @@ Page {
                     downloadFile (fileItem); // START DOWNLOAD
                 }
                 else if (localFileItem.canBeDownloaded && localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // DOWNLOADING
-                    // TODO : STOP DOWNLOAD ?
+                    cancelDownloadFile (fileItem); // CANCEL DOWNLOAD
                 }
                 else if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && localFileItem.isDownloadingCompleted) { // DOWNLOADED
                     Qt.openUrlExternally (TD_Global.urlFromLocalPath (localFileItem.path));  // OPEN FILE
@@ -263,63 +273,37 @@ Page {
 
             property TD_MessageVideo messageContentItem : null;
 
-            readonly property TD_Video     videoItem     : (messageContentItem ? messageContentItem.video : null);
-            readonly property TD_File      fileItem      : (videoItem          ? videoItem.video          : null);
-            readonly property TD_LocalFile localFileItem : (fileItem           ? fileItem.local           : null);
-            readonly property TD_PhotoSize photoSizeItem : (videoItem          ? videoItem.thumbnail      : null);
+            readonly property TD_FormattedText captionItem   : (messageContentItem  ? messageContentItem.caption : null);
+            readonly property TD_Video         videoItem     : (messageContentItem  ? messageContentItem.video   : null);
+            readonly property TD_PhotoSize     photoSizeItem : (videoItem           ? videoItem.thumbnail        : null);
 
+            HelperFileState {
+                id: helperMsgVideoFile;
+                fileItem: (delegateMsgVideo.videoItem ? delegateMsgVideo.videoItem.video : null)
+            }
             Label {
                 text: (delegateMsgVideo.captionItem ? delegateMsgVideo.captionItem.text : "");
                 visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 ExtraAnchors.horizontalFill: parent;
             }
-            MouseArea {
-                width: (delegateMsgVideo.videoItem ? Math.min (delegateMsgVideo.videoItem.width, delegateMsgVideo.width) : 1);
-                Container.forcedHeight: (delegateMsgVideo.videoItem ? delegateMsgVideo.videoItem.height * width / delegateMsgVideo.videoItem.width : 1);
-                onClicked: {
-                    if (delegateMsgVideo.localFileItem) {
-                        if (delegateMsgVideo.localFileItem.canBeDownloaded && !delegateMsgVideo.localFileItem.isDownloadingActive && !delegateMsgVideo.localFileItem.isDownloadingCompleted) {
-                            downloadFile (delegateMsgVideo.fileItem); // START DOWNLOAD
+            ColumnContainer {
+                MouseArea {
+                    implicitWidth: (delegateMsgVideo.videoItem ? Math.min (delegateMsgVideo.videoItem.width, delegateMsgVideo.width) : 1);
+                    Container.forcedHeight: (delegateMsgVideo.videoItem ? delegateMsgVideo.videoItem.height * implicitWidth / delegateMsgVideo.videoItem.width : 1);
+                    onClicked: {
+                        if (helperMsgVideoFile.downloadable && !helperMsgVideoFile.downloading && !helperMsgVideoFile.downloaded) {
+                            helperMsgVideoFile.tryDownload (true); // START DOWNLOAD
                         }
-                        else if (delegateMsgVideo.localFileItem.isDownloadingCompleted) {
-                            currentMedia = delegateMsgVideo.localFileItem;
+                        else if (helperMsgVideoFile.downloadable && helperMsgVideoFile.downloading && !helperMsgVideoFile.downloaded) {
+                            helperMsgVideoFile.cancelDownload (); // CANCEL DOWNLOAD
                         }
-                    }
-                }
-
-                DelegateDownloadableImage {
-                    fileItem: (delegateMsgVideo.photoSizeItem ? delegateMsgVideo.photoSizeItem.photo : null);
-                    anchors.fill: parent;
-                }
-                Image {
-                    source: "image://theme/icon-m-play?#FFFFFF";
-                    visible: (delegateMsgVideo.localFileItem && delegateMsgVideo.localFileItem.isDownloadingCompleted);
-                    anchors.centerIn: parent;
-                }
-                Loader {
-                    active: (currentMedia && delegateMsgVideo.localFileItem && currentMedia === delegateMsgVideo.localFileItem);
-                    sourceComponent: Video {
-                        id: playerVideo;
-                        smooth: true;
-                        source: (delegateMsgVideo.localFileItem && delegateMsgVideo.localFileItem.path !== ""
-                                 ? TD_Global.urlFromLocalPath (delegateMsgVideo.localFileItem.path)
-                                 : "");
-                        autoLoad: true;
-                        autoPlay: true;
-                        fillMode: VideoOutput.PreserveAspectFit;
-                        antialiasing: true;
-                        anchors.fill: parent;
-
-                        Image {
-                            source: "image://theme/icon-m-play?#FFFFFF";
-                            visible: (playerVideo.playbackState !== MediaPlayer.PlayingState);
-                            anchors.centerIn: parent;
-                        }
-                        MouseArea {
-                            anchors.fill: parent;
-                            onClicked: {
-                                if (playerVideo.playbackState === MediaPlayer.PlayingState) {
+                        else if (helperMsgVideoFile.downloaded) {
+                            if (currentMessageContent !== delegateMsgVideo.messageContentItem) {
+                                currentMessageContent = delegateMsgVideo.messageContentItem;
+                            }
+                            else {
+                                if (playerVideo.playing) {
                                     playerVideo.pause ();
                                 }
                                 else {
@@ -327,29 +311,49 @@ Page {
                                 }
                             }
                         }
-                        Rectangle {
-                            color: Theme.highlightColor;
-                            implicitWidth: (playerVideo.duration > 0 ? parent.width * playerVideo.position / playerVideo.duration : 0);
-                            implicitHeight: Theme.paddingSmall;
-                            ExtraAnchors.bottomLeftCorner: parent;
-                        }
                     }
-                    anchors.fill: parent;
+
+                    DelegateDownloadableImage {
+                        fileItem: (delegateMsgVideo.photoSizeItem ? delegateMsgVideo.photoSizeItem.photo : null);
+                        anchors.fill: parent;
+                    }
+                    WrapperVideoPlayer {
+                        id: playerVideo;
+                        source: helperMsgVideoFile.url;
+                        active: (currentMessageContent && delegateMsgVideo.messageContentItem && currentMessageContent === delegateMsgVideo.messageContentItem);
+                        autoLoad: true;
+                        autoPlay: true;
+                        anchors.fill: parent;
+                    }
+                    Image {
+                        source: ((helperMsgVideoFile.downloadable && !helperMsgVideoFile.downloading && !helperMsgVideoFile.downloaded)
+                                 ? "image://theme/icon-m-cloud-download?#808080"
+                                 : ((helperMsgVideoFile.downloaded && !playerVideo.playing)
+                                    ? "image://theme/icon-m-play?#808080"
+                                    : ""));
+                        anchors.centerIn: parent;
+                    }
+                    ProgressCircle {
+                        value: helperMsgVideoFile.progress;
+                        visible: (helperMsgVideoFile.downloading || helperMsgVideoFile.uploading);
+                        implicitWidth: BusyIndicatorSize.Large;
+                        implicitHeight: BusyIndicatorSize.Large;
+                        anchors.centerIn: parent;
+                    }
                 }
-                Image {
-                    source: "image://theme/icon-m-cloud-download?#FFFFFF";
-                    visible: (delegateMsgVideo.localFileItem &&
-                              delegateMsgVideo.localFileItem.canBeDownloaded &&
-                              !delegateMsgVideo.localFileItem.isDownloadingActive &&
-                              !delegateMsgVideo.localFileItem.isDownloadingCompleted);
-                    anchors.centerIn: parent;
-                }
-                ProgressCircle {
-                    value: (delegateMsgVideo.localFileItem ? delegateMsgVideo.localFileItem.downloadedSize / Math.max (delegateMsgVideo.fileItem.size, 1) : 0);
-                    visible: (delegateMsgVideo.localFileItem && delegateMsgVideo.localFileItem.isDownloadingActive);
-                    implicitWidth: BusyIndicatorSize.Large;
-                    implicitHeight: BusyIndicatorSize.Large;
-                    anchors.centerIn: parent;
+                Item {
+                    implicitHeight: Theme.paddingSmall;
+                    ExtraAnchors.horizontalFill: parent;
+
+                    Rectangle {
+                        color: Theme.secondaryColor;
+                        anchors.fill: parent;
+                    }
+                    Rectangle {
+                        color: Theme.highlightColor;
+                        implicitWidth: (parent.width * playerVideo.progress);
+                        ExtraAnchors.leftDock: parent;
+                    }
                 }
             }
         }
@@ -412,8 +416,11 @@ Page {
                             if (delegateMsgAudio.localFileItem.canBeDownloaded && !delegateMsgAudio.localFileItem.isDownloadingActive && !delegateMsgAudio.localFileItem.isDownloadingCompleted) {
                                 downloadFile (delegateMsgAudio.fileItem); // START DOWNLOAD
                             }
+                            else if (delegateMsgAudio.localFileItem.canBeDownloaded && delegateMsgAudio.localFileItem.isDownloadingActive && !delegateMsgAudio.localFileItem.isDownloadingCompleted) {
+                                cancelDownloadFile (delegateMsgAudio.fileItem); // CANCEL DOWNLOAD
+                            }
                             else if (delegateMsgAudio.localFileItem.isDownloadingCompleted) {
-                                currentMedia = delegateMsgAudio.localFileItem;
+                                currentMessageContent = delegateMsgAudio.localFileItem;
                             }
                         }
                     }
@@ -432,11 +439,11 @@ Page {
                     }
                     Image {
                         source: "image://theme/icon-m-play?#FFFFFF";
-                        visible: (currentMedia !== delegateMsgAudio.localFileItem && delegateMsgAudio.localFileItem.isDownloadingCompleted);
+                        visible: (currentMessageContent !== delegateMsgAudio.localFileItem && delegateMsgAudio.localFileItem.isDownloadingCompleted);
                         anchors.centerIn: parent;
                     }
                     Loader {
-                        active: (currentMedia && delegateMsgAudio.localFileItem && currentMedia === delegateMsgAudio.localFileItem);
+                        active: (currentMessageContent && delegateMsgAudio.localFileItem && currentMessageContent === delegateMsgAudio.localFileItem);
                         sourceComponent: MouseArea {
                             onClicked: {
                                 if (playerAudio.playbackState === MediaPlayer.PlayingState) {
@@ -647,6 +654,8 @@ Page {
             property real progress  : 0.0;
             property int  remaining : 0;
 
+            signal seekRequested (real ratio);
+
             Label {
                 text: (delegateMsgVoiceNote.captionItem ? delegateMsgVoiceNote.captionItem.text : "");
                 visible: (text !== "");
@@ -663,13 +672,14 @@ Page {
                     anchors.verticalCenter: parent.verticalCenter;
                     onClicked: {
                         if (delegateMsgVoiceNote.localFileItem) {
-                            if (delegateMsgVoiceNote.localFileItem.canBeDownloaded &&
-                                    !delegateMsgVoiceNote.localFileItem.isDownloadingActive &&
-                                    !delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
+                            if (delegateMsgVoiceNote.localFileItem.canBeDownloaded && !delegateMsgVoiceNote.localFileItem.isDownloadingActive && !delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
                                 downloadFile (delegateMsgVoiceNote.fileItem); // START DOWNLOAD
                             }
+                            else if (delegateMsgVoiceNote.localFileItem.canBeDownloaded && delegateMsgVoiceNote.localFileItem.isDownloadingActive && !delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
+                                cancelDownloadFile (delegateMsgVoiceNote.fileItem); // CANCEL DOWNLOAD
+                            }
                             else if (delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
-                                currentMedia = delegateMsgVoiceNote.localFileItem;
+                                currentMessageContent = delegateMsgVoiceNote.localFileItem;
                             }
                         }
                     }
@@ -681,7 +691,7 @@ Page {
                         anchors.fill: parent;
                     }
                     Loader {
-                        active: (currentMedia && delegateMsgVoiceNote.localFileItem && currentMedia === delegateMsgVoiceNote.localFileItem);
+                        active: (currentMessageContent && delegateMsgVoiceNote.localFileItem && currentMessageContent === delegateMsgVoiceNote.localFileItem);
                         sourceComponent: MouseArea {
                             anchors.fill: parent;
                             onClicked: {
@@ -706,6 +716,13 @@ Page {
                                          : "");
                                 autoLoad: true;
                                 autoPlay: true;
+                                Component.onCompleted: {
+                                    delegateMsgVoiceNote.seekRequested.connect (function (ratio) {
+                                        if (ratio >= 0.0 && ratio <= 1.0) {
+                                            seek (Math.round (ratio * duration));
+                                        }
+                                    });
+                                }
                             }
                             Binding {
                                 target: delegateMsgVoiceNote;
@@ -729,9 +746,9 @@ Page {
                         source: "image://theme/icon-m-play?#FFFFFF";
                         visible: (delegateMsgVoiceNote.localFileItem &&
                                   delegateMsgVoiceNote.localFileItem.isDownloadingCompleted &&
-                                  (!currentMedia ||
+                                  (!currentMessageContent ||
                                    !delegateMsgVoiceNote.localFileItem ||
-                                   currentMedia !== delegateMsgVoiceNote.localFileItem));
+                                   currentMessageContent !== delegateMsgVoiceNote.localFileItem));
                         anchors.centerIn: parent;
                     }
                     ProgressCircle {
@@ -760,6 +777,13 @@ Page {
                     RowContainer {
                         spacing: 1;
 
+                        MouseArea {
+                            anchors.fill: parent;
+                            Container.ignored: true;
+                            onClicked: {
+                                delegateMsgVoiceNote.seekRequested (mouse.x / width);
+                            }
+                        }
                         Repeater {
                             model: (delegateMsgVoiceNote.voiceNoteItem && delegateMsgVoiceNote.voiceNoteItem.waveform !== ""
                                     ? TD_Global.parseWaveform (delegateMsgVoiceNote.voiceNoteItem.waveform)
@@ -768,13 +792,14 @@ Page {
                                 color: ((model.index / 100) <= delegateMsgVoiceNote.progress ? Theme.highlightColor : Theme.secondaryColor);
                                 implicitWidth: 3;
                                 implicitHeight: (modelData * 2);
-                                anchors.bottom: parent.bottom;
+                                anchors.verticalCenter: parent.verticalCenter;
                             }
                         }
                         Rectangle {
                             color: Theme.primaryColor;
                             implicitHeight: 1;
-                            ExtraAnchors.bottomDock: parent;
+                            anchors.verticalCenter: parent.verticalCenter;
+                            ExtraAnchors.horizontalFill: parent;
 
                             Rectangle {
                                 color: Theme.highlightColor;
@@ -961,6 +986,7 @@ Page {
                 }
             }
         }
+        VerticalScrollDecorator { flickable: parent; }
     }
     Item {
         id: footerChat;
@@ -1004,26 +1030,7 @@ Page {
                     onClicked: {
                         var tmp = inputMsg.text.trim ();
                         if (tmp !== "") {
-                            TD_Global.send ({
-                                                "@type" : "sendMessage",
-                                                "chat_id" : currentChat.id,
-                                                "reply_to_message_id" : 0,
-                                                "disable_notification" : false,
-                                                "from_background" : false,
-                                                "reply_markup" : null,
-                                                "input_message_content" : {
-                                                    "@type" : "inputMessageText",
-                                                    "disable_web_page_preview" : false,
-                                                    "clear_draft" : false,
-                                                    "text" :  TD_Global.exec ({
-                                                                                  "@type" : "parseTextEntities",
-                                                                                  "text" : tmp,
-                                                                                  "parse_mode" : {
-                                                                                      "@type" : "textParseModeMarkdown",
-                                                                                  }
-                                                                              })
-                                                }
-                                            });
+                            TD_Global.sendMessageText (currentChat, tmp);
                             flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
                         }
                         inputMsg.text = "";
@@ -1031,19 +1038,19 @@ Page {
                 }
             }
             RowContainer {
-                visible: (currentMsgType === "MSGTYPE_02_ALBUM");
+                visible: (currentMsgType === "MSGTYPE_02_PHOTO");
                 spacing: Theme.paddingMedium;
                 anchors.margins: Theme.paddingSmall;
                 Container.forcedHeight: (implicitHeight + anchors.margins * 2);
                 ExtraAnchors.horizontalFill: parent;
 
                 Label {
-                    text: (selectedImagesUrls.length > 0
+                    text: (TD_Global.selectedPhotosCount > 0
                            ? (groupImagesInAlbums
-                              ? qsTr ("Send %1 images as an album").arg (selectedImagesUrls.length)
-                              : qsTr ("Send %1 images separately").arg (selectedImagesUrls.length))
+                              ? qsTr ("Send %1 images as an album").arg (TD_Global.selectedPhotosCount)
+                              : qsTr ("Send %1 images separately").arg (TD_Global.selectedPhotosCount))
                            : qsTr ("No image selected"));
-                    color: (selectedImagesUrls.length > 0 ? Theme.highlightColor : Theme.secondaryColor);
+                    color: (TD_Global.selectedPhotosCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
                     anchors.verticalCenter: parent.verticalCenter;
                     Container.horizontalStretch: 1;
                 }
@@ -1061,34 +1068,35 @@ Page {
                 RectangleButton {
                     icon: "icon-m-enter";
                     size: Theme.iconSizeMedium;
-                    enabled: (selectedImagesUrls.length > 0);
+                    enabled: (TD_Global.selectedPhotosCount > 0);
                     implicitWidth: Theme.itemSizeSmall;
                     implicitHeight: Theme.itemSizeSmall;
                     anchors.verticalCenter: parent.verticalCenter;
                     onClicked: {
-                        if (selectedImagesUrls.length > 0) {
-                            TD_Global.sendMessagePhoto (selectedImagesUrls, currentChat, groupImagesInAlbums);
+                        if (TD_Global.selectedPhotosCount > 0) {
+                            TD_Global.sendMessagePhoto (currentChat, groupImagesInAlbums);
+                            TD_Global.unselectAllPhotos ();
                             flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
                         }
-                        selectedImagesUrls = [];
                     }
                 }
             }
             RowContainer {
-                visible: (currentMsgType === "MSGTYPE_02_ALBUM");
+                visible: (currentMsgType === "MSGTYPE_02_PHOTO");
                 anchors.margins: 1;
                 ExtraAnchors.horizontalFill: parent;
                 Container.forcedHeight: (Theme.itemSizeHuge * 2);
 
-                GridView {
+                SilicaGridView {
                     clip: true;
                     cellWidth: (width / 4);
                     cellHeight: cellWidth;
+                    quickScroll: true;
                     anchors.fill: parent;
                     model: DocumentGalleryModel {
                         id: galleryModel;
                         rootType: DocumentGallery.Image;
-                        properties: ["url", "dateTaken"];
+                        properties: ["url", "filePath", "dateTaken", "mimeType", "width", "height"];
                         autoUpdate: true;
                         sortProperties: ["-dateTaken"];
                     }
@@ -1097,27 +1105,28 @@ Page {
                         implicitWidth: GridView.view.cellWidth;
                         implicitHeight: GridView.view.cellHeight;
                         onClicked: {
-                            var tmp = selectedImagesUrls;
-                            if (idx < 0) {
-                                tmp.push (model.url);
+                            if (selected) {
+                                TD_Global.deselectPhoto (model.filePath);
                             }
                             else {
-                                tmp.splice (idx, 1);
+                                TD_Global.selectPhoto (model.filePath, model.width, model.height);
                             }
-                            selectedImagesUrls = tmp;
                         }
 
-                        readonly property int idx : selectedImagesUrls.indexOf (model.url);
+                        readonly property bool selected : (TD_Global.selectedPhotosCount > 0 && TD_Global.isPhotoSelected (model.filePath));
 
-                        Thumbnail {
-                            source: model.url;
+                        Image {
+                            cache: false;
+                            source: ("image://nemoThumbnail/" + model.url);
+                            fillMode: Image.PreserveAspectCrop;
                             sourceSize: Qt.size (width, height);
+                            asynchronous: true;
                             anchors.fill: parent;
                             anchors.margins: 1;
 
                             Rectangle {
                                 color: "transparent";
-                                visible: (delegatePhoto.idx >= 0);
+                                visible: delegatePhoto.selected;
                                 border {
                                     width: 3;
                                     color: Theme.highlightColor;
@@ -1130,30 +1139,222 @@ Page {
                     VerticalScrollDecorator { flickable: parent; }
                 }
             }
+            RowContainer {
+                visible: (currentMsgType === "MSGTYPE_03_VIDEO");
+                spacing: Theme.paddingMedium;
+                anchors.margins: Theme.paddingSmall;
+                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                ExtraAnchors.horizontalFill: parent;
+
+                Label {
+                    text: (TD_Global.selectedVideosCount > 0
+                           ? (groupVideosInAlbums
+                              ? qsTr ("Send %1 videos as an album").arg (TD_Global.selectedVideosCount)
+                              : qsTr ("Send %1 videos separately").arg (TD_Global.selectedVideosCount))
+                           : qsTr ("No video selected"));
+                    color: (TD_Global.selectedVideosCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
+                    anchors.verticalCenter: parent.verticalCenter;
+                    Container.horizontalStretch: 1;
+                }
+                RectangleButton {
+                    icon: "icon-m-levels";
+                    size: Theme.iconSizeMedium;
+                    active: groupVideosInAlbums;
+                    implicitWidth: Theme.itemSizeSmall;
+                    implicitHeight: Theme.itemSizeSmall;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        groupVideosInAlbums = !groupVideosInAlbums;
+                    }
+                }
+                RectangleButton {
+                    icon: "icon-m-enter";
+                    size: Theme.iconSizeMedium;
+                    enabled: (TD_Global.selectedVideosCount > 0);
+                    implicitWidth: Theme.itemSizeSmall;
+                    implicitHeight: Theme.itemSizeSmall;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        if (TD_Global.selectedVideosCount > 0) {
+                            TD_Global.sendMessageVideo (currentChat, groupVideosInAlbums);
+                            TD_Global.unselectAllVideos ();
+                            flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
+                        }
+                    }
+                }
+            }
+            RowContainer {
+                visible: (currentMsgType === "MSGTYPE_03_VIDEO");
+                anchors.margins: 1;
+                ExtraAnchors.horizontalFill: parent;
+                Container.forcedHeight: (Theme.itemSizeHuge * 2);
+
+                SilicaGridView {
+                    clip: true;
+                    cellWidth: (width / 4);
+                    cellHeight: cellWidth;
+                    quickScroll: true;
+                    anchors.fill: parent;
+                    model: DocumentGalleryModel {
+                        id: galleryModelVideo;
+                        rootType: DocumentGallery.Video;
+                        properties: ["url", "filePath", "dateTaken", "mimeType", "width", "height", "duration"];
+                        autoUpdate: true;
+                        sortProperties: ["-dateTaken"];
+                    }
+                    delegate: MouseArea {
+                        id: delegateVideoSelect;
+                        implicitWidth: GridView.view.cellWidth;
+                        implicitHeight: GridView.view.cellHeight;
+                        onClicked: {
+                            if (selected) {
+                                TD_Global.deselectVideo (model.filePath);
+                            }
+                            else {
+                                TD_Global.selectVideo (model.filePath, model.width, model.height, model.duration);
+                            }
+                        }
+
+                        readonly property bool selected : (TD_Global.selectedVideosCount > 0 && TD_Global.isVideoSelected (model.filePath));
+
+                        Rectangle {
+                            color: Theme.secondaryColor;
+                            anchors.fill: parent;
+                            anchors.margins: 1;
+
+                            Thumbnail {
+                                source: model.url;
+                                mimeType: model.mimeType;
+                                fillMode: Thumbnail.PreserveAspectCrop;
+                                sourceSize: Qt.size (width, height);
+                                anchors.fill: parent;
+                            }
+                            Rectangle {
+                                color: "transparent";
+                                visible: delegateVideoSelect.selected;
+                                border {
+                                    width: 3;
+                                    color: Theme.highlightColor;
+                                }
+                                anchors.fill: parent;
+                            }
+                            Image {
+                                source: "image://theme/icon-m-video?#808080";
+                                sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
+                                anchors.margins: Theme.paddingSmall;
+                                ExtraAnchors.bottomLeftCorner: parent;
+                            }
+                            Label {
+                                text: TD_Global.formatTime (model.duration * 1000, true);
+                                color: "gray";
+                                font.pixelSize: Theme.fontSizeExtraSmall;
+                                anchors.margins: Theme.paddingSmall;
+                                ExtraAnchors.bottomRightCorner: parent;
+                            }
+                        }
+                    }
+
+                    VerticalScrollDecorator { flickable: parent; }
+                }
+            }
+            RowContainer {
+                visible: (currentMsgType === "MSGTYPE_07_VOICE");
+                spacing: Theme.paddingMedium;
+                anchors.margins: Theme.paddingSmall;
+                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                ExtraAnchors.horizontalFill: parent;
+
+                RectangleButton {
+                    id: btnRecord;
+                    icon: "icon-m-call-recording-on";
+                    enabled: !btnReplay.active;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onPressed: {
+                        active = TD_Global.startRecordingAudio ();
+                        if (active) {
+                            currentRecording = "";
+                        }
+                        console.log ("RECORDING STARTED", active);
+                    }
+                    onReleased: {
+                        if (active) {
+                            active = false;
+                            currentRecording = TD_Global.stopRecordingAudio ();
+                            console.log ("RECORDING STOPPED", currentRecording);
+                        }
+                    }
+                }
+                RectangleButton {
+                    id: btnReplay;
+                    icon: "icon-m-play";
+                    active: (playerRecording.playbackState === MediaPlayer.PlayingState);
+                    enabled: (currentRecording !== "");
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        if (playerRecording.playbackState !== MediaPlayer.PlayingState) {
+                            playerRecording.source = TD_Global.urlFromLocalPath (currentRecording);
+                            playerRecording.seek (0);
+                            playerRecording.play ();
+                        }
+                        else {
+                            playerRecording.stop ();
+                            playerRecording.source = "";
+                        }
+                    }
+
+                    MediaPlayer {
+                        id: playerRecording;
+                        autoLoad: true;
+                        autoPlay: true;
+                    }
+                }
+                Label {
+                    text: (btnRecord.active
+                           ? qsTr ("Recording (%1)").arg (TD_Global.formatTime (TD_Global.recordingDuration, false))
+                           : (currentRecording !== ""
+                              ? ((playerRecording.playbackState === MediaPlayer.PlayingState)
+                                 ? qsTr ("Replaying (%1/%2)").arg (TD_Global.formatTime (playerRecording.position, false)).arg (TD_Global.formatTime (playerRecording.duration, false))
+                                 : qsTr ("Send recording (%1)").arg (TD_Global.formatTime (TD_Global.recordingDuration, false)))
+                              : qsTr ("Idle")));
+                    color: ((btnRecord.active || btnReplay.active)
+                            ? Theme.highlightColor
+                            : (currentRecording !== ""
+                               ? Theme.primaryColor
+                               : Theme.secondaryColor));
+                    anchors.verticalCenter: parent.verticalCenter;
+                    Container.horizontalStretch: 1;
+                }
+                RectangleButton {
+                    icon: "icon-m-enter";
+                    size: Theme.iconSizeMedium;
+                    enabled: (currentRecording !== "" && !btnRecord.active && !btnReplay.active);
+                    implicitWidth: Theme.itemSizeSmall;
+                    implicitHeight: Theme.itemSizeSmall;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        TD_Global.sendMessageVoiceNote (currentChat, currentRecording);
+                        currentRecording = "";
+                    }
+                }
+            }
             GridContainer {
                 id: selectorMsgType;
                 cols: capacity;
-                capacity: layoutItemsCount;
+                capacity: repeaterModes.count;
                 horizontalSpacing: 1;
                 ExtraAnchors.horizontalFill: parent;
                 Container.forcedHeight: (Theme.itemSizeSmall * 0.85);
 
                 Repeater {
+                    id: repeaterModes;
                     model: Object.getOwnPropertyNames (msgTypes);
-                    delegate: MouseArea {
+                    delegate: RectangleButton {
+                        size: Theme.iconSizeMedium;
+                        icon: msgTypes [modelData]["icon"];
+                        active: (currentMsgType === modelData);
+                        rounded: false;
                         onClicked: {
                             currentMsgType = modelData;
-                        }
-
-                        Rectangle {
-                            color: (currentMsgType === modelData ? Theme.highlightColor : Theme.primaryColor);
-                            opacity: 0.05;
-                            anchors.fill: parent;
-                        }
-                        Image {
-                            source: "image://theme/%1?%2".arg (msgTypes [modelData]["icon"]).arg (currentMsgType === modelData ? Theme.highlightColor : Theme.primaryColor);
-                            sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
-                            anchors.centerIn: parent;
                         }
                     }
                 }

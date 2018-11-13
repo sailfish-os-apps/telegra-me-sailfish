@@ -35,6 +35,6 @@ QtTdLibFile::QtTdLibFile (const qint32 id, QObject * parent)
 void QtTdLibFile::updateFromJson (const QJsonObject & json) {
     set_size_withJSON          (json ["size"]);
     set_expectedSize_withJSON  (json ["expected_size"]);
-    set_local_withJSON         (json ["local"],  &QtTdLibAbstractObject::create<QtTdLibLocalFile>);
-    set_remote_withJSON        (json ["remote"], &QtTdLibAbstractObject::create<QtTdLibRemoteFile>);
+    set_local_withJSON         (json ["local"],  &QtTdLibLocalFile::create);
+    set_remote_withJSON        (json ["remote"], &QtTdLibRemoteFile::create);
 }

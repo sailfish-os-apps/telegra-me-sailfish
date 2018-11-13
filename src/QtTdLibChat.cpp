@@ -6,8 +6,8 @@ QtTdLibChatPhoto::QtTdLibChatPhoto (QObject * parent)
 { }
 
 void QtTdLibChatPhoto::updateFromJson (const QJsonObject & json) {
-    set_big_withJSON   (json ["big"].toObject (),   &QtTdLibAbstractInt32IdObject::create<QtTdLibFile>);
-    set_small_withJSON (json ["small"].toObject (), &QtTdLibAbstractInt32IdObject::create<QtTdLibFile>);
+    set_big_withJSON   (json ["big"].toObject (),   &QtTdLibFile::create);
+    set_small_withJSON (json ["small"].toObject (), &QtTdLibFile::create);
 }
 
 QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
@@ -30,20 +30,20 @@ void QtTdLibChat::updateFromJson (const QJsonObject & json) {
     set_isPinned_withJSON                (json ["is_pinned"]);
     set_title_withJSON                   (json ["title"]);
     set_clientData_withJSON              (json ["client_data"]);
-    set_type_withJSON                    (json ["type"].toObject (),  &QtTdLibChatType::create);
-    set_photo_withJSON                   (json ["photo"].toObject (), &QtTdLibAbstractObject::create<QtTdLibChatPhoto>);
+    set_type_withJSON                    (json ["type"].toObject (),  &QtTdLibChatType::createXXX);
+    set_photo_withJSON                   (json ["photo"].toObject (), &QtTdLibChatPhoto::create);
 }
 
 QtTdLibChatType::QtTdLibChatType (const QtTdLibObjectType::Type typeOf, QObject * parent)
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibChatType * QtTdLibChatType::create (const QJsonObject & json, QObject * parent) {
+QtTdLibChatType * QtTdLibChatType::createXXX (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
-        case QtTdLibObjectType::CHAT_TYPE_PRIVATE:     return new QtTdLibChatTypePrivate    { parent };
-        case QtTdLibObjectType::CHAT_TYPE_BASIC_GROUP: return new QtTdLibChatTypeBasicGroup { parent };
-        case QtTdLibObjectType::CHAT_TYPE_SUPERGROUP:  return new QtTdLibChatTypeSupergroup { parent };
-        case QtTdLibObjectType::CHAT_TYPE_SECRET:      return new QtTdLibChatTypeSecret     { parent };
+        case QtTdLibObjectType::CHAT_TYPE_PRIVATE:     return QtTdLibChatTypePrivate::create    (json, parent);
+        case QtTdLibObjectType::CHAT_TYPE_BASIC_GROUP: return QtTdLibChatTypeBasicGroup::create (json, parent);
+        case QtTdLibObjectType::CHAT_TYPE_SUPERGROUP:  return QtTdLibChatTypeSupergroup::create (json, parent);
+        case QtTdLibObjectType::CHAT_TYPE_SECRET:      return QtTdLibChatTypeSecret::create     (json, parent);
         default: return Q_NULLPTR;
     }
 }

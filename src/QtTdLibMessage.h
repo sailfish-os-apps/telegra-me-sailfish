@@ -11,10 +11,10 @@ class QtTdLibMessageContent : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibMessageContent (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibMessageContent * create (const QJsonObject & json, QObject * parent);
+    static QtTdLibMessageContent * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibMessageText : public QtTdLibMessageContent {
+class QtTdLibMessageText : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageText> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (text, QtTdLibFormattedText)
     Q_TDLIB_PROPERTY_SUBOBJECT (webPage,    QtTdLibWebPage)
@@ -25,7 +25,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibMessagePhoto : public QtTdLibMessageContent {
+class QtTdLibMessagePhoto : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessagePhoto> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (caption, QtTdLibFormattedText)
     Q_TDLIB_PROPERTY_SUBOBJECT (photo,   QtTdLibPhoto)
@@ -36,7 +36,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibMessageDocument : public QtTdLibMessageContent {
+class QtTdLibMessageDocument : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageDocument> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (document,     QtTdLibDocument)
     Q_TDLIB_PROPERTY_SUBOBJECT (caption, QtTdLibFormattedText)
@@ -47,7 +47,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibMessageSticker : public QtTdLibMessageContent {
+class QtTdLibMessageSticker : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageSticker> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (sticker, QtTdLibSticker)
 
@@ -57,7 +57,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibMessageAnimation : public QtTdLibMessageContent {
+class QtTdLibMessageAnimation : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageAnimation> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (animation,   QtTdLibAnimation)
     Q_TDLIB_PROPERTY_SUBOBJECT (caption, QtTdLibFormattedText)
@@ -68,7 +68,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibMessageVideoNote : public QtTdLibMessageContent {
+class QtTdLibMessageVideoNote : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageVideoNote> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_BOOL      (isViewed)
     Q_TDLIB_PROPERTY_SUBOBJECT (videoNote, QtTdLibVideoNote)
@@ -79,7 +79,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibMessageVoiceNote : public QtTdLibMessageContent {
+class QtTdLibMessageVoiceNote : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageVoiceNote> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_BOOL      (isListened)
     Q_TDLIB_PROPERTY_SUBOBJECT (voiceNote,   QtTdLibVoiceNote)
@@ -91,7 +91,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibMessageVideo : public QtTdLibMessageContent {
+class QtTdLibMessageVideo : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageVideo> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (video,   QtTdLibVideo)
     Q_TDLIB_PROPERTY_SUBOBJECT (caption, QtTdLibFormattedText)
@@ -102,7 +102,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibMessageAudio : public QtTdLibMessageContent {
+class QtTdLibMessageAudio : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageAudio> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (audio,   QtTdLibAudio)
     Q_TDLIB_PROPERTY_SUBOBJECT (caption, QtTdLibFormattedText)
@@ -141,7 +141,7 @@ public:
 //messageContactRegistered = MessageContent;
 //messageUnsupported = MessageContent;
 
-class QtTdLibMessage : public QtTdLibAbstractInt53IdObject {
+class QtTdLibMessage : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<QtTdLibMessage> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (date)
     Q_TDLIB_PROPERTY_INT32     (editDate)

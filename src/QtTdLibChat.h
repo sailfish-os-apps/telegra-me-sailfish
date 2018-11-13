@@ -5,7 +5,7 @@
 #include "QtTdLibFile.h"
 #include "QtTdLibMessage.h"
 
-class QtTdLibChatPhoto : public QtTdLibAbstractObject {
+class QtTdLibChatPhoto : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibChatPhoto> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (big,   QtTdLibFile)
     Q_TDLIB_PROPERTY_SUBOBJECT (small, QtTdLibFile)
@@ -22,10 +22,10 @@ class QtTdLibChatType : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibChatType (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibChatType * create (const QJsonObject & json, QObject * parent);
+    static QtTdLibChatType * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
-class QtTdLibChatTypePrivate : public QtTdLibChatType {
+class QtTdLibChatTypePrivate : public QtTdLibChatType, public FactoryNoId<QtTdLibChatTypePrivate> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_ID32 (userId)
 
@@ -35,7 +35,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibChatTypeBasicGroup : public QtTdLibChatType {
+class QtTdLibChatTypeBasicGroup : public QtTdLibChatType, public FactoryNoId<QtTdLibChatTypeBasicGroup> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_ID32 (basicGroupId)
 
@@ -45,7 +45,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibChatTypeSupergroup : public QtTdLibChatType {
+class QtTdLibChatTypeSupergroup : public QtTdLibChatType, public FactoryNoId<QtTdLibChatTypeSupergroup> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_ID32 (supergroupId)
     Q_TDLIB_PROPERTY_BOOL (isChannel)
@@ -56,7 +56,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibChatTypeSecret : public QtTdLibChatType {
+class QtTdLibChatTypeSecret : public QtTdLibChatType, public FactoryNoId<QtTdLibChatTypeSecret> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_ID32 (secretChatId)
     Q_TDLIB_PROPERTY_ID32 (userId)
@@ -67,7 +67,7 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
-class QtTdLibChat : public QtTdLibAbstractInt53IdObject {
+class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<QtTdLibChat> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (unreadCount)
     Q_TDLIB_PROPERTY_INT32     (unreadMentionCount)

@@ -5,10 +5,19 @@
 #include <QDir>
 #include <QStringBuilder>
 #include <QImageReader>
+#include <QAudioEncoderSettings>
+#include <QAudioBuffer>
+#include <QAudioDecoder>
+#include <QTimer>
+#include <QDateTime>
+#include <QtMath>
 
 QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     : QObject { parent }
     , m_chatsList { new QQmlObjectListModel<QtTdLibChat> { this } }
+    , m_recordingDuration { 0 }
+    , m_selectedPhotosCount { 0 }
+    , m_selectedVideosCount { 0 }
     , m_svgIconForMimetype {
 { "image/png", "image" },
 { "image/jpeg", "image" },
@@ -70,7 +79,20 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
 { "application/x-ms-dos-executable", "executable" },
           }
     , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { this } }
+    , m_audioRecorder    { new QAudioRecorder     { this } }
 {
+    QAudioEncoderSettings audioEncoderSettings { };
+    audioEncoderSettings.setCodec        ("audio/PCM"); // "audio/speex"
+    audioEncoderSettings.setEncodingMode (QMultimedia::TwoPassEncoding);
+    audioEncoderSettings.setQuality      (QMultimedia::HighQuality);
+    audioEncoderSettings.setSampleRate   (22050);
+    m_audioRecorder->setEncodingSettings (audioEncoderSettings);
+    m_audioRecorder->setContainerFormat  ("wav"); // "ogg"
+    connect (m_audioRecorder, &QAudioRecorder::durationChanged, [this] (void) {
+        if (m_audioRecorder->status () == QMediaRecorder::RecordingStatus || m_audioRecorder->status () == QMediaRecorder::FinalizingStatus) {
+            set_recordingDuration (int (m_audioRecorder->duration ()));
+        }
+    });
     connect (m_tdLibJsonWrapper, &QtTdLibJsonWrapper::recv, this, &QtTdLibGlobal::onFrame);
     m_tdLibJsonWrapper->start ();
 }
@@ -90,7 +112,7 @@ QObject * QtTdLibGlobal::qmlSingletonFactory (QQmlEngine * qmlEngine, QJSEngine 
 }
 
 void QtTdLibGlobal::send (const QJsonObject & json) const {
-    //m_tdLibJsonWrapper->send (json);
+    qWarning () << "SEND" << json;
     QMetaObject::invokeMethod (m_tdLibJsonWrapper, "send", Qt::QueuedConnection, Q_ARG (QJsonObject, json));
 }
 
@@ -180,35 +202,134 @@ QtTdLibChat * QtTdLibGlobal::getChatItemById (const qint64 id) const {
     return QtTdLibCollection::allChats.value (id, Q_NULLPTR);
 }
 
-void QtTdLibGlobal::sendMessagePhoto (const QStringList & photoList, QtTdLibChat * chatItem, const bool groupInAlbum) {
-    if (chatItem != Q_NULLPTR && !photoList.isEmpty ()) {
+void QtTdLibGlobal::selectPhoto (const QString & path, const int width, const int height) {
+    if (!isPhotoSelected (path)) {
+        m_selectedPhotosList.append (new SelectionPhoto {
+                                         path,
+                                         width,
+                                         height,
+                                     });
+        set_selectedPhotosCount (m_selectedPhotosCount +1);
+    }
+}
+
+void QtTdLibGlobal::deselectPhoto (const QString & path) {
+    for (SelectionPhoto * selection : m_selectedPhotosList) {
+        if (selection->path == path) {
+            m_selectedPhotosList.removeOne (selection);
+            set_selectedPhotosCount (m_selectedPhotosCount -1);
+            break;
+        }
+    }
+}
+
+bool QtTdLibGlobal::isPhotoSelected (const QString & path) const {
+    for (SelectionPhoto * selection : m_selectedPhotosList) {
+        if (selection->path == path) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void QtTdLibGlobal::unselectAllPhotos (void) {
+    qDeleteAll (m_selectedPhotosList);
+    set_selectedPhotosCount (0);
+}
+
+void QtTdLibGlobal::selectVideo (const QString & path, const int width, const int height, const int duration) {
+    if (!isVideoSelected (path)) {
+        m_selectedVideosList.append (new SelectionVideo {
+                                         path,
+                                         width,
+                                         height,
+                                         duration,
+                                     });
+        set_selectedVideosCount (m_selectedVideosCount +1);
+    }
+}
+
+void QtTdLibGlobal::deselectVideo (const QString & path) {
+    for (SelectionVideo * selection : m_selectedVideosList) {
+        if (selection->path == path) {
+            m_selectedVideosList.removeOne (selection);
+            set_selectedVideosCount (m_selectedVideosCount -1);
+            break;
+        }
+    }
+}
+
+bool QtTdLibGlobal::isVideoSelected (const QString & path) const {
+    for (SelectionVideo * selection : m_selectedVideosList) {
+        if (selection->path == path) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void QtTdLibGlobal::unselectAllVideos (void) {
+    qDeleteAll (m_selectedVideosList);
+    set_selectedVideosCount (0);
+}
+
+void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & text) {
+    if (chatItem != Q_NULLPTR && !text.isEmpty ()) {
+        send (QJsonObject {
+                  { "@type", "sendMessage" },
+                  { "chat_id" , chatItem->get_id () },
+                  { "reply_to_message_id", 0 },
+                  { "disable_notification", false },
+                  { "from_background", false },
+                  { "reply_markup", QJsonValue::Null },
+                  { "input_message_content", QJsonObject {
+                        { "@type", "inputMessageText" },
+                        { "disable_web_page_preview", false },
+                        { "clear_draft", false },
+                        { "text", exec ({
+                              { "@type", "parseTextEntities" },
+                              { "text", text },
+                              { "parse_mode", {
+                                    { "@type", "textParseModeMarkdown" },
+                                }
+                              }
+                          })
+                        }
+                    }
+                  }
+              });
+    }
+}
+
+void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupInAlbum) {
+    if (chatItem != Q_NULLPTR && !m_selectedPhotosList.isEmpty ()) {
         if (groupInAlbum) {
             QJsonArray contents { };
-            for (const QString & url : photoList) {
-                QImageReader imgReader { localPathFromUrl (url) };
+            for (SelectionPhoto * selection : m_selectedPhotosList) {
                 contents.append (QJsonObject {
                                      { "@type", "inputMessagePhoto" },
-                                     { "width", imgReader.size ().width () },
-                                     { "height", imgReader.size ().height () },
+                                     { "width", selection->width },
+                                     { "height", selection->height },
                                      { "photo", QJsonObject {
                                            { "@type", "inputFileLocal" },
-                                           { "path", localPathFromUrl (url) },
+                                           { "path", selection->path },
                                        }
                                      }
                                  });
             }
-            send (QJsonObject {
-                      { "@type", "sendMessageAlbum" },
-                      { "chat_id", chatItem->get_id () },
-                      { "reply_to_message_id", 0  },
-                      { "disable_notification", false },
-                      { "from_background", false },
-                      { "input_message_contents", contents }
-                  });
+            if (!contents.isEmpty ()) {
+                send (QJsonObject {
+                          { "@type", "sendMessageAlbum" },
+                          { "chat_id", chatItem->get_id () },
+                          { "reply_to_message_id", 0  },
+                          { "disable_notification", false },
+                          { "from_background", false },
+                          { "input_message_contents", contents }
+                      });
+            }
         }
         else {
-            for (const QString & url : photoList) {
-                QImageReader imgReader { localPathFromUrl (url) };
+            for (SelectionPhoto * selection : m_selectedPhotosList) {
                 send (QJsonObject {
                           { "@type", "sendMessage" },
                           { "chat_id", chatItem->get_id () },
@@ -217,11 +338,11 @@ void QtTdLibGlobal::sendMessagePhoto (const QStringList & photoList, QtTdLibChat
                           { "from_background", false },
                           { "input_message_content", QJsonObject {
                                 { "@type", "inputMessagePhoto" },
-                                { "width", imgReader.size ().width () },
-                                { "height", imgReader.size ().height () },
+                                { "width", selection->width },
+                                { "height", selection->height },
                                 { "photo", QJsonObject {
                                       { "@type", "inputFileLocal" },
-                                      { "path", localPathFromUrl (url) },
+                                      { "path", selection->path },
                                   }
                                 }
                             }
@@ -232,57 +353,161 @@ void QtTdLibGlobal::sendMessagePhoto (const QStringList & photoList, QtTdLibChat
     }
 }
 
+void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupInAlbum) {
+    if (chatItem != Q_NULLPTR && !m_selectedVideosList.isEmpty ()) {
+        if (groupInAlbum) {
+            QJsonArray contents { };
+            for (SelectionVideo * selection : m_selectedVideosList) {
+                contents.append (QJsonObject {
+                                     { "@type", "inputMessageVideo" },
+                                     { "width", selection->width },
+                                     { "height", selection->height },
+                                     { "duration", selection->duration },
+                                     { "photo", QJsonObject {
+                                           { "@type", "inputFileLocal" },
+                                           { "path", selection->path },
+                                       }
+                                     }
+                                 });
+            }
+            if (!contents.isEmpty ()) {
+                send (QJsonObject {
+                          { "@type", "sendMessageAlbum" },
+                          { "chat_id", chatItem->get_id () },
+                          { "reply_to_message_id", 0  },
+                          { "disable_notification", false },
+                          { "from_background", false },
+                          { "input_message_contents", contents }
+                      });
+            }
+        }
+        else {
+            for (SelectionVideo * selection : m_selectedVideosList) {
+                send (QJsonObject {
+                          { "@type", "sendMessage" },
+                          { "chat_id", chatItem->get_id () },
+                          { "reply_to_message_id", 0  },
+                          { "disable_notification", false },
+                          { "from_background", false },
+                          { "input_message_content", QJsonObject {
+                                { "@type", "inputMessageVideo" },
+                                { "width", selection->width },
+                                { "height", selection->height },
+                                { "duration", selection->duration },
+                                { "video", QJsonObject {
+                                      { "@type", "inputFileLocal" },
+                                      { "path", selection->path },
+                                  }
+                                }
+                            }
+                          }
+                      });
+            }
+        }
+    }
+}
+
+void QtTdLibGlobal::sendMessageVoiceNote (QtTdLibChat * chatItem, const QString & recording) {
+    if (chatItem != Q_NULLPTR && QFile::exists (recording)) {
+        QByteArray waveform { };
+        waveform.reserve (100);
+        for (quint8 byte { 0 }; byte < 100; ++byte) {
+            waveform.append (qrand () % 0xFF);
+        }
+        send (QJsonObject {
+                  { "@type", "sendMessage" },
+                  { "chat_id", chatItem->get_id () },
+                  { "reply_to_message_id", 0  },
+                  { "disable_notification", false },
+                  { "from_background", false },
+                  { "input_message_content", QJsonObject {
+                        { "@type", "inputMessageVoiceNote" },
+                        { "duration", qCeil (m_recordingDuration / 1000.0) },
+                        { "waveform", QString::fromLatin1 (waveform.toBase64 ()) },  // TODO
+                        { "voice_note", QJsonObject {
+                              { "@type", "inputFileLocal" },
+                              { "path", recording },
+                          }
+                        }
+                    }
+                  }
+              });
+    }
+}
+
+bool QtTdLibGlobal::startRecordingAudio (void) {
+    if (m_audioRecorder->status () == QMediaRecorder::LoadedStatus) {
+        QDir ().mkpath ("/home/nemo/.telegrame/recordings");
+        m_audioRecorder->setOutputLocation (QUrl ("file:///home/nemo/.telegrame/recordings/rec_" % QDateTime::currentDateTimeUtc ().toString ("yyyy-MM-dd_hh-mm-ss-zzz") % ".wav"));
+        m_audioRecorder->record ();
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+QString QtTdLibGlobal::stopRecordingAudio (void) {
+    if (m_audioRecorder->status () == QMediaRecorder::RecordingStatus) {
+        m_audioRecorder->stop ();
+        return m_audioRecorder->outputLocation ().toLocalFile ();
+    }
+    else {
+        return "";
+    }
+}
+
 void QtTdLibGlobal::onFrame (const QJsonObject & json) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::UPDATE_AUTHORIZATION_STATE: {
-            set_authorizationState_withJSON (json ["authorization_state"], &QtTdLibAuthorizationState::create);
+            set_authorizationState_withJSON (json ["authorization_state"], &QtTdLibAuthorizationState::createXXX);
             if (m_authorizationState) {
                 switch (m_authorizationState->get_typeOf ()) {
                     case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_TDLIB_PARAMETERS: {
                         send (QJsonObject {
-                                                      { "@type", "setTdlibParameters" },
-                                                      { "parameters", QJsonObject {
-                                                            { "api_id", 27687 },
-                                                            { "api_hash", "dfc01707ab3b6aefe4a7fcfb83ea275c" },
-                                                            { "use_test_dc", false },
-                                                            { "use_file_database", true },
-                                                            { "use_chat_info_database", true },
-                                                            { "use_message_database", true },
-                                                            { "use_secret_chats", true },
-                                                            { "system_language_code", "en" },
-                                                            { "device_model", "Jolla Sailfish OS" },
-                                                            { "system_version", "3.x" },
-                                                            { "application_version", "0.9" },
-                                                            { "enable_storage_optimizer", true },
-                                                            { "database_directory", QString (QDir::homePath () % "/.telegrame") },
-                                                            { "files_directory", QString (QDir::homePath () % "/.telegrame") },
-                                                            //{ "ignore_file_names", false },
-                                                        }
-                                                      }
-                                                  });
+                                  { "@type", "setTdlibParameters" },
+                                  { "parameters", QJsonObject {
+                                        { "api_id", 27687 },
+                                        { "api_hash", "dfc01707ab3b6aefe4a7fcfb83ea275c" },
+                                        { "use_test_dc", false },
+                                        { "use_file_database", true },
+                                        { "use_chat_info_database", true },
+                                        { "use_message_database", true },
+                                        { "use_secret_chats", true },
+                                        { "system_language_code", "en" },
+                                        { "device_model", "Jolla Sailfish OS" },
+                                        { "system_version", "3.x" },
+                                        { "application_version", "0.9" },
+                                        { "enable_storage_optimizer", true },
+                                        { "database_directory", QString (QDir::homePath () % "/.telegrame") },
+                                        { "files_directory", QString (QDir::homePath () % "/.telegrame") },
+                                        //{ "ignore_file_names", false },
+                                    }
+                                  }
+                              });
                         break;
                     }
                     case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_ENCRYPTION_KEY: {
                         send (QJsonObject {
-                                                      { "@type", "setDatabaseEncryptionKey" },
-                                                      { "new_encryption_key",            "" },
-                                                  });
+                                  { "@type", "setDatabaseEncryptionKey" },
+                                  { "new_encryption_key",            "" },
+                              });
                         break;
                     }
                     case QtTdLibObjectType::AUTHORIZATION_STATE_READY: {
                         send (QJsonObject {
-                                                      { "@type",       "getChats" },
-                                                      { "offset_order", "1000000" },
-                                                      { "offset_chat_id", 1000000 },
-                                                      { "limit",          1000000 },
-                                                  });
+                                  { "@type",       "getChats" },
+                                  { "offset_order", "1000000" },
+                                  { "offset_chat_id", 1000000 },
+                                  { "limit",          1000000 },
+                              });
                         send (QJsonObject {
-                                                      { "@type", "getInstalledStickerSets" },
-                                                      { "is_masks",                  false },
-                                                  });
+                                  { "@type", "getInstalledStickerSets" },
+                                  { "is_masks",                  false },
+                              });
                         send (QJsonObject {
-                                                      { "@type", "getSavedAnimations" },
-                                                  });
+                                  { "@type", "getSavedAnimations" },
+                              });
                         break;
                     }
                     default: break;
@@ -291,7 +516,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             break;
         }
         case QtTdLibObjectType::UPDATE_CONNECTION_STATE: {
-            set_connectionState_withJSON (json ["state"], &QtTdLibConnectionState::create);
+            set_connectionState_withJSON (json ["state"], &QtTdLibConnectionState::createXXX);
             break;
         }
         case QtTdLibObjectType::UPDATE_FILE: {
@@ -304,30 +529,31 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
         case QtTdLibObjectType::UPDATE_USER: {
             const QJsonObject userJson { json ["user"].toObject () };
             const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (userJson ["id"]) };
-            QtTdLibUser * userItem { getUserItemById (userId) };
-            if (!userItem) {
-                userItem = new QtTdLibUser { userId, this };
+            if (QtTdLibUser * userItem = { getUserItemById (userId) }) {
+                userItem->updateFromJson (userJson);
             }
-            userItem->updateFromJson (userJson);
+            else {
+                QtTdLibUser::create (userJson, this);
+            }
             break;
         }
         case QtTdLibObjectType::UPDATE_USER_STATUS: {
             const QJsonObject statusJson { json ["status"].toObject () };
             const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (json ["user_id"]) };
             if (QtTdLibUser * userItem = { getUserItemById (userId) }) {
-                userItem->set_status_withJSON (statusJson, &QtTdLibUserStatus::create);
+                userItem->set_status_withJSON (statusJson, &QtTdLibUserStatus::createXXX);
             }
             break;
         }
         case QtTdLibObjectType::UPDATE_NEW_CHAT: {
             const QJsonObject chatJson { json ["chat"].toObject () };
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (chatJson ["id"]) };
-            QtTdLibChat * chatItem { getChatItemById (chatId) };
-            if (!chatItem) {
-                chatItem = new QtTdLibChat { chatId, this };
-                m_chatsList->append (chatItem);
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->updateFromJson (chatJson);
             }
-            chatItem->updateFromJson (chatJson);
+            else {
+                m_chatsList->append (QtTdLibChat::create (chatJson, this));
+            }
             break;
         }
         case QtTdLibObjectType::UPDATE_CHAT_READ_INBOX: {
@@ -350,12 +576,12 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["chat_id"]) };
             if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
                 const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["id"]) };
-                QtTdLibMessage * messageItem { chatItem->getMessageItemById (messageId) };
-                if (!messageItem) {
-                    messageItem = new QtTdLibMessage { messageId, chatItem };
-                    chatItem->get_messagesModel ()->append (messageItem);
+                if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
+                    messageItem->updateFromJson (messageJson);
                 }
-                messageItem->updateFromJson (messageJson);
+                else {
+                    chatItem->get_messagesModel ()->append (QtTdLibMessage::create (messageJson, chatItem));
+                }
             }
             break;
         }
@@ -364,12 +590,12 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["chat_id"]) };
             if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
                 const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["id"]) };
-                QtTdLibMessage * messageItem { chatItem->getMessageItemById (messageId) };
-                if (!messageItem) {
-                    messageItem = new QtTdLibMessage { messageId, chatItem };
-                    chatItem->get_messagesModel ()->append (messageItem);
+                if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
+                    messageItem->updateFromJson (messageJson);
                 }
-                messageItem->updateFromJson (messageJson);
+                else {
+                    chatItem->get_messagesModel ()->append (QtTdLibMessage::create (messageJson, chatItem));
+                }
             }
             break;
         }
@@ -380,12 +606,12 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                 const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["chat_id"]) };
                 if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
                     const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["id"]) };
-                    QtTdLibMessage * messageItem { chatItem->getMessageItemById (messageId) };
-                    if (!messageItem) {
-                        messageItem = new QtTdLibMessage { messageId, chatItem };
-                        chatItem->get_messagesModel ()->prepend (messageItem);
+                    if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
+                        messageItem->updateFromJson (messageJson);
                     }
-                    messageItem->updateFromJson (messageJson);
+                    else {
+                        chatItem->get_messagesModel ()->append (QtTdLibMessage::create (messageJson, chatItem));
+                    }
                 }
             }
             break;
@@ -413,12 +639,12 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["chat_id"]) };
             if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
                 const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["id"]) };
-                QtTdLibMessage * messageItem { chatItem->getMessageItemById (messageId) };
-                if (!messageItem) {
-                    messageItem = new QtTdLibMessage { messageId, chatItem };
-                    chatItem->get_messagesModel ()->append (messageItem);
+                if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
+                    messageItem->updateFromJson (messageJson);
                 }
-                messageItem->updateFromJson (messageJson);
+                else {
+                    chatItem->get_messagesModel ()->append (QtTdLibMessage::create (messageJson, chatItem));
+                }
                 const qint64 oldMessageId { QtTdLibId53Helper::fromJsonToCpp (json ["old_message_id"]) };
                 if (QtTdLibMessage * oldMessageItem = { chatItem->getMessageItemById (oldMessageId) }) {
                     qWarning () << "DELETING OLD TEMPORARY MESSAGE" << oldMessageId << oldMessageItem;

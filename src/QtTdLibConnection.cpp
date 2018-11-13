@@ -5,13 +5,13 @@ QtTdLibConnectionState::QtTdLibConnectionState (const QtTdLibObjectType::Type ty
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibConnectionState * QtTdLibConnectionState::create (const QJsonObject & json, QObject * parent) {
+QtTdLibConnectionState * QtTdLibConnectionState::createXXX (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
-        case QtTdLibObjectType::CONNECTION_STATE_WAITING_FOR_NETWORK: return new QtTdLibConnectionStateWaitingForNetwork { parent };
-        case QtTdLibObjectType::CONNECTION_STATE_CONNECTING_TO_PROXY: return new QtTdLibConnectionStateConnectingToProxy { parent };
-        case QtTdLibObjectType::CONNECTION_STATE_CONNECTING:          return new QtTdLibConnectionStateConnecting        { parent };
-        case QtTdLibObjectType::CONNECTION_STATE_UPDATING:            return new QtTdLibConnectionStateUpdating          { parent };
-        case QtTdLibObjectType::CONNECTION_STATE_READY:               return new QtTdLibConnectionStateReady             { parent };
+        case QtTdLibObjectType::CONNECTION_STATE_WAITING_FOR_NETWORK: return QtTdLibConnectionStateWaitingForNetwork::create (json, parent);
+        case QtTdLibObjectType::CONNECTION_STATE_CONNECTING_TO_PROXY: return QtTdLibConnectionStateConnectingToProxy::create (json, parent);
+        case QtTdLibObjectType::CONNECTION_STATE_CONNECTING:          return QtTdLibConnectionStateConnecting::create        (json, parent);
+        case QtTdLibObjectType::CONNECTION_STATE_UPDATING:            return QtTdLibConnectionStateUpdating::create          (json, parent);
+        case QtTdLibObjectType::CONNECTION_STATE_READY:               return QtTdLibConnectionStateReady::create             (json, parent);
         default: return Q_NULLPTR;
     }
 }

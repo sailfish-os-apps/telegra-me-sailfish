@@ -75,6 +75,7 @@ Page {
             }
             SilicaFlickable {
                 clip: true;
+                quickScroll: true;
                 contentWidth: width;
                 contentHeight: layoutCountries.height;
                 anchors.top: inputFilter.bottom;
@@ -364,10 +365,29 @@ Page {
             id: headerConversations;
             title: qsTr ("Conversations");
             ExtraAnchors.topDock: parent;
+
+            GlassItem {
+                color: {
+                    switch (TD_Global.connectionState ? TD_Global.connectionState.typeOf : -1) {
+                    case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return "red";
+                    case TD_ObjectType.CONNECTION_STATE_CONNECTING:          return "orange";
+                    case TD_ObjectType.CONNECTION_STATE_CONNECTING_TO_PROXY: return "orange";
+                    case TD_ObjectType.CONNECTION_STATE_UPDATING:            return "orange";
+                    case TD_ObjectType.CONNECTION_STATE_READY:               return "lime";
+                    }
+                    return "magenta";
+                }
+                anchors {
+                    left: parent.left;
+                    margins: Theme.paddingLarge;
+                    verticalCenter: parent.verticalCenter;
+                }
+            }
         }
         SilicaListView {
             clip: true;
             model: TD_Global.chatsList;
+            quickScroll: true;
             delegate: ListItem {
                 id: delegateChat;
                 implicitHeight: Theme.itemSizeMedium;
@@ -420,6 +440,8 @@ Page {
             }
             anchors.top: headerConversations.bottom;
             ExtraAnchors.bottomDock: parent;
+
+            VerticalScrollDecorator { flickable: parent; }
         }
     }
 }
