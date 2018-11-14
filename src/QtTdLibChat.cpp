@@ -30,7 +30,7 @@ void QtTdLibChat::updateFromJson (const QJsonObject & json) {
     set_isPinned_withJSON                (json ["is_pinned"]);
     set_title_withJSON                   (json ["title"]);
     set_clientData_withJSON              (json ["client_data"]);
-    set_type_withJSON                    (json ["type"].toObject (),  &QtTdLibChatType::createXXX);
+    set_type_withJSON                    (json ["type"].toObject (),  &QtTdLibChatType::createAbstract);
     set_photo_withJSON                   (json ["photo"].toObject (), &QtTdLibChatPhoto::create);
 }
 
@@ -38,7 +38,7 @@ QtTdLibChatType::QtTdLibChatType (const QtTdLibObjectType::Type typeOf, QObject 
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibChatType * QtTdLibChatType::createXXX (const QJsonObject & json, QObject * parent) {
+QtTdLibChatType * QtTdLibChatType::createAbstract (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::CHAT_TYPE_PRIVATE:     return QtTdLibChatTypePrivate::create    (json, parent);
         case QtTdLibObjectType::CHAT_TYPE_BASIC_GROUP: return QtTdLibChatTypeBasicGroup::create (json, parent);

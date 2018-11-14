@@ -112,7 +112,6 @@ QObject * QtTdLibGlobal::qmlSingletonFactory (QQmlEngine * qmlEngine, QJSEngine 
 }
 
 void QtTdLibGlobal::send (const QJsonObject & json) const {
-    qWarning () << "SEND" << json;
     QMetaObject::invokeMethod (m_tdLibJsonWrapper, "send", Qt::QueuedConnection, Q_ARG (QJsonObject, json));
 }
 
@@ -460,7 +459,7 @@ QString QtTdLibGlobal::stopRecordingAudio (void) {
 void QtTdLibGlobal::onFrame (const QJsonObject & json) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::UPDATE_AUTHORIZATION_STATE: {
-            set_authorizationState_withJSON (json ["authorization_state"], &QtTdLibAuthorizationState::createXXX);
+            set_authorizationState_withJSON (json ["authorization_state"], &QtTdLibAuthorizationState::createAbstract);
             if (m_authorizationState) {
                 switch (m_authorizationState->get_typeOf ()) {
                     case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_TDLIB_PARAMETERS: {
@@ -516,7 +515,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             break;
         }
         case QtTdLibObjectType::UPDATE_CONNECTION_STATE: {
-            set_connectionState_withJSON (json ["state"], &QtTdLibConnectionState::createXXX);
+            set_connectionState_withJSON (json ["state"], &QtTdLibConnectionState::createAbstract);
             break;
         }
         case QtTdLibObjectType::UPDATE_FILE: {
@@ -541,7 +540,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             const QJsonObject statusJson { json ["status"].toObject () };
             const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (json ["user_id"]) };
             if (QtTdLibUser * userItem = { getUserItemById (userId) }) {
-                userItem->set_status_withJSON (statusJson, &QtTdLibUserStatus::createXXX);
+                userItem->set_status_withJSON (statusJson, &QtTdLibUserStatus::createAbstract);
             }
             break;
         }
@@ -610,7 +609,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                         messageItem->updateFromJson (messageJson);
                     }
                     else {
-                        chatItem->get_messagesModel ()->append (QtTdLibMessage::create (messageJson, chatItem));
+                        chatItem->get_messagesModel ()->prepend (QtTdLibMessage::create (messageJson, chatItem));
                     }
                 }
             }

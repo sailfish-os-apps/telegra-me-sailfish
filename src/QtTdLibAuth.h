@@ -9,7 +9,7 @@ class QtTdLibAuthenticationCodeType : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibAuthenticationCodeType (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibAuthenticationCodeType * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+    static QtTdLibAuthenticationCodeType * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
 class QtTdLibAuthenticationCodeTypeTelegramMessage : public QtTdLibAuthenticationCodeType, public FactoryNoId<QtTdLibAuthenticationCodeTypeTelegramMessage> {
@@ -70,7 +70,7 @@ class QtTdLibAuthorizationState : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibAuthorizationState (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibAuthorizationState * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+    static QtTdLibAuthorizationState * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
 class QtTdLibAuthorizationStateWaitTdlibParameters : public QtTdLibAuthorizationState, public FactoryNoId<QtTdLibAuthorizationStateWaitTdlibParameters> {

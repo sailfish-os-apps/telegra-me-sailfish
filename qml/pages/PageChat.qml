@@ -120,54 +120,12 @@ Page {
 
             readonly property TD_FormattedText captionItem   : (messageContentItem  ? messageContentItem.caption  : null);
             readonly property TD_Document      documentItem  : (messageContentItem  ? messageContentItem.document : null);
-            readonly property TD_File          fileItem      : (documentItem        ? documentItem.document       : null);
-            readonly property TD_LocalFile     localFileItem : (fileItem            ? fileItem.local              : null);
 
-            readonly property string size : {
-                if (localFileItem && fileItem) {
-                    if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // TO BE DOWNLOADED
-                        return "(%1)".arg (TD_Global.formatSize (fileItem.expectedSize));
-                    }
-                    else if (localFileItem.canBeDownloaded && localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // DOWNLOADING
-                        return "(%1 / %2)".arg (TD_Global.formatSize (localFileItem.downloadedSize)).arg (TD_Global.formatSize (fileItem.expectedSize));
-                    }
-                    else if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && localFileItem.isDownloadingCompleted) { // DOWNLOADED
-                        return "(%1)".arg (TD_Global.formatSize (localFileItem.downloadedSize));
-                    }
-                    else { }
-                }
-                return "";
+            HelperFileState {
+                id: helperMsgDocumentFile;
+                fileItem: (delegateMsgDocument.documentItem ? delegateMsgDocument.documentItem.document : null);
+                autoDownload: false;
             }
-
-            readonly property string status : {
-                if (localFileItem && fileItem) {
-                    if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // TO BE DOWNLOADED
-                        return qsTr ("Click to download")
-                    }
-                    else if (localFileItem.canBeDownloaded && localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // DOWNLOADING
-                        return qsTr ("Downloading, please wait...");
-                    }
-                    else if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && localFileItem.isDownloadingCompleted) { // DOWNLOADED
-                        return qsTr ("Downloaded, click to open");
-                    }
-                    else { }
-                }
-                return "";
-            }
-
-            function click () {
-                if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // TO BE DOWNLOADED
-                    downloadFile (fileItem); // START DOWNLOAD
-                }
-                else if (localFileItem.canBeDownloaded && localFileItem.isDownloadingActive && !localFileItem.isDownloadingCompleted) { // DOWNLOADING
-                    cancelDownloadFile (fileItem); // CANCEL DOWNLOAD
-                }
-                else if (localFileItem.canBeDownloaded && !localFileItem.isDownloadingActive && localFileItem.isDownloadingCompleted) { // DOWNLOADED
-                    Qt.openUrlExternally (TD_Global.urlFromLocalPath (localFileItem.path));  // OPEN FILE
-                }
-                else { }
-            }
-
             Label {
                 text: (delegateMsgDocument.captionItem ? delegateMsgDocument.captionItem.text : "");
                 visible: (text !== "");
@@ -182,7 +140,24 @@ Page {
                     anchors.fill: parent;
                     Container.ignored: true;
                     onClicked: {
-                        delegateMsgDocument.click ();
+                        if (helperMsgDocumentFile.uploading) {
+                            // NOTHING WE CAN DO
+                        }
+                        else {
+                            if (helperMsgDocumentFile.downloaded) {
+                                Qt.openUrlExternally (helperMsgDocumentFile.url);
+                            }
+                            else {
+                                if (helperMsgDocumentFile.downloadable) {
+                                    if (helperMsgDocumentFile.downloading) {
+                                        helperMsgDocumentFile.cancelDownload ();
+                                    }
+                                    else {
+                                        helperMsgDocumentFile.tryDownload (true);
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -215,13 +190,15 @@ Page {
                         ExtraAnchors.horizontalFill: parent;
                     }
                     Label {
-                        text: delegateMsgDocument.size;
+                        text: ((helperMsgDocumentFile.downloading || helperMsgDocumentFile.uploading)
+                               ? "(%1 / %2)".arg (TD_Global.formatSize (helperMsgDocumentFile.currentSize)).arg (TD_Global.formatSize (helperMsgDocumentFile.totalSize))
+                               : "(%1)".arg (TD_Global.formatSize (helperMsgDocumentFile.totalSize)));
                         color: Theme.secondaryColor;
                         font.pixelSize: Theme.fontSizeSmall;
 
                         BusyIndicator {
                             size: BusyIndicatorSize.ExtraSmall;
-                            running: (delegateMsgDocument.localFileItem && delegateMsgDocument.localFileItem.isDownloadingActive);
+                            running: (helperMsgDocumentFile.downloading || helperMsgDocumentFile.uploading);
                             anchors {
                                 left: parent.right;
                                 margins: Theme.paddingMedium;
@@ -232,7 +209,13 @@ Page {
                 }
             }
             Label {
-                text: delegateMsgDocument.status;
+                text: (helperMsgDocumentFile.downloading
+                       ? qsTr ("Downloading, please wait...")
+                       : (helperMsgDocumentFile.uploading
+                          ? qsTr ("Uploading, please wait...")
+                          : (helperMsgDocumentFile.downloaded
+                             ? qsTr ("Downloaded, click to open")
+                             : qsTr ("Click to download"))));
                 color: Theme.secondaryColor;
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.italic: true;
@@ -249,6 +232,7 @@ Page {
             size: (page.width * 0.35);
             fileItem: (stickerItem ? stickerItem.sticker : null);
             background: false;
+            autoDownload: true;
             implicitWidth: (stickerItem
                             ? ((stickerItem.width > stickerItem.height)
                                ? size
@@ -279,7 +263,8 @@ Page {
 
             HelperFileState {
                 id: helperMsgVideoFile;
-                fileItem: (delegateMsgVideo.videoItem ? delegateMsgVideo.videoItem.video : null)
+                fileItem: (delegateMsgVideo.videoItem ? delegateMsgVideo.videoItem.video : null);
+                autoDownload: false;
             }
             Label {
                 text: (delegateMsgVideo.captionItem ? delegateMsgVideo.captionItem.text : "");
@@ -292,22 +277,31 @@ Page {
                     implicitWidth: (delegateMsgVideo.videoItem ? Math.min (delegateMsgVideo.videoItem.width, delegateMsgVideo.width) : 1);
                     Container.forcedHeight: (delegateMsgVideo.videoItem ? delegateMsgVideo.videoItem.height * implicitWidth / delegateMsgVideo.videoItem.width : 1);
                     onClicked: {
-                        if (helperMsgVideoFile.downloadable && !helperMsgVideoFile.downloading && !helperMsgVideoFile.downloaded) {
-                            helperMsgVideoFile.tryDownload (true); // START DOWNLOAD
+                        if (helperMsgVideoFile.uploading) {
+                            // NOTHING WE CAN DO
                         }
-                        else if (helperMsgVideoFile.downloadable && helperMsgVideoFile.downloading && !helperMsgVideoFile.downloaded) {
-                            helperMsgVideoFile.cancelDownload (); // CANCEL DOWNLOAD
-                        }
-                        else if (helperMsgVideoFile.downloaded) {
-                            if (currentMessageContent !== delegateMsgVideo.messageContentItem) {
-                                currentMessageContent = delegateMsgVideo.messageContentItem;
-                            }
-                            else {
-                                if (playerVideo.playing) {
-                                    playerVideo.pause ();
+                        else {
+                            if (helperMsgVideoFile.downloaded) {
+                                if (currentMessageContent === delegateMsgVideo.messageContentItem) {
+                                    if (playerVideo.playing) {
+                                        playerVideo.pause ();
+                                    }
+                                    else {
+                                        playerVideo.play ();
+                                    }
                                 }
                                 else {
-                                    playerVideo.play ();
+                                    currentMessageContent = delegateMsgVideo.messageContentItem;
+                                }
+                            }
+                            else {
+                                if (helperMsgVideoFile.downloadable) {
+                                    if (helperMsgVideoFile.downloading) {
+                                        helperMsgVideoFile.cancelDownload ();
+                                    }
+                                    else {
+                                        helperMsgVideoFile.tryDownload (true);
+                                    }
                                 }
                             }
                         }
@@ -331,6 +325,7 @@ Page {
                                  : ((helperMsgVideoFile.downloaded && !playerVideo.playing)
                                     ? "image://theme/icon-m-play?#808080"
                                     : ""));
+                        sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
                         anchors.centerIn: parent;
                     }
                     ProgressCircle {
@@ -367,38 +362,35 @@ Page {
             property TD_MessageAudio messageContentItem : null;
 
             readonly property TD_Audio     audioItem     : (messageContentItem ? messageContentItem.audio      : null);
-            readonly property TD_File      fileItem      : (audioItem          ? audioItem.audio               : null);
-            readonly property TD_LocalFile localFileItem : (fileItem           ? fileItem.local                : null);
             readonly property TD_PhotoSize photoSizeItem : (audioItem          ? audioItem.albumCoverThumbnail : null);
 
-            property int  remaining : 0;
-            property bool playing   : false;
-
+            HelperFileState {
+                id: helperMsgAudioFile;
+                fileItem: (delegateMsgAudio.audioItem ? delegateMsgAudio.audioItem.audio : null);
+                autoDownload: false;
+            }
+            WrapperAudioPlayer {
+                id: playerAudio;
+                source: helperMsgAudioFile.url;
+                active: (currentMessageContent && delegateMsgAudio.messageContentItem && currentMessageContent === delegateMsgAudio.messageContentItem);
+                autoLoad: true;
+                autoPlay: true;
+            }
             Label {
-                text: (delegateMsgAudio.audioItem
-                       ? delegateMsgAudio.audioItem.fileName
-                       : "");
+                text: (delegateMsgAudio.audioItem ? delegateMsgAudio.audioItem.fileName : "");
                 elide: Text.ElideRight;
                 font.pixelSize: Theme.fontSizeSmall;
                 ExtraAnchors.horizontalFill: parent;
             }
             Label {
-                text: (delegateMsgAudio.audioItem
-                       ? (delegateMsgAudio.audioItem.title !== ""
-                          ? delegateMsgAudio.audioItem.title
-                          : "")
-                       : "");
+                text: (delegateMsgAudio.audioItem ? delegateMsgAudio.audioItem.title : "");
                 visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.bold: true;
                 ExtraAnchors.horizontalFill: parent;
             }
             Label {
-                text: (delegateMsgAudio.audioItem
-                       ? (delegateMsgAudio.audioItem.performer !== ""
-                          ? delegateMsgAudio.audioItem.performer
-                          : "")
-                       : "");
+                text: (delegateMsgAudio.audioItem ? delegateMsgAudio.audioItem.performer : "");
                 visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.bold: true;
@@ -407,96 +399,88 @@ Page {
             RowContainer {
                 spacing: Theme.paddingMedium;
 
-                MouseArea {
-                    implicitWidth: (Theme.iconSizeExtraLarge * 2);
-                    implicitHeight: (Theme.iconSizeExtraLarge * 2);
+                ColumnContainer {
                     anchors.verticalCenter: parent.verticalCenter;
-                    onClicked: {
-                        if (delegateMsgAudio.localFileItem) {
-                            if (delegateMsgAudio.localFileItem.canBeDownloaded && !delegateMsgAudio.localFileItem.isDownloadingActive && !delegateMsgAudio.localFileItem.isDownloadingCompleted) {
-                                downloadFile (delegateMsgAudio.fileItem); // START DOWNLOAD
-                            }
-                            else if (delegateMsgAudio.localFileItem.canBeDownloaded && delegateMsgAudio.localFileItem.isDownloadingActive && !delegateMsgAudio.localFileItem.isDownloadingCompleted) {
-                                cancelDownloadFile (delegateMsgAudio.fileItem); // CANCEL DOWNLOAD
-                            }
-                            else if (delegateMsgAudio.localFileItem.isDownloadingCompleted) {
-                                currentMessageContent = delegateMsgAudio.localFileItem;
-                            }
-                        }
-                    }
 
-                    Image {
-                        source: "qrc:///images/cd-box.svg";
-                        visible: !imgAlbumCover.valid;
-                        fillMode: Image.PreserveAspectFit;
-                        anchors.fill: parent;
-                    }
-                    DelegateDownloadableImage {
-                        id: imgAlbumCover;
-                        fileItem: (delegateMsgAudio.photoSizeItem ? delegateMsgAudio.photoSizeItem.photo : null);
-                        background: false;
-                        anchors.fill: parent;
-                    }
-                    Image {
-                        source: "image://theme/icon-m-play?#FFFFFF";
-                        visible: (currentMessageContent !== delegateMsgAudio.localFileItem && delegateMsgAudio.localFileItem.isDownloadingCompleted);
-                        anchors.centerIn: parent;
-                    }
-                    Loader {
-                        active: (currentMessageContent && delegateMsgAudio.localFileItem && currentMessageContent === delegateMsgAudio.localFileItem);
-                        sourceComponent: MouseArea {
-                            onClicked: {
-                                if (playerAudio.playbackState === MediaPlayer.PlayingState) {
-                                    playerAudio.pause ();
+                    MouseArea {
+                        implicitWidth: (Theme.iconSizeExtraLarge * 2);
+                        implicitHeight: (Theme.iconSizeExtraLarge * 2);
+                        onClicked: {
+                            if (helperMsgAudioFile.uploading) {
+                                // NOTHING WE CAN DO
+                            }
+                            else {
+                                if (helperMsgAudioFile.downloaded) {
+                                    if (currentMessageContent === delegateMsgAudio.messageContentItem) {
+                                        if (playerAudio.playing) {
+                                            playerAudio.pause ();
+                                        }
+                                        else {
+                                            playerAudio.play ();
+                                        }
+                                    }
+                                    else {
+                                        currentMessageContent = delegateMsgAudio.messageContentItem;
+                                    }
                                 }
                                 else {
-                                    playerAudio.play ();
+                                    if (helperMsgAudioFile.downloadable) {
+                                        if (helperMsgAudioFile.downloading) {
+                                            helperMsgAudioFile.cancelDownload ();
+                                        }
+                                        else {
+                                            helperMsgAudioFile.tryDownload (true);
+                                        }
+                                    }
                                 }
                             }
-
-                            Image {
-                                source: (playerAudio.playbackState !== MediaPlayer.PlayingState
-                                         ? "image://theme/icon-m-play?#FFFFFF"
-                                         : "image://theme/icon-m-pause?#FFFFFF");
-                                anchors.centerIn: parent;
-                            }
-                            MediaPlayer {
-                                id: playerAudio;
-                                source: (delegateMsgAudio.localFileItem && delegateMsgAudio.localFileItem.path !== ""
-                                         ? TD_Global.urlFromLocalPath (delegateMsgAudio.localFileItem.path)
-                                         : "");
-                                autoLoad: true;
-                                autoPlay: true;
-                            }
-                            Binding {
-                                target: delegateMsgAudio;
-                                property: "remaining";
-                                value: (playerAudio.duration - playerAudio.position);
-                            }
-                            Binding {
-                                target: delegateMsgAudio;
-                                property: "playing";
-                                value: (playerAudio.playbackState === MediaPlayer.PlayingState);
-                            }
                         }
-                        anchors.fill: parent;
+
+                        Image {
+                            source: "qrc:///images/cd-box.svg";
+                            visible: !imgAlbumCover.valid;
+                            fillMode: Image.PreserveAspectFit;
+                            anchors.fill: parent;
+                        }
+                        DelegateDownloadableImage {
+                            id: imgAlbumCover;
+                            fileItem: (delegateMsgAudio.photoSizeItem ? delegateMsgAudio.photoSizeItem.photo : null);
+                            background: false;
+                            autoDownload: true;
+                            anchors.fill: parent;
+                        }
+                        Image {
+                            source: ((helperMsgAudioFile.downloadable && !helperMsgAudioFile.downloading && !helperMsgAudioFile.downloaded)
+                                     ? "image://theme/icon-m-cloud-download?#808080"
+                                     : ((helperMsgAudioFile.downloaded && !playerAudio.playing)
+                                        ? "image://theme/icon-m-play?#808080"
+                                        : "image://theme/icon-m-pause?#808080"));
+                            sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                            anchors.centerIn: parent;
+                        }
                     }
-                    Image {
-                        source: "image://theme/icon-m-cloud-download?#FFFFFF";
-                        visible: (delegateMsgAudio.localFileItem &&
-                                  delegateMsgAudio.localFileItem.canBeDownloaded &&
-                                  !delegateMsgAudio.localFileItem.isDownloadingActive &&
-                                  !delegateMsgAudio.localFileItem.isDownloadingCompleted);
-                        anchors.centerIn: parent;
+                    Item {
+                        implicitHeight: Theme.paddingSmall;
+                        ExtraAnchors.horizontalFill: parent;
+
+                        Rectangle {
+                            color: Theme.secondaryColor;
+                            anchors.fill: parent;
+                        }
+                        Rectangle {
+                            color: Theme.highlightColor;
+                            implicitWidth: (parent.width * playerAudio.progress);
+                            ExtraAnchors.leftDock: parent;
+                        }
                     }
                 }
                 Label {
                     text: (delegateMsgAudio.audioItem
-                           ? (delegateMsgAudio.playing
-                              ? ("-" + TD_Global.formatTime (delegateMsgAudio.remaining, false))
+                           ? (playerAudio.playing
+                              ? ("-" + TD_Global.formatTime (playerAudio.remaining, false))
                               : TD_Global.formatTime ((delegateMsgAudio.audioItem.duration * 1000), false))
                            : "--:--");
-                    color: (delegateMsgAudio.playing ? Theme.highlightColor : Theme.secondaryColor);
+                    color: (playerAudio.playing ? Theme.highlightColor : Theme.secondaryColor);
                     font.pixelSize: Theme.fontSizeSmall;
                     anchors.verticalCenter: parent.verticalCenter;
                 }
@@ -509,38 +493,34 @@ Page {
         Item {
             id: delegateMsgAnimation;
             implicitHeight: placeholderAnim.height;
-            Component.onCompleted: { download (); }
-            onDownloadableChanged: { download (); }
-            onDownloadingChanged:  { download (); }
-            onDownloadedChanged:   { download (); }
 
             property TD_MessageAnimation messageContentItem : null;
 
+            property bool paused : true;
+
             readonly property TD_FormattedText captionItem   : (messageContentItem ? messageContentItem.caption   : null);
             readonly property TD_Animation     animationItem : (messageContentItem ? messageContentItem.animation : null);
-            readonly property TD_File          fileItem      : (animationItem      ? animationItem.animation      : null);
-            readonly property TD_LocalFile     localFileItem : (fileItem           ? fileItem.local               : null);
             readonly property TD_PhotoSize     photoSizeItem : (animationItem      ? animationItem.thumbnail      : null);
 
-            readonly property bool             downloadable  : (localFileItem && localFileItem.canBeDownloaded);
-            readonly property bool             downloading   : (localFileItem && localFileItem.isDownloadingActive);
-            readonly property bool             downloaded    : (localFileItem && localFileItem.isDownloadingCompleted);
-
-            function download () {
-                if (downloadable && !downloading && !downloaded ) {
-                    downloadFile (fileItem);
-                }
+            HelperFileState {
+                id: helperMsgAnimationFile;
+                fileItem: (delegateMsgAnimation.animationItem ? delegateMsgAnimation.animationItem.animation : null);
+                autoDownload: true;
             }
-
             Item {
                 id: placeholderAnim;
                 implicitWidth: (delegateMsgAnimation.animationItem ? Math.min (delegateMsgAnimation.animationItem.width, delegateMsgAnimation.width) : 1);
-                implicitHeight: (delegateMsgAnimation.animationItem ? delegateMsgAnimation.animationItem.height * width / delegateMsgAnimation.animationItem.width : 1);
+                implicitHeight: (delegateMsgAnimation.animationItem ? delegateMsgAnimation.animationItem.height * implicitWidth / delegateMsgAnimation.animationItem.width : 1);
                 ExtraAnchors.topLeftCorner: parent;
 
                 DelegateDownloadableImage {
                     fileItem: (delegateMsgAnimation.photoSizeItem ? delegateMsgAnimation.photoSizeItem.photo : null);
+                    autoDownload: true;
                     anchors.fill: parent;
+                }
+                MouseArea {
+                    anchors.fill: parent;
+                    onClicked: { delegateMsgAnimation.paused = !delegateMsgAnimation.paused; }
                 }
                 Loader {
                     id: loaderAnim;
@@ -555,18 +535,20 @@ Page {
                     }
                     anchors.fill: parent;
                 }
-                ProgressCircle {
-                    value: (delegateMsgAnimation.localFileItem
-                            ? (delegateMsgAnimation.localFileItem.downloadedSize / Math.max (delegateMsgAnimation.fileItem.size, 1) )
-                            : 0);
-                    visible: delegateMsgAnimation.downloading;
-                    implicitWidth: BusyIndicatorSize.Medium;
-                    implicitHeight: BusyIndicatorSize.Medium;
+                Image {
+                    source: ((!helperMsgAnimationFile.downloaded && !helperMsgAnimationFile.downloading && helperMsgAnimationFile.downloadable)
+                             ? "image://theme/icon-m-cloud-download?#808080"
+                             : ((helperMsgAnimationFile.downloaded && delegateMsgAnimation.paused)
+                                ? "image://theme/icon-m-play?#808080"
+                                : ""));
+                    sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
                     anchors.centerIn: parent;
                 }
-                Image {
-                    source: "image://theme/icon-m-cloud-download?#FFFFFF";
-                    visible: (!delegateMsgAnimation.downloaded && !delegateMsgAnimation.downloading && delegateMsgAnimation.downloadable);
+                ProgressCircle {
+                    value: helperMsgAnimationFile.progress;
+                    visible: (helperMsgAnimationFile.downloading || helperMsgAnimationFile.uploading);
+                    implicitWidth: BusyIndicatorSize.Medium;
+                    implicitHeight: BusyIndicatorSize.Medium;
                     anchors.centerIn: parent;
                 }
             }
@@ -575,63 +557,29 @@ Page {
 
                 AnimatedImage {
                     cache: true;
+                    paused: delegateMsgAnimation.paused;
                     smooth: true;
                     mipmap: true;
-                    source: (delegateMsgAnimation.localFileItem && delegateMsgAnimation.localFileItem.path !== ""
-                             ? TD_Global.urlFromLocalPath (delegateMsgAnimation.localFileItem.path)
-                             : "");
+                    source: helperMsgAnimationFile.url;
                     fillMode: Image.PreserveAspectFit;
                     antialiasing: true;
                     asynchronous: true;
                     verticalAlignment: Image.AlignVCenter;
                     horizontalAlignment: Image.AlignLeft;
                     anchors.fill: parent;
-
-                    MouseArea {
-                        anchors.fill: parent;
-                        onClicked: { parent.paused = !parent.paused; }
-                    }
-                    Image {
-                        source: "image://theme/icon-m-play?#FFFFFF";
-                        visible: (delegateMsgAnimation.downloaded && parent.paused);
-                        anchors.centerIn: parent;
-                    }
                 }
             }
             Component {
                 id: compoAnimationVideo;
 
-                Video {
+                WrapperVideoPlayer {
+                    loop: true;
                     muted: true;
-                    smooth: true;
-                    source: (delegateMsgAnimation.localFileItem && delegateMsgAnimation.localFileItem.path !== ""
-                             ? TD_Global.urlFromLocalPath (delegateMsgAnimation.localFileItem.path)
-                             : "");
-                    autoLoad: false;
-                    autoPlay: false;
-                    fillMode: VideoOutput.PreserveAspectFit;
-                    antialiasing: true;
+                    source: helperMsgAnimationFile.url;
+                    active: !delegateMsgAnimation.paused;
+                    autoLoad: true;
+                    autoPlay: true;
                     anchors.fill: parent;
-                    onStopped: {
-                        play ();
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent;
-                        onClicked: {
-                            if (parent.playbackState !== MediaPlayer.PlayingState) {
-                                parent.play ();
-                            }
-                            else {
-                                parent.pause ();
-                            }
-                        }
-                    }
-                    Image {
-                        source: "image://theme/icon-m-play?#FFFFFF";
-                        visible: (delegateMsgAnimation.downloaded && parent.playbackState !== MediaPlayer.PlayingState);
-                        anchors.centerIn: parent;
-                    }
                 }
             }
         }
@@ -647,15 +595,19 @@ Page {
 
             readonly property TD_FormattedText captionItem   : (messageContentItem ? messageContentItem.caption   : null);
             readonly property TD_VoiceNote     voiceNoteItem : (messageContentItem ? messageContentItem.voiceNote : null);
-            readonly property TD_File          fileItem      : (voiceNoteItem      ? voiceNoteItem.voice          : null);
-            readonly property TD_LocalFile     localFileItem : (fileItem           ? fileItem.local               : null);
 
-            property bool playing   : false;
-            property real progress  : 0.0;
-            property int  remaining : 0;
-
-            signal seekRequested (real ratio);
-
+            HelperFileState {
+                id: helperMsgVoiceNoteFile;
+                fileItem: (delegateMsgVoiceNote.voiceNoteItem ? delegateMsgVoiceNote.voiceNoteItem.voice : null);
+                autoDownload: false;
+            }
+            WrapperAudioPlayer {
+                id: playerVoiceNote;
+                source: helperMsgVoiceNoteFile.url;
+                active: (currentMessageContent && delegateMsgVoiceNote.messageContentItem && currentMessageContent === delegateMsgVoiceNote.messageContentItem);
+                autoLoad: true;
+                autoPlay: true;
+            }
             Label {
                 text: (delegateMsgVoiceNote.captionItem ? delegateMsgVoiceNote.captionItem.text : "");
                 visible: (text !== "");
@@ -666,106 +618,53 @@ Page {
                 spacing: Theme.paddingMedium;
                 ExtraAnchors.horizontalFill: parent;
 
-                MouseArea {
+                RectangleButton {
+                    icon: ((helperMsgVoiceNoteFile.downloadable && !helperMsgVoiceNoteFile.downloading && !helperMsgVoiceNoteFile.downloaded)
+                           ? "icon-m-cloud-download"
+                           : ((helperMsgVoiceNoteFile.downloaded && !playerVoiceNote.playing)
+                              ? "icon-m-play"
+                              : "icon-m-pause"));
+                    size: Theme.iconSizeMedium;
+                    active: playerVoiceNote.playing;
                     implicitWidth: Theme.itemSizeMedium;
                     implicitHeight: Theme.itemSizeMedium;
                     anchors.verticalCenter: parent.verticalCenter;
                     onClicked: {
-                        if (delegateMsgVoiceNote.localFileItem) {
-                            if (delegateMsgVoiceNote.localFileItem.canBeDownloaded && !delegateMsgVoiceNote.localFileItem.isDownloadingActive && !delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
-                                downloadFile (delegateMsgVoiceNote.fileItem); // START DOWNLOAD
-                            }
-                            else if (delegateMsgVoiceNote.localFileItem.canBeDownloaded && delegateMsgVoiceNote.localFileItem.isDownloadingActive && !delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
-                                cancelDownloadFile (delegateMsgVoiceNote.fileItem); // CANCEL DOWNLOAD
-                            }
-                            else if (delegateMsgVoiceNote.localFileItem.isDownloadingCompleted) {
-                                currentMessageContent = delegateMsgVoiceNote.localFileItem;
-                            }
+                        if (helperMsgVoiceNoteFile.uploading) {
+                            // NOTHING WE CAN DO
                         }
-                    }
-
-                    Rectangle {
-                        color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
-                        radius: Theme.paddingSmall;
-                        opacity: 0.15;
-                        anchors.fill: parent;
-                    }
-                    Loader {
-                        active: (currentMessageContent && delegateMsgVoiceNote.localFileItem && currentMessageContent === delegateMsgVoiceNote.localFileItem);
-                        sourceComponent: MouseArea {
-                            anchors.fill: parent;
-                            onClicked: {
-                                if (playerVoiceNote.playbackState !== MediaPlayer.PlayingState) {
-                                    playerVoiceNote.play ();
+                        else {
+                            if (helperMsgVoiceNoteFile.downloaded) {
+                                if (currentMessageContent === delegateMsgVoiceNote.messageContentItem) {
+                                    if (playerVoiceNote.playing) {
+                                        playerVoiceNote.pause ();
+                                    }
+                                    else {
+                                        playerVoiceNote.play ();
+                                    }
                                 }
                                 else {
-                                    playerVoiceNote.pause ();
+                                    currentMessageContent = delegateMsgVoiceNote.messageContentItem;
                                 }
                             }
-
-                            Image {
-                                source: (playerVoiceNote.playbackState !== MediaPlayer.PlayingState
-                                         ? "image://theme/icon-m-play?#FFFFFF"
-                                         : "image://theme/icon-m-pause?#FFFFFF");
-                                anchors.centerIn: parent;
-                            }
-                            MediaPlayer {
-                                id: playerVoiceNote;
-                                source: (delegateMsgVoiceNote.localFileItem && delegateMsgVoiceNote.localFileItem.path !== ""
-                                         ? TD_Global.urlFromLocalPath (delegateMsgVoiceNote.localFileItem.path)
-                                         : "");
-                                autoLoad: true;
-                                autoPlay: true;
-                                Component.onCompleted: {
-                                    delegateMsgVoiceNote.seekRequested.connect (function (ratio) {
-                                        if (ratio >= 0.0 && ratio <= 1.0) {
-                                            seek (Math.round (ratio * duration));
-                                        }
-                                    });
+                            else {
+                                if (helperMsgVoiceNoteFile.downloadable) {
+                                    if (helperMsgVoiceNoteFile.downloading) {
+                                        helperMsgVoiceNoteFile.cancelDownload ();
+                                    }
+                                    else {
+                                        helperMsgVoiceNoteFile.tryDownload (true);
+                                    }
                                 }
-                            }
-                            Binding {
-                                target: delegateMsgVoiceNote;
-                                property: "progress";
-                                value: (playerVoiceNote.duration ? playerVoiceNote.position / playerVoiceNote.duration : 0.0);
-                            }
-                            Binding {
-                                target: delegateMsgVoiceNote;
-                                property: "remaining";
-                                value: (playerVoiceNote.duration - playerVoiceNote.position);
-                            }
-                            Binding {
-                                target: delegateMsgVoiceNote;
-                                property: "playing";
-                                value: (playerVoiceNote.playbackState === MediaPlayer.PlayingState);
                             }
                         }
-                        anchors.fill: parent;
                     }
-                    Image {
-                        source: "image://theme/icon-m-play?#FFFFFF";
-                        visible: (delegateMsgVoiceNote.localFileItem &&
-                                  delegateMsgVoiceNote.localFileItem.isDownloadingCompleted &&
-                                  (!currentMessageContent ||
-                                   !delegateMsgVoiceNote.localFileItem ||
-                                   currentMessageContent !== delegateMsgVoiceNote.localFileItem));
-                        anchors.centerIn: parent;
-                    }
+
                     ProgressCircle {
-                        value: (delegateMsgVoiceNote.localFileItem && delegateMsgVoiceNote.fileItem
-                                ? (delegateMsgVoiceNote.localFileItem.downloadedSize / Math.max (delegateMsgVoiceNote.fileItem.size, 1) )
-                                : 0);
-                        visible: (delegateMsgVoiceNote.localFileItem && delegateMsgVoiceNote.localFileItem.isDownloadingActive);
+                        value: helperMsgVoiceNoteFile.progress;
+                        visible: (helperMsgVoiceNoteFile.downloading || helperMsgVoiceNoteFile.uploading);
                         implicitWidth: BusyIndicatorSize.Medium;
                         implicitHeight: BusyIndicatorSize.Medium;
-                        anchors.centerIn: parent;
-                    }
-                    Image {
-                        source: "image://theme/icon-m-cloud-download?#FFFFFF";
-                        visible: (delegateMsgVoiceNote.localFileItem &&
-                                  delegateMsgVoiceNote.localFileItem.canBeDownloaded &&
-                                  !delegateMsgVoiceNote.localFileItem.isDownloadingCompleted &&
-                                  !delegateMsgVoiceNote.localFileItem.isDownloadingActive);
                         anchors.centerIn: parent;
                     }
                 }
@@ -781,7 +680,7 @@ Page {
                             anchors.fill: parent;
                             Container.ignored: true;
                             onClicked: {
-                                delegateMsgVoiceNote.seekRequested (mouse.x / width);
+                                playerVoiceNote.seek (Math.round (playerVoiceNote.duration * mouse.x / width));
                             }
                         }
                         Repeater {
@@ -789,7 +688,7 @@ Page {
                                     ? TD_Global.parseWaveform (delegateMsgVoiceNote.voiceNoteItem.waveform)
                                     : 0);
                             delegate: Rectangle {
-                                color: ((model.index / 100) <= delegateMsgVoiceNote.progress ? Theme.highlightColor : Theme.secondaryColor);
+                                color: ((model.index / 100) <= playerVoiceNote.progress ? Theme.highlightColor : Theme.secondaryColor);
                                 implicitWidth: 3;
                                 implicitHeight: (modelData * 2);
                                 anchors.verticalCenter: parent.verticalCenter;
@@ -803,14 +702,14 @@ Page {
 
                             Rectangle {
                                 color: Theme.highlightColor;
-                                implicitWidth: (parent.width * delegateMsgVoiceNote.progress);
+                                implicitWidth: (parent.width * playerVoiceNote.progress);
                                 ExtraAnchors.leftDock: parent;
                             }
                         }
                     }
                     Label {
                         text: (delegateMsgVoiceNote.voiceNoteItem
-                               ?  (delegateMsgVoiceNote.playing
+                               ?  (playerVoiceNote.playing
                                    ? qsTr ("(Listening...)")
                                    : (delegateMsgVoiceNote.messageContentItem.isListened
                                       ? qsTr ("(Listened)")
@@ -821,11 +720,11 @@ Page {
                     }
                     Label {
                         text: (delegateMsgVoiceNote.voiceNoteItem
-                               ? (delegateMsgVoiceNote.playing
-                                  ? ("-" + TD_Global.formatTime (delegateMsgVoiceNote.remaining, false))
+                               ? (playerVoiceNote.playing
+                                  ? ("-" + TD_Global.formatTime (playerVoiceNote.remaining, false))
                                   : TD_Global.formatTime ((delegateMsgVoiceNote.voiceNoteItem.duration * 1000), false))
                                : "--:--");
-                        color: (delegateMsgVoiceNote.playing ? Theme.highlightColor : Theme.primaryColor);
+                        color: (playerVoiceNote.playing ? Theme.highlightColor : Theme.primaryColor);
                         font.pixelSize: Theme.fontSizeSmall;
                     }
                 }

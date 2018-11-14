@@ -5,7 +5,7 @@ QtTdLibConnectionState::QtTdLibConnectionState (const QtTdLibObjectType::Type ty
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibConnectionState * QtTdLibConnectionState::createXXX (const QJsonObject & json, QObject * parent) {
+QtTdLibConnectionState * QtTdLibConnectionState::createAbstract (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::CONNECTION_STATE_WAITING_FOR_NETWORK: return QtTdLibConnectionStateWaitingForNetwork::create (json, parent);
         case QtTdLibObjectType::CONNECTION_STATE_CONNECTING_TO_PROXY: return QtTdLibConnectionStateConnectingToProxy::create (json, parent);

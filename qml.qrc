@@ -9,5 +9,6 @@
         <file>qml/components/RectangleButton.qml</file>
         <file>qml/components/HelperFileState.qml</file>
         <file>qml/components/WrapperVideoPlayer.qml</file>
+        <file>qml/components/WrapperAudioPlayer.qml</file>
     </qresource>
 </RCC>

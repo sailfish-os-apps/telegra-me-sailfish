@@ -22,6 +22,13 @@ QtObject {
     readonly property bool uploading : (remoteFileItem && remoteFileItem.isUploadingActive);
     readonly property bool uploaded  : (remoteFileItem && remoteFileItem.isUploadingCompleted);
 
+    readonly property int totalSize   : (fileItem ? fileItem.expectedSize : 0);
+    readonly property int currentSize : ((downloading && localFileItem)
+                                         ? localFileItem.downloadedSize
+                                         : ((uploading && remoteFileItem)
+                                            ? remoteFileItem.uploadedSize
+                                            : totalSize));
+
     readonly property real progress : ((downloading && localFileItem && fileItem)
                                        ? (localFileItem.downloadedSize / Math.max (fileItem.size, localFileItem.downloadedSize))
                                        : ((uploading && remoteFileItem && fileItem)

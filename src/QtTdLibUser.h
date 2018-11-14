@@ -21,7 +21,7 @@ class QtTdLibLinkState : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibLinkState (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibLinkState * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+    static QtTdLibLinkState * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
 class QtTdLibLinkStateNone : public QtTdLibLinkState, public FactoryNoId<QtTdLibLinkStateNone> {
@@ -51,7 +51,7 @@ class QtTdLibUserType : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibUserType (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibUserType * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+    static QtTdLibUserType * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
 class QtTdLibUserTypeRegular : public QtTdLibUserType, public FactoryNoId<QtTdLibUserTypeRegular> {
@@ -93,7 +93,7 @@ class QtTdLibUserStatus : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibUserStatus (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibUserStatus * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+    static QtTdLibUserStatus * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
 class QtTdLibUserStatusEmpty : public QtTdLibUserStatus, public FactoryNoId<QtTdLibUserStatusEmpty> {

@@ -171,14 +171,14 @@ QtTdLibTextEntity::QtTdLibTextEntity (QObject * parent)
 void QtTdLibTextEntity::updateFromJson (const QJsonObject & json) {
     set_offset_withJSON (json ["offset"]);
     set_length_withJSON (json ["length"]);
-    set_type_withJSON   (json ["type"], &QtTdLibTextEntityType::createXXX);
+    set_type_withJSON   (json ["type"], &QtTdLibTextEntityType::createAbstract);
 }
 
 QtTdLibTextEntityType::QtTdLibTextEntityType (const QtTdLibObjectType::Type typeOf, QObject * parent)
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibTextEntityType * QtTdLibTextEntityType::createXXX (const QJsonObject & json, QObject * parent) {
+QtTdLibTextEntityType * QtTdLibTextEntityType::createAbstract (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::TEXT_ENTITY_TYPE_MENTION:       return QtTdLibTextEntityTypeMention::create      (json, parent);
         case QtTdLibObjectType::TEXT_ENTITY_TYPE_HASHTAG:       return QtTdLibTextEntityTypeHashtag::create      (json, parent);

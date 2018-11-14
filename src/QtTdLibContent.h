@@ -10,7 +10,7 @@ class QtTdLibTextEntityType : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibTextEntityType (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibTextEntityType * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+    static QtTdLibTextEntityType * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
 class QtTdLibTextEntityTypeMention : public QtTdLibTextEntityType, public FactoryNoId<QtTdLibTextEntityTypeMention> {

@@ -5,7 +5,7 @@ QtTdLibAuthorizationState::QtTdLibAuthorizationState (const QtTdLibObjectType::T
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibAuthorizationState * QtTdLibAuthorizationState::createXXX (const QJsonObject & json, QObject * parent) {
+QtTdLibAuthorizationState * QtTdLibAuthorizationState::createAbstract (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_TDLIB_PARAMETERS: return QtTdLibAuthorizationStateWaitTdlibParameters::create (json, parent);
         case QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_ENCRYPTION_KEY:   return QtTdLibAuthorizationStateWaitEncryptionKey::create   (json, parent);
@@ -66,15 +66,15 @@ QtTdLibAuthenticationCodeInfo::QtTdLibAuthenticationCodeInfo (QObject * parent)
 
 void QtTdLibAuthenticationCodeInfo::updateFromJson (const QJsonObject & json) {
     set_timeout_withJSON  (json ["timeout"]);
-    set_type_withJSON     (json ["type"],      &QtTdLibAuthenticationCodeType::createXXX);
-    set_nextType_withJSON (json ["next_type"], &QtTdLibAuthenticationCodeType::createXXX);
+    set_type_withJSON     (json ["type"],      &QtTdLibAuthenticationCodeType::createAbstract);
+    set_nextType_withJSON (json ["next_type"], &QtTdLibAuthenticationCodeType::createAbstract);
 }
 
 QtTdLibAuthenticationCodeType::QtTdLibAuthenticationCodeType (const QtTdLibObjectType::Type typeOf, QObject * parent)
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibAuthenticationCodeType * QtTdLibAuthenticationCodeType::createXXX (const QJsonObject & json, QObject * parent) {
+QtTdLibAuthenticationCodeType * QtTdLibAuthenticationCodeType::createAbstract (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_TELEGRAM_MESSAGE: return QtTdLibAuthenticationCodeTypeTelegramMessage::create (json, parent);
         case QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_SMS:              return QtTdLibAuthenticationCodeTypeSms::create             (json, parent);

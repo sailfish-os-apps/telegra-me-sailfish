@@ -9,7 +9,7 @@ class QtTdLibConnectionState : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibConnectionState (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibConnectionState * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+    static QtTdLibConnectionState * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
 class QtTdLibConnectionStateWaitingForNetwork : public QtTdLibConnectionState, public FactoryNoId<QtTdLibConnectionStateWaitingForNetwork> {

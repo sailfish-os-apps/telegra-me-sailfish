@@ -14,7 +14,7 @@ QtTdLibLinkState::QtTdLibLinkState (const QtTdLibObjectType::Type typeOf, QObjec
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibLinkState * QtTdLibLinkState::createXXX (const QJsonObject & json, QObject * parent) {
+QtTdLibLinkState * QtTdLibLinkState::createAbstract (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::LINK_STATE_IS_CONTACT:         return QtTdLibLinkStateIsContact::create        (json, parent);
         case QtTdLibObjectType::LINK_STATE_KNOWS_PHONE_NUMBER: return QtTdLibLinkStateKnowsPhoneNumber::create (json, parent);
@@ -50,10 +50,10 @@ void QtTdLibUser::updateFromJson (const QJsonObject & json) {
     set_restrictionReason_withJSON (json ["restriction_reason"]);
     set_isVerified_withJSON        (json ["is_verified"]);
     set_haveAccess_withJSON        (json ["have_access"]);
-    set_type_withJSON              (json ["type"],          &QtTdLibUserType::createXXX);
-    set_status_withJSON            (json ["status"],        &QtTdLibUserStatus::createXXX);
-    set_outgoingLink_withJSON      (json ["outgoing_link"], &QtTdLibLinkState::createXXX);
-    set_incomingLink_withJSON      (json ["incoming_link"], &QtTdLibLinkState::createXXX);
+    set_type_withJSON              (json ["type"],          &QtTdLibUserType::createAbstract);
+    set_status_withJSON            (json ["status"],        &QtTdLibUserStatus::createAbstract);
+    set_outgoingLink_withJSON      (json ["outgoing_link"], &QtTdLibLinkState::createAbstract);
+    set_incomingLink_withJSON      (json ["incoming_link"], &QtTdLibLinkState::createAbstract);
     set_profilePhoto_withJSON      (json ["profile_photo"], &QtTdLibProfilePhoto::create);
 }
 
@@ -61,7 +61,7 @@ QtTdLibUserType::QtTdLibUserType (const QtTdLibObjectType::Type typeOf, QObject 
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibUserType * QtTdLibUserType::createXXX (const QJsonObject & json, QObject * parent) {
+QtTdLibUserType * QtTdLibUserType::createAbstract (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::USER_TYPE_REGULAR: return QtTdLibUserTypeRegular::create (json, parent);
         case QtTdLibObjectType::USER_TYPE_DELETED: return QtTdLibUserTypeDeleted::create (json, parent);
@@ -91,7 +91,7 @@ QtTdLibUserStatus::QtTdLibUserStatus (const QtTdLibObjectType::Type typeOf, QObj
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibUserStatus * QtTdLibUserStatus::createXXX (const QJsonObject & json, QObject * parent) {
+QtTdLibUserStatus * QtTdLibUserStatus::createAbstract (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::USER_STATUS_EMPTY:      return QtTdLibUserStatusEmpty::create     (json, parent);
         case QtTdLibObjectType::USER_STATUS_ONLINE:     return QtTdLibUserStatusOnline::create    (json, parent);

@@ -22,7 +22,7 @@ class QtTdLibChatType : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibChatType (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibChatType * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+    static QtTdLibChatType * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
 class QtTdLibChatTypePrivate : public QtTdLibChatType, public FactoryNoId<QtTdLibChatTypePrivate> {

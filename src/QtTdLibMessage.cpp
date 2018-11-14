@@ -6,7 +6,7 @@ QtTdLibMessageContent::QtTdLibMessageContent (const QtTdLibObjectType::Type type
     : QtTdLibAbstractObject { typeOf, parent }
 { }
 
-QtTdLibMessageContent * QtTdLibMessageContent::createXXX (const QJsonObject & json, QObject * parent) {
+QtTdLibMessageContent * QtTdLibMessageContent::createAbstract (const QJsonObject & json, QObject * parent) {
     switch (QtTdLibEnums::objectTypeEnumFromJson (json)) {
         case QtTdLibObjectType::MESSAGE_ANIMATION:  return QtTdLibMessageAnimation::create (json, parent);
         case QtTdLibObjectType::MESSAGE_AUDIO:      return QtTdLibMessageAudio::create     (json, parent);
@@ -47,7 +47,7 @@ void QtTdLibMessage::updateFromJson (const QJsonObject & json) {
     set_views_withJSON            (json ["views"]);
     set_replyToMessageId_withJSON (json ["reply_to_message_id"]);
     set_mediaAlbumId_withJSON     (json ["media_album_id"]);
-    set_content_withJSON          (json ["content"], &QtTdLibMessageContent::createXXX);
+    set_content_withJSON          (json ["content"], &QtTdLibMessageContent::createAbstract);
 }
 
 QtTdLibMessagePhoto::QtTdLibMessagePhoto (QObject * parent)

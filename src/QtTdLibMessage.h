@@ -11,7 +11,7 @@ class QtTdLibMessageContent : public QtTdLibAbstractObject {
 public:
     explicit QtTdLibMessageContent (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
-    static QtTdLibMessageContent * createXXX (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+    static QtTdLibMessageContent * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
 };
 
 class QtTdLibMessageText : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageText> {
