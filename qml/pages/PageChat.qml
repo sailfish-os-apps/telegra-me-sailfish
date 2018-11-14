@@ -106,6 +106,7 @@ Page {
             DelegateDownloadableImage {
                 width: (delegateMsgPhoto.photoSizeItem ? Math.min (delegateMsgPhoto.photoSizeItem .width, delegateMsgPhoto.width) : 1);
                 fileItem: (delegateMsgPhoto.photoSizeItem ? delegateMsgPhoto.photoSizeItem.photo : null);
+                autoDownload: true;
                 Container.forcedHeight: (delegateMsgPhoto.photoSizeItem ? delegateMsgPhoto.photoSizeItem.height * width / delegateMsgPhoto.photoSizeItem.width : 1);
             }
         }
@@ -892,6 +893,10 @@ Page {
         implicitHeight: (layoutFooter.height + layoutFooter.anchors.margins * 2);
         ExtraAnchors.bottomDock: parent;
 
+        Rectangle {
+            color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
+            anchors.fill: parent;
+        }
         ColumnContainer {
             id: layoutFooter;
             verticalSpacing: 1;
@@ -1266,16 +1271,9 @@ Page {
         implicitHeight: (Math.max (headerIcon.height, headerText.height) + Theme.paddingMedium * 2);
         ExtraAnchors.topDock: parent;
 
+        Behavior on opacity { NumberAnimation { duration: 150; } }
         Rectangle {
-            z: -2;
-            color: "black";
-            opacity: 0.65;
-            anchors.fill: parent;
-        }
-        Rectangle {
-            z: -1;
-            color: Theme.primaryColor;
-            opacity: 0.35;
+            color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
             anchors.fill: parent;
         }
         Label {

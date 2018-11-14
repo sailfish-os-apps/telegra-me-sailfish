@@ -9,11 +9,10 @@ Item {
 
     property int size : Theme.iconSizeMedium;
 
-    property bool background : true;
-
     property alias cache        : img.cache;
     property alias asynchronous : img.asynchronous;
     property alias fileItem     : helper.fileItem;
+    property alias background   : rect.visible;
     property alias autoDownload : helper.autoDownload;
 
     readonly property bool valid : (img.status === Image.Ready);
@@ -22,9 +21,9 @@ Item {
         id: helper;
     }
     Rectangle {
+        id: rect;
         color: "gray";
         opacity: 0.35;
-        visible: background;
         anchors.fill: parent;
     }
     Image {
@@ -38,6 +37,13 @@ Item {
         horizontalAlignment: Image.AlignHCenter;
         anchors.fill: parent;
         //autoTransform: true;
+    }
+    Image {
+        source: ((helper.downloadable && !helper.downloading && !helper.downloaded)
+                 ? "image://theme/icon-m-cloud-download?#808080"
+                 : "");
+        sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+        anchors.centerIn: parent;
     }
     ProgressCircle {
         value: helper.progress;
