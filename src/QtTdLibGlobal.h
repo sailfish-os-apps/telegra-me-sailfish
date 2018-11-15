@@ -23,6 +23,8 @@ class QtTdLibGlobal : public QObject {
     Q_TDLIB_PROPERTY_SUBOBJECT (connectionState,       QtTdLibConnectionState)
     Q_TDLIB_PROPERTY_SUBOBJECT (authorizationState, QtTdLibAuthorizationState)
     QML_OBJMODEL_PROPERTY      (chatsList,                        QtTdLibChat)
+    QML_OBJMODEL_PROPERTY      (stickerSetsList,        QtTdLibStickerSetInfo)
+    QML_OBJMODEL_PROPERTY      (savedAnimationsList,         QtTdLibAnimation)
     QML_READONLY_VAR_PROPERTY  (recordingDuration,                        int)
     QML_READONLY_VAR_PROPERTY  (selectedPhotosCount,                      int)
     QML_READONLY_VAR_PROPERTY  (selectedVideosCount,                      int)
@@ -64,6 +66,7 @@ public:
     Q_INVOKABLE void sendMessagePhoto     (QtTdLibChat * chatItem, const bool groupInAlbum = true);
     Q_INVOKABLE void sendMessageVideo     (QtTdLibChat * chatItem, const bool groupInAlbum = true);
     Q_INVOKABLE void sendMessageVoiceNote (QtTdLibChat * chatItem, const QString & recording);
+    Q_INVOKABLE void sendMessageSticker   (QtTdLibChat * chatItem, QtTdLibSticker * stickerItem);
 
     Q_INVOKABLE bool    startRecordingAudio  (void);
     Q_INVOKABLE QString stopRecordingAudio   (void);

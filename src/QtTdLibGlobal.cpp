@@ -15,6 +15,8 @@
 QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     : QObject { parent }
     , m_chatsList { new QQmlObjectListModel<QtTdLibChat> { this } }
+    , m_stickerSetsList { new QQmlObjectListModel<QtTdLibStickerSetInfo> { this } }
+    , m_savedAnimationsList { new QQmlObjectListModel<QtTdLibAnimation> { this } }
     , m_recordingDuration { 0 }
     , m_selectedPhotosCount { 0 }
     , m_selectedVideosCount { 0 }
@@ -288,7 +290,7 @@ void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & tex
                         { "text", exec ({
                               { "@type", "parseTextEntities" },
                               { "text", text },
-                              { "parse_mode", {
+                              { "parse_mode", QJsonObject {
                                     { "@type", "textParseModeMarkdown" },
                                 }
                               }
@@ -432,6 +434,28 @@ void QtTdLibGlobal::sendMessageVoiceNote (QtTdLibChat * chatItem, const QString 
                   }
               });
     }
+}
+
+void QtTdLibGlobal::sendMessageSticker (QtTdLibChat * chatItem, QtTdLibSticker * stickerItem) {
+    send (QJsonObject {
+              { "@type", "sendMessage" },
+              { "chat_id", chatItem->get_id () },
+              { "reply_to_message_id", 0  },
+              { "disable_notification", false },
+              { "from_background", false },
+              { "reply_markup", QJsonValue::Null },
+              { "input_message_content", QJsonObject {
+                    { "@type", "inputMessageSticker" },
+                    { "width", stickerItem->get_width () },
+                    { "height", stickerItem->get_height () },
+                    { "sticker", QJsonObject {
+                          { "@type", "inputFileRemote" },
+                          { "id", stickerItem->get_sticker ()->get_remote ()->get_id () },
+                      }
+                    }
+                }
+              }
+          });
 }
 
 bool QtTdLibGlobal::startRecordingAudio (void) {
@@ -652,6 +676,57 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     oldMessageItem->deleteLater ();
                 }
             }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_INSTALLED_STICKER_SETS: {
+            const QJsonArray stickerSetIds = json ["sticker_set_ids"].toArray ();
+            for (const QJsonValue & tmp : stickerSetIds) {
+                const QString setId { tmp.toString () };
+                Q_UNUSED (setId)
+            }
+            break;
+        }
+        case QtTdLibObjectType::STICKER_SETS: {
+            const QJsonArray sets = json ["sets"].toArray ();
+            for (const QJsonValue & tmp : sets) {
+                const QJsonObject stickerSetJson { tmp.toObject () };
+                const qint64 stickerSetId { QtTdLibId64Helper::fromJsonToCpp (stickerSetJson ["id"]) };
+                if (QtTdLibStickerSetInfo * stickerSetItem = { QtTdLibCollection::allStickersSets.value (stickerSetId, Q_NULLPTR) }) {
+                    stickerSetItem->updateFromJson (stickerSetJson);
+                }
+                else {
+                    m_stickerSetsList->append (QtTdLibStickerSetInfo::create (stickerSetJson, this));
+                    send (QJsonObject {
+                              { "@type", "getStickerSet" },
+                              { "set_id", QtTdLibId64Helper::fromCppToJson (stickerSetId) },
+                          });
+                }
+            }
+            break;
+        }
+        case QtTdLibObjectType::STICKER_SET: {
+            const qint64 stickerSetId { QtTdLibId64Helper::fromJsonToCpp (json ["id"]) };
+            if (QtTdLibStickerSetInfo * stickerSetItem = { QtTdLibCollection::allStickersSets.value (stickerSetId, Q_NULLPTR) }) {
+                const QJsonArray stickerSetJson = json ["stickers"].toArray ();
+                QList<QtTdLibSticker *> stickersList { };
+                stickersList.reserve (stickerSetJson.count ());
+                for (const QJsonValue & tmp : stickerSetJson) {
+                    stickersList.append (QtTdLibSticker::create (tmp.toObject ()));
+                }
+                stickerSetItem->get_stickers ()->clear ();
+                stickerSetItem->get_stickers ()->append (stickersList);
+            }
+            break;
+        }
+        case QtTdLibObjectType::ANIMATIONS: {
+            const QJsonArray animations = json ["animations"].toArray ();
+            QList<QtTdLibAnimation *> animationsList { };
+            animationsList.reserve (animations.count ());
+            for (const QJsonValue & tmp : animations) {
+                animationsList.append (QtTdLibAnimation::create (tmp.toObject ()));
+            }
+            m_savedAnimationsList->clear ();
+            m_savedAnimationsList->append (animationsList);
             break;
         }
         default: break;

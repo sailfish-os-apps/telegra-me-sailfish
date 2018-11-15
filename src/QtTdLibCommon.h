@@ -16,6 +16,7 @@ class QtTdLibUser;
 class QtTdLibFile;
 class QtTdLibChat;
 class QtTdLibMessage;
+class QtTdLibStickerSetInfo;
 
 struct QtTdLibId32Helper {
     static QJsonValue fromCppToJson (const qint32       arg) { return QJsonValue { int (arg) }; }
@@ -244,15 +245,17 @@ public:
 
 namespace QtTdLibCollection {
 
-template<class T> struct IsCollectable                 { static constexpr bool VALUE { false }; };
-template<>        struct IsCollectable<QtTdLibUser>    { static constexpr bool VALUE { true }; };
-template<>        struct IsCollectable<QtTdLibFile>    { static constexpr bool VALUE { true }; };
-template<>        struct IsCollectable<QtTdLibChat>    { static constexpr bool VALUE { true }; };
-template<>        struct IsCollectable<QtTdLibMessage> { static constexpr bool VALUE { true }; };
+template<class T> struct IsCollectable                        { static constexpr bool VALUE { false }; };
+template<>        struct IsCollectable<QtTdLibUser>           { static constexpr bool VALUE { true }; };
+template<>        struct IsCollectable<QtTdLibFile>           { static constexpr bool VALUE { true }; };
+template<>        struct IsCollectable<QtTdLibChat>           { static constexpr bool VALUE { true }; };
+template<>        struct IsCollectable<QtTdLibMessage>        { static constexpr bool VALUE { true }; };
+template<>        struct IsCollectable<QtTdLibStickerSetInfo> { static constexpr bool VALUE { true }; };
 
-extern QHash<qint32, QtTdLibUser *> allUsers;
-extern QHash<qint32, QtTdLibFile *> allFiles;
-extern QHash<qint64, QtTdLibChat *> allChats;
+extern QHash<qint32, QtTdLibUser *>           allUsers;
+extern QHash<qint32, QtTdLibFile *>           allFiles;
+extern QHash<qint64, QtTdLibChat *>           allChats;
+extern QHash<qint64, QtTdLibStickerSetInfo *> allStickersSets;
 
 }
 

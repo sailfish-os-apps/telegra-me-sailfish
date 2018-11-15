@@ -183,6 +183,25 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
+class QtTdLibStickerSetInfo : public QtTdLibAbstractInt64IdObject, public FactoryInt64Id<QtTdLibStickerSetInfo> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_STRING (title)
+    Q_TDLIB_PROPERTY_STRING (name)
+    Q_TDLIB_PROPERTY_BOOL   (isInstalled)
+    Q_TDLIB_PROPERTY_BOOL   (isArchived)
+    Q_TDLIB_PROPERTY_BOOL   (isOfficial)
+    Q_TDLIB_PROPERTY_BOOL   (isMasks)
+    Q_TDLIB_PROPERTY_BOOL   (isViewed)
+    Q_TDLIB_PROPERTY_INT32  (size)
+    QML_OBJMODEL_PROPERTY   (covers,   QtTdLibSticker)
+    QML_OBJMODEL_PROPERTY   (stickers, QtTdLibSticker)
+
+public:
+    explicit QtTdLibStickerSetInfo (const qint64 id = 0, QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
 class QtTdLibAnimation : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibAnimation> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (duration)

@@ -6,6 +6,7 @@
 QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & str) {
     static const QHash<QString, QtTdLibObjectType::Type> ret {
         { "animation", QtTdLibObjectType::ANIMATION },
+        { "animations", QtTdLibObjectType::ANIMATIONS },
         { "audio", QtTdLibObjectType::AUDIO },
         { "authenticationCodeTypeSms", QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_SMS },
         { "authenticationCodeTypeTelegramMessage", QtTdLibObjectType::AUTHENTICATION_CODE_TYPE_TELEGRAM_MESSAGE },
@@ -53,6 +54,8 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "profilePhoto", QtTdLibObjectType::PROFILE_PHOTO },
         { "remoteFile", QtTdLibObjectType::REMOTE_FILE },
         { "sticker", QtTdLibObjectType::STICKER },
+        { "stickerSet", QtTdLibObjectType::STICKER_SET },
+        { "stickerSets", QtTdLibObjectType::STICKER_SETS },
         { "stickerSetInfo", QtTdLibObjectType::STICKER_SET_INFO },
         { "textEntity", QtTdLibObjectType::TEXT_ENTITY },
         { "textEntityTypeMention", QtTdLibObjectType::TEXT_ENTITY_TYPE_MENTION },
@@ -89,6 +92,7 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "updateDeleteMessages", QtTdLibObjectType::UPDATE_DELETE_MESSAGES },
         { "updateMessageSendSucceeded", QtTdLibObjectType::UPDATE_MESSAGE_SEND_SUCCEEDED  },
         { "updateFile", QtTdLibObjectType::UPDATE_FILE },
+        { "updateInstalledStickerSets", QtTdLibObjectType::UPDATE_INSTALLED_STICKER_SETS },
         { "webPage", QtTdLibObjectType::WEB_PAGE },
         { "video", QtTdLibObjectType::VIDEO },
         { "videoNote", QtTdLibObjectType::VIDEO_NOTE },

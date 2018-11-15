@@ -255,3 +255,30 @@ QtTdLibTextEntityTypeMentionName::QtTdLibTextEntityTypeMentionName (QObject * pa
 void QtTdLibTextEntityTypeMentionName::updateFromJson (const QJsonObject & json) {
     set_userId_withJSON (json ["user_id"]);
 }
+
+QtTdLibStickerSetInfo::QtTdLibStickerSetInfo (const qint64 id, QObject * parent)
+    : QtTdLibAbstractInt64IdObject { QtTdLibObjectType::STICKER_SET_INFO, id, parent }
+    , m_covers                     { new QQmlObjectListModel<QtTdLibSticker> { this } }
+    , m_stickers                   { new QQmlObjectListModel<QtTdLibSticker> { this } }
+{
+     QtTdLibCollection::allStickersSets.insert (id, this);
+}
+
+void QtTdLibStickerSetInfo::updateFromJson (const QJsonObject & json) {
+    set_title_withJSON       (json ["title"]);
+    set_name_withJSON        (json ["name"]);
+    set_isInstalled_withJSON (json ["is_installed"]);
+    set_isArchived_withJSON  (json ["is_archived"]);
+    set_isOfficial_withJSON  (json ["is_official"]);
+    set_isMasks_withJSON     (json ["is_masks"]);
+    set_isViewed_withJSON    (json ["is_viewed"]);
+    set_size_withJSON        (json ["size"]);
+    const QJsonArray coversList = json ["covers"].toArray ();
+    QList<QtTdLibSticker *> list { };
+    list.reserve (coversList.size ());
+    for (const QJsonValue & tmp : coversList) {
+        list.append (QtTdLibSticker::create (tmp.toObject ()));
+    }
+    m_covers->clear ();
+    m_covers->append (list);
+}

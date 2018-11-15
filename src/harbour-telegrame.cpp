@@ -74,6 +74,7 @@ int main (int argc, char * argv []) {
     qmlRegisterType<QtTdLibProfilePhoto>                          ("harbour.Telegrame", 1, 0, "TD_ProfilePhoto");
     qmlRegisterType<QtTdLibRemoteFile>                            ("harbour.Telegrame", 1, 0, "TD_RemoteFile");
     qmlRegisterType<QtTdLibSticker>                               ("harbour.Telegrame", 1, 0, "TD_Sticker");
+    qmlRegisterType<QtTdLibStickerSetInfo>                        ("harbour.Telegrame", 1, 0, "TD_StickerSet");
     qmlRegisterType<QtTdLibTextEntity>                            ("harbour.Telegrame", 1, 0, "TD_TextEntity");
     qmlRegisterType<QtTdLibTextEntityType>                        ("harbour.Telegrame", 1, 0, "TD_TextEntityType");
     qmlRegisterType<QtTdLibTextEntityTypeBold>                    ("harbour.Telegrame", 1, 0, "TD_TextEntityTypeBold");

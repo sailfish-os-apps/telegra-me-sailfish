@@ -19,6 +19,8 @@ Page {
 
     property TD_Chat currentChat : null;
 
+    property TD_StickerSet currentStickerSet : (TD_Global.stickerSetsList.count > 0 ? TD_Global.stickerSetsList.getFirst () : null);
+
     property TD_MessageContent currentMessageContent : null;
 
     property bool groupImagesInAlbums : true;
@@ -228,26 +230,55 @@ Page {
     Component {
         id: compoMsgSticker;
 
-        DelegateDownloadableImage {
+        ColumnContainer {
             id: delegateMsgSticker;
-            size: (page.width * 0.35);
-            fileItem: (stickerItem ? stickerItem.sticker : null);
-            background: false;
-            autoDownload: true;
-            implicitWidth: (stickerItem
-                            ? ((stickerItem.width > stickerItem.height)
-                               ? size
-                               : (stickerItem.width * size / stickerItem.height))
-                            : 0);
-            implicitHeight: (stickerItem
-                             ? ((stickerItem.height > stickerItem.width)
-                                ? size
-                                : (stickerItem.height * size / stickerItem.width))
-                             : 0);
 
             property TD_MessageSticker messageContentItem : null;
 
             readonly property TD_Sticker stickerItem : (messageContentItem ? messageContentItem.sticker : null);
+
+            readonly property int size : (page.width * 0.35);
+
+            HelperFileState {
+                id: helperMsgStickerFile;
+                fileItem: (delegateMsgSticker.stickerItem ? delegateMsgSticker.stickerItem.sticker : null);
+                autoDownload: true;
+            }
+            Item {
+                implicitWidth: (delegateMsgSticker.stickerItem
+                                ? ((delegateMsgSticker.stickerItem.width > delegateMsgSticker.stickerItem.height)
+                                   ? delegateMsgSticker.size
+                                   : (delegateMsgSticker.stickerItem.width * delegateMsgSticker.size / delegateMsgSticker.stickerItem.height))
+                                : 0);
+                implicitHeight: (delegateMsgSticker.stickerItem
+                                 ? ((delegateMsgSticker.stickerItem.height > delegateMsgSticker.stickerItem.width)
+                                    ? delegateMsgSticker.size
+                                    : (delegateMsgSticker.stickerItem.height * delegateMsgSticker.size / delegateMsgSticker.stickerItem.width))
+                                 : 0);
+
+                Image {
+                    cache: true;
+                    source: helperMsgStickerFile.url;
+                    sourceSize: Qt.size (width, height);
+                    asynchronous: true;
+                    anchors.fill: parent;
+                }
+
+                Image {
+                    source: ((helperMsgStickerFile.downloadable && !helperMsgStickerFile.downloading && !helper.downloaded)
+                             ? "image://theme/icon-m-cloud-download?#808080"
+                             : "");
+                    sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                    anchors.centerIn: parent;
+                }
+                ProgressCircle {
+                    value: helperMsgStickerFile.progress;
+                    visible: (helperMsgStickerFile.downloading || helperMsgStickerFile.uploading);
+                    implicitWidth: BusyIndicatorSize.Medium;
+                    implicitHeight: BusyIndicatorSize.Medium;
+                    anchors.centerIn: parent;
+                }
+            }
         }
     }
     Component {
@@ -1160,6 +1191,99 @@ Page {
 
                     VerticalScrollDecorator { flickable: parent; }
                 }
+            }
+            SilicaGridView {
+                clip: true;
+                model: (currentStickerSet ? currentStickerSet.stickers : 0);
+                visible: (currentMsgType === "MSGTYPE_05_STICKER");
+                cellWidth: (width / Math.floor (width / (Theme.iconSizeLarge + Theme.paddingSmall * 2)));
+                cellHeight: cellWidth;
+                quickScroll: true;
+                delegate: MouseArea {
+                    id: delegateSelectorSticker;
+                    implicitWidth: GridView.view.cellWidth;
+                    implicitHeight: GridView.view.cellHeight;
+                    onClicked: {
+                        TD_Global.sendMessageSticker (currentChat, stickerItem);
+                        flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
+                    }
+
+                    readonly property TD_Sticker stickerItem : modelData;
+
+                    HelperFileState {
+                        id: helperSelectorStickerFile;
+                        fileItem: (delegateSelectorSticker.stickerItem ? delegateSelectorSticker.stickerItem.sticker : null);
+                        autoDownload: true;
+                    }
+                    Image {
+                        cache: true;
+                        source: helperSelectorStickerFile.url;
+                        fillMode: Image.PreserveAspectFit;
+                        sourceSize: Qt.size (Theme.iconSizeLarge, Theme.iconSizeLarge);
+                        asynchronous: true;
+                        verticalAlignment: Image.AlignVCenter;
+                        horizontalAlignment: Image.AlignHCenter;
+                        anchors.centerIn: parent;
+                    }
+                    ProgressCircle {
+                        value: helperSelectorStickerFile.progress;
+                        visible: helperSelectorStickerFile.downloading;
+                        implicitWidth: BusyIndicatorSize.Medium;
+                        implicitHeight: BusyIndicatorSize.Medium;
+                        anchors.centerIn: parent;
+                    }
+                }
+                ExtraAnchors.horizontalFill: parent;
+                Container.forcedHeight: (Theme.itemSizeHuge * 1.65);
+            }
+            ListView {
+                model: TD_Global.stickerSetsList;
+                spacing: 1;
+                visible: (currentMsgType === "MSGTYPE_05_STICKER");
+                orientation: ListView.Horizontal;
+                delegate: MouseArea {
+                    id: delegateSelectorStickerSet;
+                    implicitWidth: height;
+                    ExtraAnchors.verticalFill: parent;
+                    onClicked: {
+                        currentStickerSet = stickerSetItem;
+                    }
+
+                    readonly property TD_StickerSet stickerSetItem : modelData;
+                    readonly property TD_Sticker    coverItem      : (stickerSetItem && stickerSetItem.covers.count >= 1 ? stickerSetItem.covers.getFirst () : null);
+
+                    readonly property bool active : (currentStickerSet === stickerSetItem);
+
+                    HelperFileState {
+                        id: helperSelectorStickerSetFile;
+                        fileItem: (delegateSelectorStickerSet.coverItem ? delegateSelectorStickerSet.coverItem.sticker : null);
+                        autoDownload: true;
+                    }
+                    Rectangle {
+                        color: (delegateSelectorStickerSet.active || pressed ? Theme.highlightColor : Theme.primaryColor);
+                        opacity: (delegateSelectorStickerSet.active ? 0.35 : 0.15);
+                        anchors.fill: parent;
+                    }
+                    Image {
+                        cache: true;
+                        source: helperSelectorStickerSetFile.url;
+                        fillMode: Image.PreserveAspectFit;
+                        sourceSize: Qt.size (Theme.iconSizeMedium * 0.85, Theme.iconSizeMedium * 0.85);
+                        asynchronous: true;
+                        verticalAlignment: Image.AlignVCenter;
+                        horizontalAlignment: Image.AlignHCenter;
+                        anchors.centerIn: parent;
+                    }
+                    ProgressCircle {
+                        value: helperSelectorStickerSetFile.progress;
+                        visible: helperSelectorStickerSetFile.downloading;
+                        implicitWidth: BusyIndicatorSize.Small;
+                        implicitHeight: BusyIndicatorSize.Small;
+                        anchors.centerIn: parent;
+                    }
+                }
+                ExtraAnchors.horizontalFill: parent;
+                Container.forcedHeight: (Theme.iconSizeMedium * 1.15);
             }
             RowContainer {
                 visible: (currentMsgType === "MSGTYPE_07_VOICE");
