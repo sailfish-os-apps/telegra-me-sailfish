@@ -623,7 +623,7 @@ ApplicationWindow {
                         TD_ObjectType.MESSAGE_TEXT,
                         TD_ObjectType.MESSAGE_PHOTO,
                         TD_ObjectType.MESSAGE_VIDEO,
-                        TD_ObjectType.MESSAGE_AUDIO,
+                        //TD_ObjectType.MESSAGE_AUDIO,
                         TD_ObjectType.MESSAGE_STICKER,
                         //TD_ObjectType.MESSAGE_ANIMATION,
                         TD_ObjectType.MESSAGE_VOICE_NOTE,
