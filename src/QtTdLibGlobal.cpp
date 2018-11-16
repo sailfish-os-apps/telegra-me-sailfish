@@ -20,6 +20,8 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     , m_recordingDuration { 0 }
     , m_selectedPhotosCount { 0 }
     , m_selectedVideosCount { 0 }
+    , m_currentChat { Q_NULLPTR }
+    , m_currentMessageContent { Q_NULLPTR }
     , m_svgIconForMimetype {
 { "image/png", "image" },
 { "image/jpeg", "image" },
@@ -81,7 +83,7 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
 { "application/x-ms-dos-executable", "executable" },
           }
     , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { this } }
-    , m_audioRecorder    { new QAudioRecorder     { this } }
+    , m_audioRecorder { new QAudioRecorder { this } }
 {
     QAudioEncoderSettings audioEncoderSettings { };
     audioEncoderSettings.setCodec        ("audio/PCM"); // "audio/speex"
@@ -187,6 +189,10 @@ QString QtTdLibGlobal::localPathFromUrl (const QString & url) const {
     return QUrl (url).toLocalFile ();
 }
 
+QString QtTdLibGlobal::getMimeTypeForPath (const QString & path) const {
+    return m_mimeDb.mimeTypeForFile (path).name ();
+}
+
 QString QtTdLibGlobal::getSvgIconForMimeType (const QString & type) const {
     return m_svgIconForMimetype.value (type, "file");
 }
@@ -272,6 +278,43 @@ bool QtTdLibGlobal::isVideoSelected (const QString & path) const {
 void QtTdLibGlobal::unselectAllVideos (void) {
     qDeleteAll (m_selectedVideosList);
     set_selectedVideosCount (0);
+}
+
+void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
+    closeChat (m_currentChat);
+    if (chatItem != Q_NULLPTR) {
+        set_currentChat (chatItem);
+        send (QJsonObject {
+                  { "@type", "openChat" },
+                  { "chat_id", chatItem->get_id () },
+              });
+        if (chatItem->get_messagesModel ()->count () < 15) {
+            loadMoreMessages (chatItem, 15); // FIXME : maybe a better way...
+        }
+    }
+}
+
+void QtTdLibGlobal::closeChat (QtTdLibChat * chatItem) {
+    if (chatItem != Q_NULLPTR) {
+        set_currentChat (Q_NULLPTR);
+        send (QJsonObject {
+                  { "@type", "closeChat" },
+                  { "chat_id", chatItem->get_id () },
+              });
+    }
+}
+
+void QtTdLibGlobal::loadMoreMessages (QtTdLibChat * chatItem, const int count) {
+    if (chatItem != Q_NULLPTR && !chatItem->get_messagesModel ()->isEmpty () && count > 0) {
+    send (QJsonObject {
+             { "@type", "getChatHistory" },
+             { "chat_id",  chatItem->get_id () },
+             { "from_message_id", chatItem->get_messagesModel ()->first ()->get_id () }, // Identifier of the message starting from which history must be fetched; use 0 to get results from the begining
+             { "offset", 0 }, // Specify 0 to get results from exactly the from_message_id or a negative offset to get the specified message and some newer messages
+             { "limit", count }, // The maximum number of messages to be returned; must be positive and can't be greater than 100. If the offset is negative, the limit must be greater than -offset. Fewer messages may be returned than specified by the limit, even if the end of the message history has not been reached
+             { "only_local", false }, // If true, returns only messages that are available locally without sending network requests
+          });
+    }
 }
 
 void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & text) {
@@ -451,6 +494,26 @@ void QtTdLibGlobal::sendMessageSticker (QtTdLibChat * chatItem, QtTdLibSticker *
                     { "sticker", QJsonObject {
                           { "@type", "inputFileRemote" },
                           { "id", stickerItem->get_sticker ()->get_remote ()->get_id () },
+                      }
+                    }
+                }
+              }
+          });
+}
+
+void QtTdLibGlobal::sendMessageDocument (QtTdLibChat * chatItem, const QString & path) {
+    send (QJsonObject {
+              { "@type", "sendMessage" },
+              { "chat_id", chatItem->get_id () },
+              { "reply_to_message_id", 0 },
+              { "disable_notification", false },
+              { "from_background", false },
+              { "reply_markup", QJsonValue::Null },
+              { "input_message_content", QJsonObject {
+                    { "@type", "inputMessageDocument" },
+                    { "document", QJsonObject {
+                          { "@type", "inputFileLocal" },
+                          { "path", path },
                       }
                     }
                 }

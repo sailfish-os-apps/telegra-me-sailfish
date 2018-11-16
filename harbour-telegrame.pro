@@ -39,15 +39,16 @@ SOURCES += \
     $$PWD/libQtQmlTricks/gui/containers/QQuickRowContainer.cpp \
     $$PWD/libQtQmlTricks/gui/helpers/QQuickExtraAnchors.cpp \
     $$PWD/libQtQmlTricks/QtQmlTricks.cpp \
-    src/QtTdLibCommon.cpp \
-    src/QtTdLibConnection.cpp \
-    src/QtTdLibGlobal.cpp \
-    src/QtTdLibAuth.cpp \
-    src/QtTdLibChat.cpp \
-    src/QtTdLibContent.cpp \
-    src/QtTdLibFile.cpp \
-    src/QtTdLibMessage.cpp \
-    src/QtTdLibUser.cpp
+    $$PWD/src/QtTdLibCommon.cpp \
+    $$PWD/src/QtTdLibConnection.cpp \
+    $$PWD/src/QtTdLibGlobal.cpp \
+    $$PWD/src/QtTdLibAuth.cpp \
+    $$PWD/src/QtTdLibChat.cpp \
+    $$PWD/src/QtTdLibContent.cpp \
+    $$PWD/src/QtTdLibFile.cpp \
+    $$PWD/src/QtTdLibMessage.cpp \
+    $$PWD/src/QtTdLibUser.cpp \
+    $$PWD/src/TextFormatter.cpp
 
 HEADERS += \
     $$PWD/src/QtTdLibJsonWrapper.h \
@@ -63,22 +64,23 @@ HEADERS += \
     $$PWD/libQtQmlTricks/gui/containers/QQuickRowContainer.h \
     $$PWD/libQtQmlTricks/gui/helpers/QQuickExtraAnchors.h \
     $$PWD/libQtQmlTricks/QtQmlTricks.h \
-    src/QtTdLibCommon.h \
-    src/QtTdLibConnection.h \
-    src/QtTdLibGlobal.h \
-    src/QtTdLibAuth.h \
-    src/QtTdLibChat.h \
-    src/QtTdLibContent.h \
-    src/QtTdLibFile.h \
-    src/QtTdLibMessage.h \
-    src/QtTdLibUser.h
+    $$PWD/src/QtTdLibCommon.h \
+    $$PWD/src/QtTdLibConnection.h \
+    $$PWD/src/QtTdLibGlobal.h \
+    $$PWD/src/QtTdLibAuth.h \
+    $$PWD/src/QtTdLibChat.h \
+    $$PWD/src/QtTdLibContent.h \
+    $$PWD/src/QtTdLibFile.h \
+    $$PWD/src/QtTdLibMessage.h \
+    $$PWD/src/QtTdLibUser.h \
+    $$PWD/src/TextFormatter.h
 
 RESOURCES += \
     $$PWD/qml.qrc \
-    flags.qrc \
-    icons.qrc \
-    symbols.qrc \
-    images.qrc
+    $$PWD/flags.qrc \
+    $$PWD/icons.qrc \
+    $$PWD/symbols.qrc \
+    $$PWD/images.qrc
 
 OTHER_FILES += \
     $$PWD/$${TARGET}.desktop \

@@ -19,11 +19,13 @@
 #include "QtTdLibMessage.h"
 #include "QtTdLibFile.h"
 #include "QtTdLibChat.h"
+#include "TextFormatter.h"
 
 int main (int argc, char * argv []) {
     QtQmlTricks::registerComponents ();
     //qmlRegisterType<QtTdLibStickerSetInfo>                        ("harbour.Telegrame", 1, 0, "TD_StickerSetInfo");
     qmlRegisterSingletonType<QtTdLibGlobal>                       ("harbour.Telegrame", 1, 0, "TD_Global", &QtTdLibGlobal::qmlSingletonFactory);
+    qmlRegisterType<TextFormatter>                                ("harbour.Telegrame", 1, 0, "TextFormatter");
     qmlRegisterType<QtTdLibAbstractObject>                        ("harbour.Telegrame", 1, 0, "TD_AbstractObject");
     qmlRegisterType<QtTdLibAnimation>                             ("harbour.Telegrame", 1, 0, "TD_Animation");
     qmlRegisterType<QtTdLibAudio>                                 ("harbour.Telegrame", 1, 0, "TD_Audio");

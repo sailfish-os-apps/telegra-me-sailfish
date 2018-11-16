@@ -5,6 +5,7 @@
 #include <QAudioRecorder>
 #include <QObject>
 #include <QQmlEngine>
+#include <QMimeDatabase>
 
 #include "QtTdLibCommon.h"
 #include "QtTdLibJsonWrapper.h"
@@ -28,6 +29,8 @@ class QtTdLibGlobal : public QObject {
     QML_READONLY_VAR_PROPERTY  (recordingDuration,                        int)
     QML_READONLY_VAR_PROPERTY  (selectedPhotosCount,                      int)
     QML_READONLY_VAR_PROPERTY  (selectedVideosCount,                      int)
+    QML_READONLY_PTR_PROPERTY  (currentChat,                      QtTdLibChat)
+    QML_WRITABLE_PTR_PROPERTY  (currentMessageContent,  QtTdLibMessageContent)
 
 public:
     explicit QtTdLibGlobal (QObject * parent = Q_NULLPTR);
@@ -46,6 +49,7 @@ public:
     Q_INVOKABLE QString urlFromLocalPath (const QString & path) const;
     Q_INVOKABLE QString localPathFromUrl (const QString & url) const;
 
+    Q_INVOKABLE QString getMimeTypeForPath    (const QString & path) const;
     Q_INVOKABLE QString getSvgIconForMimeType (const QString & type) const;
 
     Q_INVOKABLE QtTdLibFile * getFileItemById (const qint32 id) const;
@@ -62,11 +66,17 @@ public:
     Q_INVOKABLE bool isVideoSelected   (const QString & path) const;
     Q_INVOKABLE void unselectAllVideos (void);
 
+    Q_INVOKABLE void openChat  (QtTdLibChat * chatItem);
+    Q_INVOKABLE void closeChat (QtTdLibChat * chatItem);
+
+    Q_INVOKABLE void loadMoreMessages (QtTdLibChat * chatItem, const int count);
+
     Q_INVOKABLE void sendMessageText      (QtTdLibChat * chatItem, const QString & text);
     Q_INVOKABLE void sendMessagePhoto     (QtTdLibChat * chatItem, const bool groupInAlbum = true);
     Q_INVOKABLE void sendMessageVideo     (QtTdLibChat * chatItem, const bool groupInAlbum = true);
     Q_INVOKABLE void sendMessageVoiceNote (QtTdLibChat * chatItem, const QString & recording);
     Q_INVOKABLE void sendMessageSticker   (QtTdLibChat * chatItem, QtTdLibSticker * stickerItem);
+    Q_INVOKABLE void sendMessageDocument  (QtTdLibChat * chatItem, const QString & path);
 
     Q_INVOKABLE bool    startRecordingAudio  (void);
     Q_INVOKABLE QString stopRecordingAudio   (void);
@@ -94,6 +104,7 @@ private:
 
     QtTdLibJsonWrapper * m_tdLibJsonWrapper;
     QAudioRecorder * m_audioRecorder;
+    QMimeDatabase m_mimeDb;
 };
 
 #endif // QTTDLIBGLOBAL_H
