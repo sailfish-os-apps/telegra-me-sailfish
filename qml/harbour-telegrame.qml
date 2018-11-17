@@ -41,6 +41,13 @@ ApplicationWindow {
     property bool groupImagesInAlbums : true;
     property bool groupVideosInAlbums : true;
 
+    property int autoMoveMode : stayFree;
+
+    readonly property int stayFree          : 0;
+    readonly property int stayAtTop         : 1;
+    readonly property int stayAtBottom      : 2;
+    readonly property int stayOnLastReadMsg : 3;
+
     /*Notification {
         id: notification;
         replacesId: 123456789;
@@ -113,7 +120,7 @@ ApplicationWindow {
                         var tmp = inputMsg.text.trim ();
                         if (tmp !== "") {
                             TD_Global.sendMessageText (TD_Global.currentChat, tmp);
-                            flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
+                            autoMoveMode = stayAtBottom;
                         }
                         inputMsg.text = "";
                     }
@@ -158,7 +165,7 @@ ApplicationWindow {
                         if (TD_Global.selectedPhotosCount > 0) {
                             TD_Global.sendMessagePhoto (TD_Global.currentChat, groupImagesInAlbums);
                             TD_Global.unselectAllPhotos ();
-                            flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
+                            autoMoveMode = stayAtBottom;
                         }
                     }
                 }
@@ -260,7 +267,7 @@ ApplicationWindow {
                         if (TD_Global.selectedVideosCount > 0) {
                             TD_Global.sendMessageVideo (TD_Global.currentChat, groupVideosInAlbums);
                             TD_Global.unselectAllVideos ();
-                            flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
+                            autoMoveMode = stayAtBottom;
                         }
                     }
                 }
@@ -352,7 +359,7 @@ ApplicationWindow {
                     implicitHeight: GridView.view.cellHeight;
                     onClicked: {
                         TD_Global.sendMessageSticker (TD_Global.currentChat, stickerItem);
-                        flickerMessages.autoMoveMode = flickerMessages.stayAtBottom;
+                        autoMoveMode = stayAtBottom;
                     }
 
                     readonly property TD_Sticker stickerItem : modelData;
@@ -530,7 +537,7 @@ ApplicationWindow {
                 Container.forcedHeight: (Theme.iconSizeExtraLarge * 2);
             }
             RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_VOICE);
+                visible: (currentMsgType === TD_ObjectType.MESSAGE_VOICE_NOTE);
                 spacing: Theme.paddingMedium;
                 anchors.margins: Theme.paddingSmall;
                 Container.forcedHeight: (implicitHeight + anchors.margins * 2);
@@ -814,13 +821,19 @@ ApplicationWindow {
 
             property TD_MessageDocument messageContentItem : null;
 
-            readonly property TD_FormattedText captionItem   : (messageContentItem  ? messageContentItem.caption  : null);
-            readonly property TD_Document      documentItem  : (messageContentItem  ? messageContentItem.document : null);
+            readonly property TD_FormattedText captionItem   : (messageContentItem  ? messageContentItem.caption   : null);
+            readonly property TD_Document      documentItem  : (messageContentItem  ? messageContentItem.document  : null);
+            readonly property TD_PhotoSize     photoSizeItem : (documentItem        ? documentItem.thumbnail       : null);
 
             HelperFileState {
                 id: helperMsgDocumentFile;
                 fileItem: (delegateMsgDocument.documentItem ? delegateMsgDocument.documentItem.document : null);
                 autoDownload: false;
+            }
+            HelperFileState {
+                id: helperMsgDocumentThumbnailFile;
+                fileItem: (delegateMsgDocument.photoSizeItem ? delegateMsgDocument.photoSizeItem.photo : null);
+                autoDownload: true;
             }
             Label {
                 text: (delegateMsgDocument.captionItem ? delegateMsgDocument.captionItem.text : "");
@@ -875,13 +888,14 @@ ApplicationWindow {
                     sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
                     anchors.verticalCenter: parent.verticalCenter;
 
-                    DelegateDownloadableImage {
-                        visible: valid;
-                        fileItem: (delegateMsgDocument.documentItem && delegateMsgDocument.documentItem.thumbnail
-                                   ? delegateMsgDocument.documentItem.thumbnail.photo
-                                   : null);
-                        background: false;
-                        autoDownload: true;
+                    Image {
+                        cache: false;
+                        source: helperMsgDocumentThumbnailFile.url;
+                        visible: (status === Image.Ready);
+                        fillMode: Image.PreserveAspectCrop;
+                        asynchronous: true;
+                        verticalAlignment: Image.AlignVCenter;
+                        horizontalAlignment: Image.AlignHCenter;
                         anchors.fill: parent;
                     }
                 }

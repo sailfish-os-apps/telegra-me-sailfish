@@ -113,6 +113,164 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
+class QtTdLibMessageBasicGroupChatCreate : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageBasicGroupChatCreate> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_STRING      (title)
+    QML_READONLY_CSTREF_PROPERTY (memberUserIds, QVariantList)
+
+public:
+    explicit QtTdLibMessageBasicGroupChatCreate (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibMessageSupergroupChatCreate : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageSupergroupChatCreate> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_STRING (title)
+
+public:
+    explicit QtTdLibMessageSupergroupChatCreate (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibMessageChatChangeTitle : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatChangeTitle> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_STRING (title)
+
+public:
+    explicit QtTdLibMessageChatChangeTitle (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibMessageChatChangePhoto : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatChangePhoto> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_SUBOBJECT (photo, QtTdLibPhoto)
+
+public:
+    explicit QtTdLibMessageChatChangePhoto (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibMessageChatDeletePhoto : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatDeletePhoto> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibMessageChatDeletePhoto (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibMessageChatAddMembers : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatAddMembers> {
+    Q_OBJECT
+    QML_READONLY_CSTREF_PROPERTY (memberUserIds, QVariantList)
+
+public:
+    explicit QtTdLibMessageChatAddMembers (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibMessageChatJoinByLink : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatJoinByLink> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibMessageChatJoinByLink (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibMessageChatDeleteMember : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatDeleteMember> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_ID32 (userId)
+
+public:
+    explicit QtTdLibMessageChatDeleteMember (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibMessageChatUpgradeTo : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatUpgradeTo> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_ID32 (supergroupId)
+
+public:
+    explicit QtTdLibMessageChatUpgradeTo (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibMessageChatUpgradeFrom : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatUpgradeFrom> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_STRING (title)
+    Q_TDLIB_PROPERTY_ID32   (basicGroupId)
+
+public:
+    explicit QtTdLibMessageChatUpgradeFrom (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibMessageContactRegistered : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageContactRegistered> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibMessageContactRegistered (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibCallDiscardReason : public QtTdLibAbstractObject {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibCallDiscardReason (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
+
+    static QtTdLibCallDiscardReason * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibCallDiscardReasonDeclined : public QtTdLibCallDiscardReason, public FactoryNoId<QtTdLibCallDiscardReasonDeclined> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibCallDiscardReasonDeclined (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibCallDiscardReasonDisconnected : public QtTdLibCallDiscardReason, public FactoryNoId<QtTdLibCallDiscardReasonDisconnected> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibCallDiscardReasonDisconnected (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibCallDiscardReasonEmpty : public QtTdLibCallDiscardReason, public FactoryNoId<QtTdLibCallDiscardReasonEmpty> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibCallDiscardReasonEmpty (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibCallDiscardReasonHungUp : public QtTdLibCallDiscardReason, public FactoryNoId<QtTdLibCallDiscardReasonHungUp> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibCallDiscardReasonHungUp (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibCallDiscardReasonMissed : public QtTdLibCallDiscardReason, public FactoryNoId<QtTdLibCallDiscardReasonMissed> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibCallDiscardReasonMissed (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibMessageCall : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageCall> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_INT32     (duration)
+    Q_TDLIB_PROPERTY_SUBOBJECT (discardReason, QtTdLibCallDiscardReason)
+
+public:
+    explicit QtTdLibMessageCall (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
 //messageExpiredPhoto = MessageContent;
 //messageExpiredVideo = MessageContent;
 //messageLocation location:location live_period:int32 = MessageContent;
@@ -120,17 +278,6 @@ public:
 //messageContact contact:contact = MessageContent;
 //messageGame game:game = MessageContent;
 //messageInvoice title:string description:string photo:photo currency:string total_amount:int53 start_parameter:string is_test:Bool need_shipping_address:Bool receipt_message_id:int53 = MessageContent;
-//messageCall discard_reason:CallDiscardReason duration:int32 = MessageContent;
-//messageBasicGroupChatCreate title:string member_user_ids:vector<int32> = MessageContent;
-//messageSupergroupChatCreate title:string = MessageContent;
-//messageChatChangeTitle title:string = MessageContent;
-//messageChatChangePhoto photo:photo = MessageContent;
-//messageChatDeletePhoto = MessageContent;
-//messageChatAddMembers member_user_ids:vector<int32> = MessageContent;
-//messageChatJoinByLink = MessageContent;
-//messageChatDeleteMember user_id:int32 = MessageContent;
-//messageChatUpgradeTo supergroup_id:int32 = MessageContent;
-//messageChatUpgradeFrom title:string basic_group_id:int32 = MessageContent;
 //messagePinMessage message_id:int53 = MessageContent;
 //messageScreenshotTaken = MessageContent;
 //messageChatSetTtl ttl:int32 = MessageContent;
@@ -138,7 +285,6 @@ public:
 //messageGameScore game_message_id:int53 game_id:int64 score:int32 = MessageContent;
 //messagePaymentSuccessful invoice_message_id:int53 currency:string total_amount:int53 = MessageContent;
 //messagePaymentSuccessfulBot invoice_message_id:int53 currency:string total_amount:int53 invoice_payload:bytes shipping_option_id:string order_info:orderInfo telegram_payment_charge_id:string provider_payment_charge_id:string = MessageContent;
-//messageContactRegistered = MessageContent;
 //messageUnsupported = MessageContent;
 
 class QtTdLibMessage : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<QtTdLibMessage> {
@@ -168,6 +314,7 @@ class QtTdLibMessage : public QtTdLibAbstractInt53IdObject, public FactoryInt53I
 
 public:
     explicit QtTdLibMessage (const qint64 id = 0, QObject * parent = Q_NULLPTR);
+    virtual ~QtTdLibMessage (void);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };

@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <QMimeDatabase>
+#include <QSortFilterProxyModel>
 
 #include "QtTdLibCommon.h"
 #include "QtTdLibJsonWrapper.h"
@@ -31,6 +32,7 @@ class QtTdLibGlobal : public QObject {
     QML_READONLY_VAR_PROPERTY  (selectedVideosCount,                      int)
     QML_READONLY_PTR_PROPERTY  (currentChat,                      QtTdLibChat)
     QML_WRITABLE_PTR_PROPERTY  (currentMessageContent,  QtTdLibMessageContent)
+    QML_CONSTANT_PTR_PROPERTY  (sortedChatsList,        QSortFilterProxyModel)
 
 public:
     explicit QtTdLibGlobal (QObject * parent = Q_NULLPTR);
@@ -66,8 +68,9 @@ public:
     Q_INVOKABLE bool isVideoSelected   (const QString & path) const;
     Q_INVOKABLE void unselectAllVideos (void);
 
-    Q_INVOKABLE void openChat  (QtTdLibChat * chatItem);
-    Q_INVOKABLE void closeChat (QtTdLibChat * chatItem);
+    Q_INVOKABLE void openChat              (QtTdLibChat * chatItem);
+    Q_INVOKABLE void closeChat             (QtTdLibChat * chatItem);
+    Q_INVOKABLE void markAllMessagesAsRead (QtTdLibChat * chatItem);
 
     Q_INVOKABLE void loadMoreMessages (QtTdLibChat * chatItem, const int count);
 

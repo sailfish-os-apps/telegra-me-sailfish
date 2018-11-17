@@ -22,6 +22,7 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     , m_selectedVideosCount { 0 }
     , m_currentChat { Q_NULLPTR }
     , m_currentMessageContent { Q_NULLPTR }
+    , m_sortedChatsList { new QSortFilterProxyModel { this } }
     , m_svgIconForMimetype {
 { "image/png", "image" },
 { "image/jpeg", "image" },
@@ -85,6 +86,10 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { this } }
     , m_audioRecorder { new QAudioRecorder { this } }
 {
+    m_sortedChatsList->setSourceModel (m_chatsList);
+    m_sortedChatsList->setSortRole (m_chatsList->roleForName ("order"));
+    m_sortedChatsList->setDynamicSortFilter (true);
+    m_sortedChatsList->sort (0, Qt::DescendingOrder);
     QAudioEncoderSettings audioEncoderSettings { };
     audioEncoderSettings.setCodec        ("audio/PCM"); // "audio/speex"
     audioEncoderSettings.setEncodingMode (QMultimedia::TwoPassEncoding);
@@ -301,6 +306,24 @@ void QtTdLibGlobal::closeChat (QtTdLibChat * chatItem) {
                   { "@type", "closeChat" },
                   { "chat_id", chatItem->get_id () },
               });
+    }
+}
+
+void QtTdLibGlobal::markAllMessagesAsRead (QtTdLibChat * chatItem) {
+    if (chatItem != Q_NULLPTR) {
+        QJsonArray messageIdsJson { };
+        for (QtTdLibMessage * messageItem : (* chatItem->get_messagesModel ())) {
+            if (messageItem->get_id () > chatItem->get_lastReadInboxMessageId ()) {
+                messageIdsJson.append (messageItem->get_id_asJSON ());
+            }
+        }
+        if (!messageIdsJson.isEmpty ()) {
+            send (QJsonObject {
+                      { "@type", "viewMessages" },
+                      { "chat_id", chatItem->get_id () },
+                      { "message_ids", messageIdsJson },
+                  });
+        }
     }
 }
 
@@ -657,6 +680,29 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             }
             break;
         }
+        case QtTdLibObjectType::UPDATE_CHAT_NOTIFICATION_SETTINGS: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_notificationSettings_withJSON (json ["notification_settings"], &QtTdLibChatNotificationSettings::create);
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_CHAT_IS_PINNED: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_order_withJSON    (json ["order"]);
+                chatItem->set_isPinned_withJSON (json ["is_pinned"]);
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_CHAT_DRAFT_MESSAGE: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_order_withJSON    (json ["order"]);
+                // TODO : draft_message subobject
+            }
+            break;
+        }
         case QtTdLibObjectType::UPDATE_NEW_MESSAGE: {
             const QJsonObject messageJson { json ["message"].toObject () };
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["chat_id"]) };
@@ -666,21 +712,22 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     messageItem->updateFromJson (messageJson);
                 }
                 else {
-                    chatItem->get_messagesModel ()->append (QtTdLibMessage::create (messageJson, chatItem));
+                    chatItem->addMessageItem (QtTdLibMessage::create (messageJson, chatItem));
                 }
             }
             break;
         }
         case QtTdLibObjectType::UPDATE_CHAT_LAST_MESSAGE: {
-            const QJsonObject messageJson { json ["last_message"].toObject () };
-            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["chat_id"]) };
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
             if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_order_withJSON (json ["order"]);
+                const QJsonObject messageJson { json ["last_message"].toObject () };
                 const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["id"]) };
                 if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
                     messageItem->updateFromJson (messageJson);
                 }
                 else {
-                    chatItem->get_messagesModel ()->append (QtTdLibMessage::create (messageJson, chatItem));
+                    chatItem->addMessageItem (QtTdLibMessage::create (messageJson, chatItem));
                 }
             }
             break;
@@ -696,7 +743,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                         messageItem->updateFromJson (messageJson);
                     }
                     else {
-                        chatItem->get_messagesModel ()->prepend (QtTdLibMessage::create (messageJson, chatItem));
+                        chatItem->addMessageItem (QtTdLibMessage::create (messageJson, chatItem));
                     }
                 }
             }
@@ -710,9 +757,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     for (const QJsonValue & tmp : messagesListJson) {
                         const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (tmp) };
                         if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
-                            qWarning () << "PERMANENTLY DELETING MESSAGE" << messageId << messageItem;
-                            chatItem->allMessages.remove (messageId); // FIXME : collection should auto-deref it...
-                            chatItem->get_messagesModel ()->remove (messageItem);
+                            chatItem->removeMessageItem (messageItem);
                             messageItem->deleteLater ();
                         }
                     }
@@ -729,15 +774,40 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     messageItem->updateFromJson (messageJson);
                 }
                 else {
-                    chatItem->get_messagesModel ()->append (QtTdLibMessage::create (messageJson, chatItem));
+                    chatItem->addMessageItem (QtTdLibMessage::create (messageJson, chatItem));
                 }
                 const qint64 oldMessageId { QtTdLibId53Helper::fromJsonToCpp (json ["old_message_id"]) };
                 if (QtTdLibMessage * oldMessageItem = { chatItem->getMessageItemById (oldMessageId) }) {
-                    qWarning () << "DELETING OLD TEMPORARY MESSAGE" << oldMessageId << oldMessageItem;
-                    chatItem->allMessages.remove (oldMessageId); // FIXME : collection should auto-deref it...
-                    chatItem->get_messagesModel ()->remove (oldMessageItem);
+                    chatItem->removeMessageItem (oldMessageItem);
                     oldMessageItem->deleteLater ();
                 }
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_MESSAGE_CONTENT: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (json ["message_id"]) };
+                if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
+                    messageItem->set_content_withJSON (json ["new_content"].toObject (), &QtTdLibMessageContent::createAbstract);
+                }
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_MESSAGE_EDITED: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (json ["message_id"]) };
+                if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
+                    messageItem->set_editDate_withJSON (json ["edit_date"]);
+                }
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_CHAT_ORDER: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_order_withJSON (json ["order"]);
             }
             break;
         }

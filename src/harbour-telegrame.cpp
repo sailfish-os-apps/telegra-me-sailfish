@@ -3,6 +3,7 @@
 #include <QQuickView>
 #include <QQmlEngine>
 #include <QUrl>
+#include <QSortFilterProxyModel>
 
 #include <qqml.h>
 #include <sailfishapp.h>
@@ -26,6 +27,7 @@ int main (int argc, char * argv []) {
     //qmlRegisterType<QtTdLibStickerSetInfo>                        ("harbour.Telegrame", 1, 0, "TD_StickerSetInfo");
     qmlRegisterSingletonType<QtTdLibGlobal>                       ("harbour.Telegrame", 1, 0, "TD_Global", &QtTdLibGlobal::qmlSingletonFactory);
     qmlRegisterType<TextFormatter>                                ("harbour.Telegrame", 1, 0, "TextFormatter");
+    qmlRegisterType<QSortFilterProxyModel>                        ("harbour.Telegrame", 1, 0, "SortFilterProxyModel");
     qmlRegisterType<QtTdLibAbstractObject>                        ("harbour.Telegrame", 1, 0, "TD_AbstractObject");
     qmlRegisterType<QtTdLibAnimation>                             ("harbour.Telegrame", 1, 0, "TD_Animation");
     qmlRegisterType<QtTdLibAudio>                                 ("harbour.Telegrame", 1, 0, "TD_Audio");

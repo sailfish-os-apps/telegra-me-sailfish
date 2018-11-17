@@ -67,6 +67,21 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
+class QtTdLibChatNotificationSettings : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibChatNotificationSettings> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_BOOL  (useDefaultMuteFor)
+    Q_TDLIB_PROPERTY_INT32 (muteFor)
+    //use_default_sound:bool
+    //sound:string
+    //use_default_show_preview:bool
+    //show_preview:bool
+
+public:
+    explicit QtTdLibChatNotificationSettings (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
 class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<QtTdLibChat> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (unreadCount)
@@ -74,23 +89,28 @@ class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<Q
     Q_TDLIB_PROPERTY_ID53      (lastReadInboxMessageId)
     Q_TDLIB_PROPERTY_ID53      (lastReadOutboxMessageId)
     Q_TDLIB_PROPERTY_ID53      (replyMarkupMessageId)
-    //order:Int64
+    Q_TDLIB_PROPERTY_INT64     (order)
     Q_TDLIB_PROPERTY_BOOL      (isPinned)
     Q_TDLIB_PROPERTY_STRING    (title)
     Q_TDLIB_PROPERTY_STRING    (clientData)
-    Q_TDLIB_PROPERTY_SUBOBJECT (type,   QtTdLibChatType)
+    Q_TDLIB_PROPERTY_SUBOBJECT (type, QtTdLibChatType)
     Q_TDLIB_PROPERTY_SUBOBJECT (photo, QtTdLibChatPhoto)
+    Q_TDLIB_PROPERTY_SUBOBJECT (notificationSettings, QtTdLibChatNotificationSettings)
+    QML_OBJMODEL_PROPERTY      (messagesModel, QtTdLibMessage)
     //last_message:message
-    //notification_settings:notificationSettings
     //draft_message:draftMessage
-    QML_OBJMODEL_PROPERTY     (messagesModel, QtTdLibMessage)
 
 public:
     explicit QtTdLibChat (const qint64 id = 0, QObject * parent = Q_NULLPTR);
 
     QHash<qint64, QtTdLibMessage *> allMessages;
 
-    Q_INVOKABLE QtTdLibMessage * getMessageItemById (const qint64 id) const;
+    Q_INVOKABLE QtTdLibMessage * getMessageItemById (const QString & id) const;
+
+    QtTdLibMessage * getMessageItemById (const qint64 id) const;
+
+    void addMessageItem    (QtTdLibMessage * messageItem);
+    void removeMessageItem (QtTdLibMessage * messageItem);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };

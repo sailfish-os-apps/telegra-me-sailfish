@@ -17,8 +17,39 @@ QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
     QtTdLibCollection::allChats.insert (id, this);
 }
 
+QtTdLibMessage * QtTdLibChat::getMessageItemById (const QString & id) const {
+    return getMessageItemById (id.toLongLong ());
+}
+
 QtTdLibMessage * QtTdLibChat::getMessageItemById (const qint64 id) const {
     return allMessages.value (id, Q_NULLPTR);
+}
+
+void QtTdLibChat::addMessageItem (QtTdLibMessage * messageItem) {
+    if (messageItem != Q_NULLPTR) {
+        if (m_messagesModel->isEmpty () || messageItem->get_id () > m_messagesModel->last ()->get_id ()) {
+            m_messagesModel->append (messageItem);
+        }
+        else if (messageItem->get_id () < m_messagesModel->first ()->get_id ()) {
+            m_messagesModel->prepend (messageItem);
+        }
+        else {
+            int idx { 0 };
+            while (idx < m_messagesModel->count ()) {
+                if (m_messagesModel->at (idx)->get_id () > messageItem->get_id ()) {
+                    m_messagesModel->insert (idx, messageItem);
+                    break;
+                }
+                ++idx;
+            }
+        }
+    }
+}
+
+void QtTdLibChat::removeMessageItem (QtTdLibMessage * messageItem) {
+    if (messageItem != Q_NULLPTR) {
+        m_messagesModel->remove (messageItem);
+    }
 }
 
 void QtTdLibChat::updateFromJson (const QJsonObject & json) {
@@ -30,8 +61,10 @@ void QtTdLibChat::updateFromJson (const QJsonObject & json) {
     set_isPinned_withJSON                (json ["is_pinned"]);
     set_title_withJSON                   (json ["title"]);
     set_clientData_withJSON              (json ["client_data"]);
-    set_type_withJSON                    (json ["type"].toObject (),  &QtTdLibChatType::createAbstract);
-    set_photo_withJSON                   (json ["photo"].toObject (), &QtTdLibChatPhoto::create);
+    set_order_withJSON                   (json ["order"]);
+    set_type_withJSON                    (json ["type"].toObject (),                  &QtTdLibChatType::createAbstract);
+    set_photo_withJSON                   (json ["photo"].toObject (),                 &QtTdLibChatPhoto::create);
+    set_notificationSettings_withJSON    (json ["notification_settings"].toObject (), &QtTdLibChatNotificationSettings::create);
 }
 
 QtTdLibChatType::QtTdLibChatType (const QtTdLibObjectType::Type typeOf, QObject * parent)
@@ -79,4 +112,13 @@ QtTdLibChatTypeSecret::QtTdLibChatTypeSecret (QObject * parent)
 void QtTdLibChatTypeSecret::updateFromJson (const QJsonObject & json) {
     set_secretChatId_withJSON (json ["secret_chat_id"]);
     set_userId_withJSON       (json ["user_id"]);
+}
+
+QtTdLibChatNotificationSettings::QtTdLibChatNotificationSettings(QObject * parent)
+    : QtTdLibAbstractObject { QtTdLibObjectType::CHAT_NOTIFICATION_SETTINGS, parent }
+{ }
+
+void QtTdLibChatNotificationSettings::updateFromJson (const QJsonObject & json) {
+    set_useDefaultMuteFor_withJSON (json ["use_default_mute_for"]);
+    set_muteFor_withJSON           (json ["mute_for"]);
 }

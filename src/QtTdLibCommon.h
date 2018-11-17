@@ -86,6 +86,17 @@ struct QtTdLibId64Helper {
     Q_SIGNALS: void NAME##Changed (void); \
     private:
 
+#define Q_TDLIB_PROPERTY_INT64(NAME) \
+    protected: Q_PROPERTY (QString NAME READ get_##NAME##_forQML NOTIFY NAME##Changed) \
+    private: qint64 m_##NAME { 0 }; \
+    public: qint64 get_##NAME (void) const { return m_##NAME; } \
+    public: QString get_##NAME##_forQML (void) const { return QString::number (m_##NAME); } \
+    public: QJsonValue get_##NAME##_asJSON (void) const { return QJsonValue (QString::number (m_##NAME)); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (json.toString ().toLongLong ()); } \
+    public Q_SLOTS: void set_##NAME (const qint64 NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
+    Q_SIGNALS: void NAME##Changed (void); \
+    private:
+
 #define Q_TDLIB_PROPERTY_ID32(NAME) \
     protected: Q_PROPERTY (QString NAME READ get_##NAME##_forQML NOTIFY NAME##Changed) \
     private: qint32 m_##NAME { 0 }; \

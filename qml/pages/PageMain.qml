@@ -386,8 +386,8 @@ Page {
         }
         SilicaListView {
             clip: true;
-            model: TD_Global.chatsList;
             quickScroll: true;
+            model: TD_Global.sortedChatsList;
             delegate: ListItem {
                 id: delegateChat;
                 implicitHeight: Theme.itemSizeMedium;
@@ -414,12 +414,31 @@ Page {
                     }
                     Label {
                         text: delegateChat.chatItem.title;
+                        elide: Text.ElideRight;
                         anchors.verticalCenter: parent.verticalCenter;
                         Container.horizontalStretch: 1;
                     }
+                    Image {
+                        source: "image://theme/icon-s-task?#808080";
+                        visible: (delegateChat.chatItem && delegateChat.chatItem.isPinned);
+                        sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
+                        anchors.verticalCenter: parent.verticalCenter;
+                    }
+                    Image {
+                        source: "image://theme/icon-m-speaker-mute?#808080";
+                        visible: (delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0);
+                        sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
+                        anchors.verticalCenter: parent.verticalCenter;
+                    }
+                    Item {
+                        visible: (delegateChat.chatItem.unreadCount > 0);
+                        Container.forcedWidth: Theme.paddingMedium;
+                    }
                     Label {
                         text: delegateChat.chatItem.unreadCount;
-                        color: Theme.highlightColor;
+                        color: (delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0
+                                ? Theme.secondaryColor
+                                : Theme.highlightColor);
                         visible: (delegateChat.chatItem.unreadCount > 0);
                         anchors.verticalCenter: parent.verticalCenter;
 
@@ -428,12 +447,13 @@ Page {
                             color: Theme.secondaryColor;
                             radius: (height * 0.5);
                             opacity: 0.35;
-                            implicitWidth: Math.max (parent.width + Theme.paddingLarge, implicitHeight);
-                            implicitHeight: (parent.height + Theme.paddingMedium);
+                            implicitWidth: Math.max (parent.width + Theme.paddingMedium * 2, implicitHeight);
+                            implicitHeight: (parent.height + Theme.paddingSmall * 2);
                             anchors.centerIn: parent;
                         }
                     }
                     Item {
+                        visible: (delegateChat.chatItem.unreadCount > 0);
                         Container.forcedWidth: Theme.paddingMedium;
                     }
                 }
