@@ -33,6 +33,10 @@ QtTdLibMessageContent * QtTdLibMessageContent::createAbstract (const QJsonObject
     }
 }
 
+QString QtTdLibMessageContent::asString (void) const {
+    return tr ("<Unsupported>");
+}
+
 QtTdLibMessageText::QtTdLibMessageText (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_TEXT, parent }
 { }
@@ -40,6 +44,14 @@ QtTdLibMessageText::QtTdLibMessageText (QObject * parent)
 void QtTdLibMessageText::updateFromJson (const QJsonObject & json) {
     set_text_withJSON    (json ["text"],     &QtTdLibFormattedText::create);
     set_webPage_withJSON (json ["web_page"], &QtTdLibWebPage::create);
+}
+
+QString QtTdLibMessageText::asString (void) const {
+    QString ret { };
+    if (m_text) {
+        ret += m_text->get_text ();
+    }
+    return ret;
 }
 
 QtTdLibMessage::QtTdLibMessage (const qint64 id, QObject * parent)
@@ -77,6 +89,10 @@ void QtTdLibMessagePhoto::updateFromJson (const QJsonObject & json) {
     set_photo_withJSON   (json ["photo"],   &QtTdLibPhoto::create);
 }
 
+QString QtTdLibMessagePhoto::asString (void) const {
+    return tr ("Photo");
+}
+
 QtTdLibMessageDocument::QtTdLibMessageDocument (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_DOCUMENT, parent }
 { }
@@ -86,12 +102,32 @@ void QtTdLibMessageDocument::updateFromJson (const QJsonObject & json) {
     set_document_withJSON (json ["document"], &QtTdLibDocument::create);
 }
 
+QString QtTdLibMessageDocument::asString (void) const {
+    QString ret { };
+    ret += tr ("Document");
+    if (m_document) {
+        ret += " - ";
+        ret += m_document->get_fileName ();
+    }
+    return ret;
+}
+
 QtTdLibMessageSticker::QtTdLibMessageSticker (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_STICKER, parent }
 { }
 
 void QtTdLibMessageSticker::updateFromJson (const QJsonObject & json) {
     set_sticker_withJSON (json ["sticker"], &QtTdLibSticker::create);
+}
+
+QString QtTdLibMessageSticker::asString (void) const {
+    QString ret { };
+    ret += tr ("Sticker");
+    if (m_sticker) {
+        ret += " - ";
+        ret += m_sticker->get_emoji ();
+    }
+    return ret;
 }
 
 QtTdLibMessageAnimation::QtTdLibMessageAnimation (QObject * parent)
@@ -103,6 +139,10 @@ void QtTdLibMessageAnimation::updateFromJson (const QJsonObject & json) {
     set_animation_withJSON (json ["animation"], &QtTdLibAnimation::create);
 }
 
+QString QtTdLibMessageAnimation::asString (void) const {
+    return tr ("Animation");
+}
+
 QtTdLibMessageVideoNote::QtTdLibMessageVideoNote (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_VIDEO_NOTE, parent }
 { }
@@ -110,6 +150,16 @@ QtTdLibMessageVideoNote::QtTdLibMessageVideoNote (QObject * parent)
 void QtTdLibMessageVideoNote::updateFromJson (const QJsonObject & json) {
     set_isViewed_withJSON  (json ["is_viewed"]);
     set_videoNote_withJSON (json ["video_note"], &QtTdLibVideoNote::create);
+}
+
+QString QtTdLibMessageVideoNote::asString (void) const {
+    QString ret { };
+    ret += tr ("Video note");
+    //if (m_videoNote) {
+    //    ret += " - ";
+    //    ret += m_videoNote->get_duration ();
+    //}
+    return ret;
 }
 
 QtTdLibMessageVoiceNote::QtTdLibMessageVoiceNote (QObject * parent)
@@ -122,6 +172,16 @@ void QtTdLibMessageVoiceNote::updateFromJson (const QJsonObject & json) {
     set_voiceNote_withJSON  (json ["voice_note"], &QtTdLibVoiceNote::create);
 }
 
+QString QtTdLibMessageVoiceNote::asString (void) const {
+    QString ret { };
+    ret += tr ("Voice note");
+    //if (m_voiceNote) {
+    //    ret += " - ";
+    //    ret += m_voiceNote->get_duration ();
+    //}
+    return ret;
+}
+
 QtTdLibMessageVideo::QtTdLibMessageVideo (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_VIDEO, parent }
 { }
@@ -131,6 +191,16 @@ void QtTdLibMessageVideo::updateFromJson (const QJsonObject & json) {
     set_video_withJSON   (json ["video"],   &QtTdLibVideo::create);
 }
 
+QString QtTdLibMessageVideo::asString (void) const {
+    QString ret { };
+    ret += tr ("Video");
+    if (m_video) {
+        ret += " - ";
+        ret += m_video->get_fileName ();
+    }
+    return ret;
+}
+
 QtTdLibMessageAudio::QtTdLibMessageAudio (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_AUDIO, parent }
 { }
@@ -138,6 +208,24 @@ QtTdLibMessageAudio::QtTdLibMessageAudio (QObject * parent)
 void QtTdLibMessageAudio::updateFromJson (const QJsonObject & json) {
     set_caption_withJSON (json ["caption"], &QtTdLibFormattedText::create);
     set_audio_withJSON   (json ["audio"],   &QtTdLibAudio::create);
+}
+
+QString QtTdLibMessageAudio::asString (void) const {
+    QString ret { };
+    ret += tr ("Music");
+    if (m_audio) {
+        ret += " - ";
+        if (m_audio->get_title ().isEmpty () && m_audio->get_performer ().isEmpty ()) {
+            ret += m_audio->get_fileName ();
+        }
+        else {
+            ret += m_audio->get_title ();
+            ret += " (";
+            ret += m_audio->get_performer ();
+            ret += ")";
+        }
+    }
+    return ret;
 }
 
 QtTdLibMessageBasicGroupChatCreate::QtTdLibMessageBasicGroupChatCreate (QObject * parent)

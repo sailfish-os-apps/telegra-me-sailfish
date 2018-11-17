@@ -391,7 +391,7 @@ Page {
             model: TD_Global.sortedChatsList;
             delegate: ListItem {
                 id: delegateChat;
-                implicitHeight: Theme.itemSizeMedium;
+                implicitHeight: (layoutChat.height + layoutChat.anchors.margins * 2);
                 ExtraAnchors.horizontalFill: parent;
                 onClicked: {
                     pageStack.push (compoPageChat, {
@@ -399,11 +399,21 @@ Page {
                                     });
                 }
 
-                readonly property TD_Chat      chatItem      : modelData;
-                readonly property TD_ChatPhoto chatPhotoItem : (chatItem ? chatItem.photo : null);
-                readonly property TD_Message   lastMsgItem   : ((chatItem.messagesModel.count > 0)
-                                                                 ? chatItem.messagesModel.getLast ()
-                                                                 : null);
+                readonly property TD_Chat           chatItem           : modelData;
+                readonly property TD_ChatPhoto      chatPhotoItem      : (chatItem ? chatItem.photo : null);
+                readonly property TD_Message        lastMsgItem        : ((chatItem.messagesModel.count > 0) ? chatItem.messagesModel.getLast () : null);
+                readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
+                readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
+                readonly property string            description        : {
+                    var ret = "";
+                    if (lastMsgUserItem) {
+                        ret += (lastMsgUserItem.firstName + " " + lastMsgUserItem.lastName + " : ");
+                    }
+                    if (lastMsgContentItem) {
+                        ret += lastMsgContentItem.asString ();
+                    }
+                    return ret;
+                }
 
                 Timer {
                     id: timerNotif;
@@ -448,29 +458,7 @@ Page {
                             ]
                         }
                     ]
-                    body: {
-                        var ret = "";
-                        if (delegateChat.lastMsgItem) {
-                            var tmp = TD_Global.getUserItemById (delegateChat.lastMsgItem.senderUserId);
-                            if (tmp) {
-                                ret += (tmp.firstName + " " + tmp.lastName + " : ");
-                            }
-                            if (delegateChat.lastMsgItem.content) {
-                                switch (delegateChat.lastMsgItem.content.typeOf) {
-                                case TD_ObjectType.MESSAGE_TEXT:       ret += delegateChat.lastMsgItem.content.text.text; break;
-                                case TD_ObjectType.MESSAGE_PHOTO:      ret += qsTr ("Photo"); break;
-                                case TD_ObjectType.MESSAGE_DOCUMENT:   ret += qsTr ("File"); break;
-                                case TD_ObjectType.MESSAGE_STICKER:    ret += qsTr ("Sticker"); break;
-                                case TD_ObjectType.MESSAGE_VIDEO:      ret += qsTr ("Video"); break;
-                                case TD_ObjectType.MESSAGE_AUDIO:      ret += qsTr ("Audio"); break;
-                                case TD_ObjectType.MESSAGE_ANIMATION:  ret += qsTr ("Animatio"); break;
-                                case TD_ObjectType.MESSAGE_VOICE_NOTE: ret += qsTr ("Voice note"); break;
-                                default:                               ret += qsTr ("<Unsupported>"); break;r
-                                }
-                            }
-                        }
-                        return ret;
-                    }
+                    body:delegateChat.description;
                     onClicked: {
                         while (pageStack.currentPage !== page) {
                             pageStack.navigateBack ();
@@ -503,6 +491,7 @@ Page {
                     property bool dirty : false;
                 }
                 RowContainer {
+                    id: layoutChat;
                     spacing: Theme.paddingMedium;
                     anchors {
                         margins: Theme.paddingMedium;
@@ -517,11 +506,39 @@ Page {
                         autoDownload: true;
                         anchors.verticalCenter: parent.verticalCenter;
                     }
-                    Label {
-                        text: delegateChat.chatItem.title;
-                        elide: Text.ElideRight;
+                    ColumnContainer {
                         anchors.verticalCenter: parent.verticalCenter;
                         Container.horizontalStretch: 1;
+
+                        Label {
+                            text: delegateChat.chatItem.title;
+                            elide: Text.ElideRight;
+                            maximumLineCount: 1;
+                            ExtraAnchors.horizontalFill: parent;
+                        }
+                        RowContainer {
+                            spacing: Theme.paddingSmall;
+                            ExtraAnchors.horizontalFill: parent;
+
+                            Label {
+                                text: delegateChat.description;
+                                color: Theme.secondaryColor;
+                                elide: Text.ElideRight;
+                                wrapMode: Text.NoWrap;
+                                maximumLineCount: 1;
+                                font.pixelSize: Theme.fontSizeExtraSmall;
+                                anchors.verticalCenter: parent.verticalCenter;
+                                Container.horizontalStretch: 1;
+                            }
+                            Image {
+                                source: "image://theme/icon-m-acknowledge?%1".arg (Theme.highlightColor);
+                                visible: (delegateChat.lastMsgItem &&
+                                          delegateChat.lastMsgItem.isOutgoing &&
+                                          delegateChat.lastMsgItem.id <= delegateChat.chatItem.lastReadOutboxMessageId);
+                                sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
+                                anchors.verticalCenter: parent.verticalCenter;
+                            }
+                        }
                     }
                     Image {
                         source: "image://theme/icon-s-task?#808080";
@@ -541,7 +558,7 @@ Page {
                     }
                     Label {
                         text: delegateChat.chatItem.unreadCount;
-                        color: (delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0
+                        color: ((delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0)
                                 ? Theme.secondaryColor
                                 : Theme.highlightColor);
                         visible: (delegateChat.chatItem.unreadCount > 0);

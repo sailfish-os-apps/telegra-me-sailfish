@@ -12,6 +12,8 @@ public:
     explicit QtTdLibMessageContent (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
 
     static QtTdLibMessageContent * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+
+    Q_INVOKABLE virtual QString asString (void) const;
 };
 
 class QtTdLibMessageText : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageText> {
@@ -23,6 +25,8 @@ public:
     explicit QtTdLibMessageText (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessagePhoto : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessagePhoto> {
@@ -34,6 +38,8 @@ public:
     explicit QtTdLibMessagePhoto (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageDocument : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageDocument> {
@@ -45,6 +51,8 @@ public:
     explicit QtTdLibMessageDocument (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageSticker : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageSticker> {
@@ -55,6 +63,8 @@ public:
     explicit QtTdLibMessageSticker (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageAnimation : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageAnimation> {
@@ -66,6 +76,8 @@ public:
     explicit QtTdLibMessageAnimation (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageVideoNote : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageVideoNote> {
@@ -77,6 +89,8 @@ public:
     explicit QtTdLibMessageVideoNote (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageVoiceNote : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageVoiceNote> {
@@ -89,6 +103,8 @@ public:
     explicit QtTdLibMessageVoiceNote (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageVideo : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageVideo> {
@@ -100,6 +116,8 @@ public:
     explicit QtTdLibMessageVideo (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageAudio : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageAudio> {
@@ -111,6 +129,8 @@ public:
     explicit QtTdLibMessageAudio (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageBasicGroupChatCreate : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageBasicGroupChatCreate> {

@@ -49,29 +49,6 @@ ApplicationWindow {
     readonly property int stayAtBottom      : 2;
     readonly property int stayOnLastReadMsg : 3;
 
-    /*Notification {
-        id: notification;
-        replacesId: 123456789;
-        appIcon: "/home/nemo/.telegrame/profile_photos/439636578_66103.jpg";
-        appName: "Telegra'me";
-        summary: qsTr ("Unread messages");
-        body: "Jimmy Huguet\n#Entourage\n#Sailfish FanClub\n#Ascorel BE";
-        itemCount: 7;
-        maxContentLines: 5;
-        previewSummary: "Contact name";
-        previewBody: "Sample message content, which can be quite long, anyway";
-        //category: "x-nemo.example"
-        //icon: "/home/nemo/.telegrame/profile_photos/439636578_66103.jpg";
-        //timestamp: "2013-02-20 18:21:00"
-        //onClicked: console.log("Clicked")
-        //onClosed: console.log("Closed, reason: " + reason)
-        Component.onCompleted: {
-            publish ();
-        }
-        Component.onDestruction: {
-            close ();
-        }
-    }*/
     Item {
         id: footerChat;
         implicitHeight: (layoutFooter.height + layoutFooter.anchors.margins * 2);
