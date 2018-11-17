@@ -29,9 +29,7 @@ ApplicationWindow {
             }
         }
     }
-    initialPage: Component {
-        PageMain { }
-    }
+    initialPage: compoPageMain;
 
     property int currentMsgType : TD_ObjectType.MESSAGE_TEXT;
 
@@ -41,6 +39,8 @@ ApplicationWindow {
 
     property bool groupImagesInAlbums : true;
     property bool groupVideosInAlbums : true;
+
+    property bool showInputPanel : false;
 
     property int autoMoveMode : stayFree;
 
@@ -52,7 +52,7 @@ ApplicationWindow {
     Item {
         id: footerChat;
         implicitHeight: (layoutFooter.height + layoutFooter.anchors.margins * 2);
-        anchors.bottomMargin: (TD_Global.currentChat ? 0 : -height);
+        anchors.bottomMargin: (showInputPanel ? 0 : -height);
         ExtraAnchors.bottomDock: parent;
 
         Behavior on anchors.bottomMargin { NumberAnimation { duration: 150; } }
@@ -1466,6 +1466,23 @@ ApplicationWindow {
             color: "magenta";
 
             property TD_MessageContent messageContentItem : null;
+        }
+    }
+    Component {
+        id: compoPageMain;
+
+        PageMain { }
+    }
+    Component {
+        id: compoPageChat;
+
+        PageChat { }
+    }
+    Component {
+        id: compoPageChatInfo;
+
+        Page {
+            allowedOrientations: Orientation.All;
         }
     }
 }

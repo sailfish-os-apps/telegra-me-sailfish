@@ -8,6 +8,7 @@ CoverBackground {
     property alias count : cnt.text;
 
     Column {
+        spacing: Theme.paddingLarge;
         anchors.centerIn: parent;
 
         Label {

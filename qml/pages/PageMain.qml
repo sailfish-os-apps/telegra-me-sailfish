@@ -142,11 +142,6 @@ Page {
             }
         }
     }
-    Component {
-        id: compoPageChat;
-
-        PageChat { }
-    }
     Item {
         id: tabRegisterPhoneNumber;
         enabled: (TD_Global.authorizationState && TD_Global.authorizationState.typeOf === TD_ObjectType.AUTHORIZATION_STATE_WAIT_PHONE_NUMBER);
@@ -391,7 +386,27 @@ Page {
             model: TD_Global.sortedChatsList;
             delegate: ListItem {
                 id: delegateChat;
-                implicitHeight: (layoutChat.height + layoutChat.anchors.margins * 2);
+                contentHeight: (layoutChat.height + layoutChat.anchors.margins * 2);
+                menu: ContextMenu {
+                    MenuItem {
+                        text: (delegateChat.chatItem.isPinned ? qsTr ("Un-pin from favorites") : qsTr ("Pin to favorites"));
+                        onClicked: {
+                            // TODO
+                        }
+                    }
+                    MenuItem {
+                        text: (delegateChat.chatItem.notificationSettings.muteFor > 0 ? qsTr ("Un-mute notifications") : qsTr ("Mute notifications"));
+                        onClicked: {
+                            // TODO
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr ("Remove chat history");
+                        onClicked: {
+                            // TODO
+                        }
+                    }
+                }
                 ExtraAnchors.horizontalFill: parent;
                 onClicked: {
                     pageStack.push (compoPageChat, {
@@ -422,38 +437,40 @@ Page {
                 readonly property int               unreadCount        : (chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
                 readonly property string            description        : {
                     var tmp = "";
-                   if (lastMsgUserItem) {
-                       tmp += (lastMsgUserItem.firstName + " " + lastMsgUserItem.lastName + " : ");
-                   }
-                   if (lastMsgContentItem) {
-                       tmp += lastMsgContentItem.asString ();
-                   }
-                   return tmp;
+                    if (lastMsgUserItem) {
+                        tmp += (lastMsgUserItem.firstName + " " + lastMsgUserItem.lastName + " : ");
+                    }
+                    if (lastMsgContentItem) {
+                        tmp += lastMsgContentItem.asString ();
+                    }
+                    return tmp;
                 }
 
                 function updateNotif () {
-                    notification.body = description;
-                    notification.timestamp = lastMsgItem.date;
-                    notification.itemCount = unreadCount;
-                    if (TD_Global.currentChat !== chatItem) {
-                        notification.previewSummary = notification.summary;
-                        notification.previewBody    = notification.body;
-                    }
-                    else {
-                        notification.previewSummary = "";
-                        notification.previewBody    = "";
-                    }
-                    if (unreadCount > 0) {
-                        notification.publish ();
-                    }
-                    else {
-                        notification.close ();
+                    if (lastMsgItem) {
+                        notification.body = description;
+                        notification.timestamp = lastMsgItem.date;
+                        notification.itemCount = unreadCount;
+                        if (TD_Global.currentChat !== chatItem && !lastMsgItem.isOutgoing) {
+                            notification.previewSummary = notification.summary;
+                            notification.previewBody    = notification.body;
+                        }
+                        else {
+                            notification.previewSummary = "";
+                            notification.previewBody    = "";
+                        }
+                        if (unreadCount > 0) {
+                            notification.publish ();
+                        }
+                        else {
+                            notification.close ();
+                        }
                     }
                 }
 
                 Notification {
                     id: notification;
-                    icon: appIcon;
+                    icon: avatarChat.url;
                     appIcon: avatarChat.url;
                     appName: "Telegra'me";
                     summary: delegateChat.chatItem.title;
@@ -463,7 +480,7 @@ Page {
                         {
                             "name" : "default",
                             "displayName ": "Show chat",
-                            "icon" : "icon-s-do-it",
+                            "icon" : avatarChat.url,
                             "service" : "org.uniqueconception.telegrame",
                             "path" : "/org/uniqueconception/telegrame",
                             "iface" : "org.uniqueconception.telegrame",
@@ -487,11 +504,8 @@ Page {
                 RowContainer {
                     id: layoutChat;
                     spacing: Theme.paddingMedium;
-                    anchors {
-                        margins: Theme.paddingMedium;
-                        verticalCenter: parent.verticalCenter;
-                    }
-                    ExtraAnchors.horizontalFill: parent;
+                    anchors.margins: Theme.paddingMedium;
+                    ExtraAnchors.topDock: parent;
 
                     DelegateDownloadableImage {
                         id: avatarChat;

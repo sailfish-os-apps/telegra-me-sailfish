@@ -39,19 +39,6 @@
         <file>RegionFlags/png/BY.png</file>
         <file>RegionFlags/png/BZ.png</file>
         <file>RegionFlags/png/CA.png</file>
-        <file>RegionFlags/png/CA-AB.png</file>
-        <file>RegionFlags/png/CA-BC.png</file>
-        <file>RegionFlags/png/CA-MB.png</file>
-        <file>RegionFlags/png/CA-NB.png</file>
-        <file>RegionFlags/png/CA-NL.png</file>
-        <file>RegionFlags/png/CA-NS.png</file>
-        <file>RegionFlags/png/CA-NT.png</file>
-        <file>RegionFlags/png/CA-NU.png</file>
-        <file>RegionFlags/png/CA-ON.png</file>
-        <file>RegionFlags/png/CA-PE.png</file>
-        <file>RegionFlags/png/CA-QC.png</file>
-        <file>RegionFlags/png/CA-SK.png</file>
-        <file>RegionFlags/png/CA-YT.png</file>
         <file>RegionFlags/png/CC.png</file>
         <file>RegionFlags/png/CD.png</file>
         <file>RegionFlags/png/CF.png</file>
@@ -95,10 +82,6 @@
         <file>RegionFlags/png/FR.png</file>
         <file>RegionFlags/png/GA.png</file>
         <file>RegionFlags/png/GB.png</file>
-        <file>RegionFlags/png/GB-ENG.png</file>
-        <file>RegionFlags/png/GB-NIR.png</file>
-        <file>RegionFlags/png/GB-SCT.png</file>
-        <file>RegionFlags/png/GB-WLS.png</file>
         <file>RegionFlags/png/GD.png</file>
         <file>RegionFlags/png/GE.png</file>
         <file>RegionFlags/png/GF.png</file>
@@ -180,38 +163,6 @@
         <file>RegionFlags/png/MV.png</file>
         <file>RegionFlags/png/MW.png</file>
         <file>RegionFlags/png/MX.png</file>
-        <file>RegionFlags/png/MX-AGU.png</file>
-        <file>RegionFlags/png/MX-BCN.png</file>
-        <file>RegionFlags/png/MX-BCS.png</file>
-        <file>RegionFlags/png/MX-CAM.png</file>
-        <file>RegionFlags/png/MX-CHH.png</file>
-        <file>RegionFlags/png/MX-CHP.png</file>
-        <file>RegionFlags/png/MX-CMX.png</file>
-        <file>RegionFlags/png/MX-COA.png</file>
-        <file>RegionFlags/png/MX-COL.png</file>
-        <file>RegionFlags/png/MX-DUR.png</file>
-        <file>RegionFlags/png/MX-GRO.png</file>
-        <file>RegionFlags/png/MX-GUA.png</file>
-        <file>RegionFlags/png/MX-HID.png</file>
-        <file>RegionFlags/png/MX-JAL.png</file>
-        <file>RegionFlags/png/MX-MEX.png</file>
-        <file>RegionFlags/png/MX-MIC.png</file>
-        <file>RegionFlags/png/MX-MOR.png</file>
-        <file>RegionFlags/png/MX-NAY.png</file>
-        <file>RegionFlags/png/MX-NLE.png</file>
-        <file>RegionFlags/png/MX-OAX.png</file>
-        <file>RegionFlags/png/MX-PUE.png</file>
-        <file>RegionFlags/png/MX-QUE.png</file>
-        <file>RegionFlags/png/MX-ROO.png</file>
-        <file>RegionFlags/png/MX-SIN.png</file>
-        <file>RegionFlags/png/MX-SLP.png</file>
-        <file>RegionFlags/png/MX-SON.png</file>
-        <file>RegionFlags/png/MX-TAB.png</file>
-        <file>RegionFlags/png/MX-TAM.png</file>
-        <file>RegionFlags/png/MX-TLA.png</file>
-        <file>RegionFlags/png/MX-VER.png</file>
-        <file>RegionFlags/png/MX-YUC.png</file>
-        <file>RegionFlags/png/MX-ZAC.png</file>
         <file>RegionFlags/png/MY.png</file>
         <file>RegionFlags/png/MZ.png</file>
         <file>RegionFlags/png/NA.png</file>
@@ -290,57 +241,6 @@
         <file>RegionFlags/png/UM.png</file>
         <file>RegionFlags/png/UN.png</file>
         <file>RegionFlags/png/US.png</file>
-        <file>RegionFlags/png/US-AK.png</file>
-        <file>RegionFlags/png/US-AL.png</file>
-        <file>RegionFlags/png/US-AR.png</file>
-        <file>RegionFlags/png/US-AZ.png</file>
-        <file>RegionFlags/png/US-CA.png</file>
-        <file>RegionFlags/png/US-CO.png</file>
-        <file>RegionFlags/png/US-CT.png</file>
-        <file>RegionFlags/png/US-DC.png</file>
-        <file>RegionFlags/png/US-DE.png</file>
-        <file>RegionFlags/png/US-FL.png</file>
-        <file>RegionFlags/png/US-GA.png</file>
-        <file>RegionFlags/png/US-HI.png</file>
-        <file>RegionFlags/png/US-IA.png</file>
-        <file>RegionFlags/png/US-ID.png</file>
-        <file>RegionFlags/png/US-IL.png</file>
-        <file>RegionFlags/png/US-IN.png</file>
-        <file>RegionFlags/png/US-KS.png</file>
-        <file>RegionFlags/png/US-KY.png</file>
-        <file>RegionFlags/png/US-LA.png</file>
-        <file>RegionFlags/png/US-MA.png</file>
-        <file>RegionFlags/png/US-MD.png</file>
-        <file>RegionFlags/png/US-ME.png</file>
-        <file>RegionFlags/png/US-MI.png</file>
-        <file>RegionFlags/png/US-MN.png</file>
-        <file>RegionFlags/png/US-MO.png</file>
-        <file>RegionFlags/png/US-MS.png</file>
-        <file>RegionFlags/png/US-MT.png</file>
-        <file>RegionFlags/png/US-NC.png</file>
-        <file>RegionFlags/png/US-ND.png</file>
-        <file>RegionFlags/png/US-NE.png</file>
-        <file>RegionFlags/png/US-NH.png</file>
-        <file>RegionFlags/png/US-NJ.png</file>
-        <file>RegionFlags/png/US-NM.png</file>
-        <file>RegionFlags/png/US-NV.png</file>
-        <file>RegionFlags/png/US-NY.png</file>
-        <file>RegionFlags/png/US-OH.png</file>
-        <file>RegionFlags/png/US-OK.png</file>
-        <file>RegionFlags/png/US-OR.png</file>
-        <file>RegionFlags/png/US-PA.png</file>
-        <file>RegionFlags/png/US-RI.png</file>
-        <file>RegionFlags/png/US-SC.png</file>
-        <file>RegionFlags/png/US-SD.png</file>
-        <file>RegionFlags/png/US-TN.png</file>
-        <file>RegionFlags/png/US-TX.png</file>
-        <file>RegionFlags/png/US-UT.png</file>
-        <file>RegionFlags/png/US-VA.png</file>
-        <file>RegionFlags/png/US-VT.png</file>
-        <file>RegionFlags/png/US-WA.png</file>
-        <file>RegionFlags/png/US-WI.png</file>
-        <file>RegionFlags/png/US-WV.png</file>
-        <file>RegionFlags/png/US-WY.png</file>
         <file>RegionFlags/png/UY.png</file>
         <file>RegionFlags/png/UZ.png</file>
         <file>RegionFlags/png/VA.png</file>
