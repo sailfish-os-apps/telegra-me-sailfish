@@ -51,6 +51,10 @@ int main (int argc, char * argv []) {
     qmlRegisterType<QtTdLibChatPhoto>                             ("harbour.Telegrame", 1, 0, "TD_ChatPhoto");
     qmlRegisterType<QtTdLibChatType>                              ("harbour.Telegrame", 1, 0, "TD_ChatType");
     qmlRegisterType<QtTdLibChatTypePrivate>                       ("harbour.Telegrame", 1, 0, "TD_ChatTypePrivate");
+    qmlRegisterType<QtTdLibChatTypeBasicGroup>                    ("harbour.Telegrame", 1, 0, "TD_ChatTypeBasicGroup");
+    qmlRegisterType<QtTdLibChatTypeSupergroup>                    ("harbour.Telegrame", 1, 0, "TD_ChatTypeSupergroup");
+    qmlRegisterType<QtTdLibChatTypeSecret>                        ("harbour.Telegrame", 1, 0, "TD_ChatTypeSecret");
+    qmlRegisterType<QtTdLibChatNotificationSettings>              ("harbour.Telegrame", 1, 0, "TD_ChatNotificationSettings");
     qmlRegisterType<QtTdLibConnectionState>                       ("harbour.Telegrame", 1, 0, "TD_ConnectionState");
     qmlRegisterType<QtTdLibConnectionStateConnecting>             ("harbour.Telegrame", 1, 0, "TD_ConnectionStateConnecting");
     qmlRegisterType<QtTdLibConnectionStateConnectingToProxy>      ("harbour.Telegrame", 1, 0, "TD_ConnectionStateConnectingToProxy");
@@ -104,7 +108,6 @@ int main (int argc, char * argv []) {
     QGuiApplication * app { SailfishApp::application (argc, argv) };
     app->setApplicationName ("harbour-telegrame");
     QQuickView * view { SailfishApp::createView () };
-    //view->setFlags (view->flags () | Qt::WindowOverridesSystemGestures);
     view->setSource (QUrl { "qrc:///qml/harbour-telegrame.qml" });
     view->show ();
     return app->exec ();

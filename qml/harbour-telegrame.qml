@@ -16,6 +16,7 @@ ApplicationWindow {
     allowedOrientations: defaultAllowedOrientations;
     cover: Component {
         CoverPage {
+            count: TD_Global.unreadMessagesCount;
             label: {
                 switch (TD_Global.connectionState ? TD_Global.connectionState.typeOf : -1) {
                 case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return qsTr ("Waiting...");

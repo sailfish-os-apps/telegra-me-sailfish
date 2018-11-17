@@ -5,9 +5,20 @@ CoverBackground {
     id: cover;
 
     property alias label : lbl.text;
+    property alias count : cnt.text;
 
-    Label {
-        id: lbl;
+    Column {
         anchors.centerIn: parent;
+
+        Label {
+            id: cnt;
+            color: Theme.highlightColor;
+            font.pixelSize: Theme.fontSizeExtraLarge;
+            anchors.horizontalCenter: parent.horizontalCenter;
+        }
+        Label {
+            id: lbl;
+            anchors.horizontalCenter: parent.horizontalCenter;
+        }
     }
 }

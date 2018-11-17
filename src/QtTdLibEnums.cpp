@@ -112,6 +112,7 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "updateMessageContent", QtTdLibObjectType::UPDATE_MESSAGE_CONTENT },
         { "updateMessageEdited", QtTdLibObjectType::UPDATE_MESSAGE_EDITED },
         { "updateChatOrder", QtTdLibObjectType::UPDATE_CHAT_ORDER },
+        { "updateUnreadMessageCount", QtTdLibObjectType::UPDATE_UNREAD_MESSAGE_COUNT },
         { "webPage", QtTdLibObjectType::WEB_PAGE },
         { "video", QtTdLibObjectType::VIDEO },
         { "videoNote", QtTdLibObjectType::VIDEO_NOTE },

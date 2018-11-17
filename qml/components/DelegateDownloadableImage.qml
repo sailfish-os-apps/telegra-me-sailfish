@@ -15,7 +15,8 @@ Item {
     property alias background   : rect.visible;
     property alias autoDownload : helper.autoDownload;
 
-    readonly property bool valid : (img.status === Image.Ready);
+    readonly property bool   valid : (img.status === Image.Ready);
+    readonly property string url   : img.source;
 
     HelperFileState {
         id: helper;

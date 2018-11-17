@@ -1,6 +1,7 @@
 import QtQuick 2.6;
 import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
+import Nemo.Notifications 1.0;
 import harbour.Telegrame 1.0;
 import "../InternationalPhoneCodes.js" as InternationalPhoneCodes;
 import "../components";
@@ -393,11 +394,114 @@ Page {
                 implicitHeight: Theme.itemSizeMedium;
                 ExtraAnchors.horizontalFill: parent;
                 onClicked: {
-                    pageStack.push (compoPageChat, { "currentChat" : chatItem });
+                    pageStack.push (compoPageChat, {
+                                        "currentChat" : chatItem
+                                    });
                 }
 
-                readonly property TD_Chat chatItem : modelData;
+                readonly property TD_Chat      chatItem      : modelData;
+                readonly property TD_ChatPhoto chatPhotoItem : (chatItem ? chatItem.photo : null);
+                readonly property TD_Message   lastMsgItem   : ((chatItem.messagesModel.count > 0)
+                                                                 ? chatItem.messagesModel.getLast ()
+                                                                 : null);
 
+                Timer {
+                    id: timerNotif;
+                    repeat: false;
+                    running: false;
+                    onTriggered: {
+                        if (notification.dirty) {
+                            notification.dirty = false;
+                            if (notification.itemCount > 0) {
+                                notification.publish ();
+                            }
+                            else {
+                                notification.close ();
+                            }
+                        }
+                    }
+                }
+                Notification {
+                    id: notification;
+                    replacesId: delegateChat.chatItem.id;
+                    appIcon: avatarChat.url;
+                    appName: "Telegra'me";
+                    summary: delegateChat.chatItem.title;
+                    itemCount: (delegateChat.chatItem.notificationSettings.muteFor === 0 ? delegateChat.chatItem.unreadCount : 0);
+                    maxContentLines: 3;
+                    previewSummary: summary;
+                    previewBody: body;
+                    icon: appIcon;
+                    timestamp: Qt.formatDateTime (delegateChat.lastMsgItem.date, "yyyy-DD-mm hh:mm:ss");
+                    remoteActions: [
+                        {
+                            "name" : "default",
+                            "displayName ": "Show chat",
+                            "icon" : "icon-s-do-it",
+                            "service" : "org.uniqueconception.telegrame",
+                            "path" : "/org/uniqueconception/telegrame",
+                            "iface" : "org.uniqueconception.telegrame",
+                            "method" : "showChat",
+                            "arguments" : [
+                                "argument",
+                                delegateChat.chatItem.id,
+                            ]
+                        }
+                    ]
+                    body: {
+                        var ret = "";
+                        if (delegateChat.lastMsgItem) {
+                            var tmp = TD_Global.getUserItemById (delegateChat.lastMsgItem.senderUserId);
+                            if (tmp) {
+                                ret += (tmp.firstName + " " + tmp.lastName + " : ");
+                            }
+                            if (delegateChat.lastMsgItem.content) {
+                                switch (delegateChat.lastMsgItem.content.typeOf) {
+                                case TD_ObjectType.MESSAGE_TEXT:       ret += delegateChat.lastMsgItem.content.text.text; break;
+                                case TD_ObjectType.MESSAGE_PHOTO:      ret += qsTr ("Photo"); break;
+                                case TD_ObjectType.MESSAGE_DOCUMENT:   ret += qsTr ("File"); break;
+                                case TD_ObjectType.MESSAGE_STICKER:    ret += qsTr ("Sticker"); break;
+                                case TD_ObjectType.MESSAGE_VIDEO:      ret += qsTr ("Video"); break;
+                                case TD_ObjectType.MESSAGE_AUDIO:      ret += qsTr ("Audio"); break;
+                                case TD_ObjectType.MESSAGE_ANIMATION:  ret += qsTr ("Animatio"); break;
+                                case TD_ObjectType.MESSAGE_VOICE_NOTE: ret += qsTr ("Voice note"); break;
+                                default:                               ret += qsTr ("<Unsupported>"); break;r
+                                }
+                            }
+                        }
+                        return ret;
+                    }
+                    onClicked: {
+                        while (pageStack.currentPage !== page) {
+                            pageStack.navigateBack ();
+                        }
+                        pageStack.push (compoPageChat, {
+                                            "currentChat" : delegateChat.chatItem
+                                        });
+                        window.activate ();
+                    }
+                    onSummaryChanged: {
+                        dirty = true;
+                        timerNotif.restart ();
+                    }
+                    onBodyChanged: {
+                        dirty = true;
+                        timerNotif.restart ();
+                    }
+                    onItemCountChanged: {
+                        dirty = true;
+                        timerNotif.restart ();
+                    }
+                    Component.onCompleted: {
+                        dirty = true;
+                        timerNotif.restart ();
+                    }
+                    Component.onDestruction: {
+                        close ();
+                    }
+
+                    property bool dirty : false;
+                }
                 RowContainer {
                     spacing: Theme.paddingMedium;
                     anchors {
@@ -407,8 +511,9 @@ Page {
                     ExtraAnchors.horizontalFill: parent;
 
                     DelegateDownloadableImage {
+                        id: avatarChat;
                         size: Theme.iconSizeMedium;
-                        fileItem: (delegateChat.chatItem && delegateChat.chatItem.photo ? delegateChat.chatItem.photo.big : null);
+                        fileItem: (delegateChat.chatPhotoItem ? delegateChat.chatPhotoItem.big : null);
                         autoDownload: true;
                         anchors.verticalCenter: parent.verticalCenter;
                     }

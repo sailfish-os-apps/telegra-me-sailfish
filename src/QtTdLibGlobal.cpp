@@ -11,6 +11,12 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QtMath>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+
+const QString dbusServiceName { "org.uniqueconception.telegrame" };
+const QString dbusObjectPath  { "/org/uniqueconception/telegrame" };
+const QString dbusInterface   { "org.uniqueconception.telegrame" };
 
 QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     : QObject { parent }
@@ -18,11 +24,13 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     , m_stickerSetsList { new QQmlObjectListModel<QtTdLibStickerSetInfo> { this } }
     , m_savedAnimationsList { new QQmlObjectListModel<QtTdLibAnimation> { this } }
     , m_recordingDuration { 0 }
+    , m_unreadMessagesCount { 0 }
     , m_selectedPhotosCount { 0 }
     , m_selectedVideosCount { 0 }
     , m_currentChat { Q_NULLPTR }
     , m_currentMessageContent { Q_NULLPTR }
     , m_sortedChatsList { new QSortFilterProxyModel { this } }
+    , m_dbusAdaptor { new DBusAdaptor { this } }
     , m_svgIconForMimetype {
 { "image/png", "image" },
 { "image/jpeg", "image" },
@@ -86,6 +94,11 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { this } }
     , m_audioRecorder { new QAudioRecorder { this } }
 {
+    QDBusConnection dbus { QDBusConnection::sessionBus () };
+    qDebug() << "Register object" << dbus.registerObject (dbusObjectPath, m_dbusAdaptor);
+    if (!dbus.interface ()->isServiceRegistered (dbusServiceName)) {
+        dbus.registerService (dbusServiceName);
+    }
     m_sortedChatsList->setSourceModel (m_chatsList);
     m_sortedChatsList->setSortRole (m_chatsList->roleForName ("order"));
     m_sortedChatsList->setDynamicSortFilter (true);
@@ -107,6 +120,9 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
 }
 
 QtTdLibGlobal::~QtTdLibGlobal (void) {
+    QDBusConnection dbus { QDBusConnection::sessionBus () };
+    dbus.unregisterObject  (dbusObjectPath);
+    dbus.unregisterService (dbusServiceName);
     m_tdLibJsonWrapper->send (QJsonObject {
                                   { "@type", "close" }
                               });
@@ -329,14 +345,14 @@ void QtTdLibGlobal::markAllMessagesAsRead (QtTdLibChat * chatItem) {
 
 void QtTdLibGlobal::loadMoreMessages (QtTdLibChat * chatItem, const int count) {
     if (chatItem != Q_NULLPTR && !chatItem->get_messagesModel ()->isEmpty () && count > 0) {
-    send (QJsonObject {
-             { "@type", "getChatHistory" },
-             { "chat_id",  chatItem->get_id () },
-             { "from_message_id", chatItem->get_messagesModel ()->first ()->get_id () }, // Identifier of the message starting from which history must be fetched; use 0 to get results from the begining
-             { "offset", 0 }, // Specify 0 to get results from exactly the from_message_id or a negative offset to get the specified message and some newer messages
-             { "limit", count }, // The maximum number of messages to be returned; must be positive and can't be greater than 100. If the offset is negative, the limit must be greater than -offset. Fewer messages may be returned than specified by the limit, even if the end of the message history has not been reached
-             { "only_local", false }, // If true, returns only messages that are available locally without sending network requests
-          });
+        send (QJsonObject {
+                  { "@type", "getChatHistory" },
+                  { "chat_id",  chatItem->get_id () },
+                  { "from_message_id", chatItem->get_messagesModel ()->first ()->get_id () }, // Identifier of the message starting from which history must be fetched; use 0 to get results from the begining
+                  { "offset", 0 }, // Specify 0 to get results from exactly the from_message_id or a negative offset to get the specified message and some newer messages
+                  { "limit", count }, // The maximum number of messages to be returned; must be positive and can't be greater than 100. If the offset is negative, the limit must be greater than -offset. Fewer messages may be returned than specified by the limit, even if the end of the message history has not been reached
+                  { "only_local", false }, // If true, returns only messages that are available locally without sending network requests
+              });
     }
 }
 
@@ -628,6 +644,10 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             set_connectionState_withJSON (json ["state"], &QtTdLibConnectionState::createAbstract);
             break;
         }
+        case QtTdLibObjectType::UPDATE_UNREAD_MESSAGE_COUNT: {
+            set_unreadMessagesCount (json ["unread_unmuted_count"].toInt ());
+            break;
+        }
         case QtTdLibObjectType::UPDATE_FILE: {
             const QJsonObject fileJson { json ["file"].toObject () };
             const qint32 fileId { QtTdLibId32Helper::fromJsonToCpp (fileJson ["id"]) };
@@ -863,5 +883,19 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             break;
         }
         default: break;
+    }
+}
+
+DBusAdaptor::DBusAdaptor (QObject * parent)
+    : QDBusAbstractAdaptor { parent }
+{
+    setAutoRelaySignals (true);
+}
+
+DBusAdaptor::~DBusAdaptor (void) { }
+
+void DBusAdaptor::showChat (qlonglong chatId) {
+    if (QtTdLibGlobal * global = { qobject_cast<QtTdLibGlobal *> (parent ()) }) {
+        emit global->showChatRequested (QString::number (chatId));
     }
 }

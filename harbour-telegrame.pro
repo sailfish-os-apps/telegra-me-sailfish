@@ -5,7 +5,7 @@ TEMPLATE = app
 
 CONFIG += c++11
 
-QT += core network gui qml quick multimedia
+QT += core network gui qml quick multimedia dbus
 
 MOC_DIR     = _moc
 OBJECTS_DIR = _obj
