@@ -121,7 +121,7 @@ public:
 class QtTdLibFormattedText : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibFormattedText> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_STRING (text)
-    QML_OBJMODEL_PROPERTY  (entities, QtTdLibTextEntity)
+    QML_OBJMODEL_PROPERTY   (entities, QtTdLibTextEntity)
 
 public:
     explicit QtTdLibFormattedText (QObject * parent = Q_NULLPTR);

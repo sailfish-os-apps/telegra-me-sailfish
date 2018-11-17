@@ -115,6 +115,10 @@ QtTdLibUserStatusOffline::QtTdLibUserStatusOffline (QObject * parent)
     : QtTdLibUserStatus { QtTdLibObjectType::USER_STATUS_OFFLINE, parent }
 { }
 
+void QtTdLibUserStatusOffline::updateFromJson (const QJsonObject & json) {
+    set_wasOnline_withJSON (json ["was_online"]);
+}
+
 QtTdLibUserStatusRecently::QtTdLibUserStatusRecently (QObject * parent)
     : QtTdLibUserStatus { QtTdLibObjectType::USER_STATUS_RECENTLY, parent }
 { }

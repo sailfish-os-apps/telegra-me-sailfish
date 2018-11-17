@@ -2,6 +2,7 @@
 #define QtTdLibCommon_H
 
 #include <QObject>
+#include <QDateTime>
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
@@ -62,6 +63,16 @@ struct QtTdLibId64Helper {
     public: QJsonValue get_##NAME##_asJSON (void) const { return QJsonValue { m_##NAME }; } \
     public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (json.toString ()); } \
     public Q_SLOTS: void set_##NAME (const QString & NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
+    Q_SIGNALS: void NAME##Changed (void); \
+    private:
+
+#define Q_TDLIB_PROPERTY_DATETIME(NAME) \
+    protected: Q_PROPERTY (QDateTime NAME READ get_##NAME NOTIFY NAME##Changed) \
+    private: QDateTime m_##NAME { }; \
+    public: const QDateTime & get_##NAME (void) const { return m_##NAME; } \
+    public: QJsonValue get_##NAME##_asJSON (void) const { return QJsonValue { (m_##NAME.toMSecsSinceEpoch () / 1000) }; } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (QDateTime::fromMSecsSinceEpoch (json.toDouble () * 1000)); } \
+    public Q_SLOTS: void set_##NAME (const QDateTime & NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
 

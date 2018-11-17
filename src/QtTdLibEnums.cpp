@@ -103,6 +103,7 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "updateChatReadInbox", QtTdLibObjectType::UPDATE_CHAT_READ_INBOX },
         { "updateChatLastMessage", QtTdLibObjectType::UPDATE_CHAT_LAST_MESSAGE },
         { "updateChatNotificationSettings", QtTdLibObjectType::UPDATE_CHAT_NOTIFICATION_SETTINGS },
+        { "updateNotificationSettings", QtTdLibObjectType::UPDATE_NOTIFICATION_SETTINGS },
         { "updateChatIsPinned", QtTdLibObjectType::UPDATE_CHAT_IS_PINNED },
         { "updateChatDraftMessage", QtTdLibObjectType::UPDATE_CHAT_DRAFT_MESSAGE },
         { "updateDeleteMessages", QtTdLibObjectType::UPDATE_DELETE_MESSAGES },

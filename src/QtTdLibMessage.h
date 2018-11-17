@@ -309,8 +309,8 @@ public:
 
 class QtTdLibMessage : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<QtTdLibMessage> {
     Q_OBJECT
-    Q_TDLIB_PROPERTY_INT32     (date)
-    Q_TDLIB_PROPERTY_INT32     (editDate)
+    Q_TDLIB_PROPERTY_DATETIME  (date)
+    Q_TDLIB_PROPERTY_DATETIME  (editDate)
     Q_TDLIB_PROPERTY_INT32     (views)
     Q_TDLIB_PROPERTY_ID32      (senderUserId)
     Q_TDLIB_PROPERTY_ID53      (chatId)

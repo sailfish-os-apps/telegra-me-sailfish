@@ -398,51 +398,67 @@ Page {
                                         "currentChat" : chatItem
                                     });
                 }
+                onUnreadCountChanged: {
+                    updateNotif ();
+                }
+                onLastMsgItemChanged: {
+                    updateNotif ();
+                }
+                onDescriptionChanged: {
+                    updateNotif ();
+                }
+                Component.onCompleted: {
+                    updateNotif ();
+                }
+                Component.onDestruction: {
+                    notification.close ();
+                }
 
                 readonly property TD_Chat           chatItem           : modelData;
                 readonly property TD_ChatPhoto      chatPhotoItem      : (chatItem ? chatItem.photo : null);
                 readonly property TD_Message        lastMsgItem        : ((chatItem.messagesModel.count > 0) ? chatItem.messagesModel.getLast () : null);
                 readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
                 readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
+                readonly property int               unreadCount        : (chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
                 readonly property string            description        : {
-                    var ret = "";
-                    if (lastMsgUserItem) {
-                        ret += (lastMsgUserItem.firstName + " " + lastMsgUserItem.lastName + " : ");
-                    }
-                    if (lastMsgContentItem) {
-                        ret += lastMsgContentItem.asString ();
-                    }
-                    return ret;
+                    var tmp = "";
+                   if (lastMsgUserItem) {
+                       tmp += (lastMsgUserItem.firstName + " " + lastMsgUserItem.lastName + " : ");
+                   }
+                   if (lastMsgContentItem) {
+                       tmp += lastMsgContentItem.asString ();
+                   }
+                   return tmp;
                 }
 
-                Timer {
-                    id: timerNotif;
-                    repeat: false;
-                    running: false;
-                    onTriggered: {
-                        if (notification.dirty) {
-                            notification.dirty = false;
-                            if (notification.itemCount > 0) {
-                                notification.publish ();
-                            }
-                            else {
-                                notification.close ();
-                            }
-                        }
+                function updateNotif () {
+                    notification.body = description;
+                    notification.timestamp = lastMsgItem.date;
+                    notification.itemCount = unreadCount;
+                    if (TD_Global.currentChat !== chatItem) {
+                        notification.previewSummary = notification.summary;
+                        notification.previewBody    = notification.body;
+                    }
+                    else {
+                        notification.previewSummary = "";
+                        notification.previewBody    = "";
+                    }
+                    if (unreadCount > 0) {
+                        notification.publish ();
+                    }
+                    else {
+                        notification.close ();
                     }
                 }
+
                 Notification {
                     id: notification;
-                    replacesId: delegateChat.chatItem.id;
+                    icon: appIcon;
                     appIcon: avatarChat.url;
                     appName: "Telegra'me";
                     summary: delegateChat.chatItem.title;
-                    itemCount: (delegateChat.chatItem.notificationSettings.muteFor === 0 ? delegateChat.chatItem.unreadCount : 0);
+                    replacesId: delegateChat.chatItem.id;
                     maxContentLines: 3;
-                    previewSummary: summary;
-                    previewBody: body;
-                    icon: appIcon;
-                    timestamp: Qt.formatDateTime (delegateChat.lastMsgItem.date, "yyyy-DD-mm hh:mm:ss");
                     remoteActions: [
                         {
                             "name" : "default",
@@ -458,7 +474,6 @@ Page {
                             ]
                         }
                     ]
-                    body:delegateChat.description;
                     onClicked: {
                         while (pageStack.currentPage !== page) {
                             pageStack.navigateBack ();
@@ -468,27 +483,6 @@ Page {
                                         });
                         window.activate ();
                     }
-                    onSummaryChanged: {
-                        dirty = true;
-                        timerNotif.restart ();
-                    }
-                    onBodyChanged: {
-                        dirty = true;
-                        timerNotif.restart ();
-                    }
-                    onItemCountChanged: {
-                        dirty = true;
-                        timerNotif.restart ();
-                    }
-                    Component.onCompleted: {
-                        dirty = true;
-                        timerNotif.restart ();
-                    }
-                    Component.onDestruction: {
-                        close ();
-                    }
-
-                    property bool dirty : false;
                 }
                 RowContainer {
                     id: layoutChat;

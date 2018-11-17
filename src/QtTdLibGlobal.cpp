@@ -707,6 +707,15 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             }
             break;
         }
+        case QtTdLibObjectType::UPDATE_NOTIFICATION_SETTINGS: {
+            if (json ["scope"].toObject () ["@type"].toString () == "notificationSettingsScopeChat") {
+                const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["scope"].toObject () ["chat_id"]) };
+                if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                    chatItem->get_notificationSettings ()->set_muteFor_withJSON (json ["notification_settings"].toObject () ["mute_for"]);
+                }
+            }
+            break;
+        }
         case QtTdLibObjectType::UPDATE_CHAT_IS_PINNED: {
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
             if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {

@@ -158,7 +158,7 @@ Page {
                                     anchors.right: parent.right;
 
                                     Label {
-                                        text: Qt.formatDateTime (new Date (delegateMsg.messageItem.date * 1000));
+                                        text: Qt.formatDateTime (delegateMsg.messageItem.date);
                                         color: Theme.secondaryColor;
                                         font.pixelSize: Theme.fontSizeExtraSmall;
                                         anchors.verticalCenter: parent.verticalCenter;
@@ -213,7 +213,7 @@ Page {
     MouseArea {
         id: headerChat;
         opacity: (pulleyTop.active ? 0.0 : 1.0);
-        implicitHeight: (Math.max (headerIcon.height, headerText.height) + Theme.paddingMedium * 2);
+        implicitHeight: (layoutHeader.height + layoutHeader.anchors.margins * 2);
         ExtraAnchors.topDock: parent;
 
         Behavior on opacity { NumberAnimation { duration: 150; } }
@@ -221,33 +221,74 @@ Page {
             color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
             anchors.fill: parent;
         }
-        Label {
-            id: headerText;
-            text: (currentChat ? currentChat.title : "");
-            color: Theme.highlightColor;
-            truncationMode: TruncationMode.Fade;
-            horizontalAlignment: Text.AlignRight;
-            font {
-                family: Theme.fontFamilyHeading;
-                pixelSize: Theme.fontSizeLarge;
-            }
+        RowContainer {
+            id: layoutHeader;
+            spacing: Theme.paddingMedium;
             anchors {
                 left: parent.left;
-                right: headerIcon.left;
+                right: parent.right;
                 leftMargin: (Theme.paddingLarge * 2);
                 rightMargin: Theme.paddingMedium;
                 verticalCenter: parent.verticalCenter;
             }
-        }
-        DelegateDownloadableImage {
-            id: headerIcon;
-            size: Theme.iconSizeLarge;
-            fileItem: (currentChat && currentChat.photo ? currentChat.photo.big : null);
-            autoDownload: true;
-            anchors {
-                right: parent.right;
-                rightMargin: Theme.paddingMedium;
-                verticalCenter: parent.verticalCenter;
+
+            ColumnContainer {
+                Container.horizontalStretch: 1;
+                anchors.verticalCenter: parent.verticalCenter;
+
+                Label {
+                    text: (currentChat ? currentChat.title : "");
+                    color: Theme.highlightColor;
+                    truncationMode: TruncationMode.Fade;
+                    horizontalAlignment: Text.AlignRight;
+                    font {
+                        family: Theme.fontFamilyHeading;
+                        pixelSize: Theme.fontSizeLarge;
+                    }
+                    ExtraAnchors.horizontalFill: parent;
+                }
+                Label {
+                    text: {
+                        if (currentChat) {
+                            switch (currentChat.type.typeOf) {
+                            case TD_ObjectType.CHAT_TYPE_SECRET:
+                            case TD_ObjectType.CHAT_TYPE_PRIVATE:
+                                var userItem = TD_Global.getUserItemById (currentChat.type.userId);
+                                if (userItem && userItem.status) {
+                                    switch (userItem.status.typeOf) {
+                                    case TD_ObjectType.USER_STATUS_ONLINE:     return qsTr ("Online");
+                                    case TD_ObjectType.USER_STATUS_OFFLINE:    return qsTr ("Offline since %1").arg (Qt.formatDateTime (userItem.status.wasOnline));
+                                    case TD_ObjectType.USER_STATUS_LAST_MONTH: return qsTr ("Seen last month");
+                                    case TD_ObjectType.USER_STATUS_LAST_WEEK:  return qsTr ("Seen last week");
+                                    case TD_ObjectType.USER_STATUS_RECENTLY:   return qsTr ("Recently");
+                                    case TD_ObjectType.USER_STATUS_EMPTY:      return qsTr ("");
+                                    }
+                                }
+                                break;
+                            case TD_ObjectType.CHAT_TYPE_BASIC_GROUP:
+                            case TD_ObjectType.CHAT_TYPE_SUPERGROUP:
+                                // TODO : online/offline members count
+                                break;
+                            }
+                        }
+                        return "";
+                    }
+                    visible: (text !== "");
+                    color: Theme.secondaryColor;
+                    truncationMode: TruncationMode.Fade;
+                    horizontalAlignment: Text.AlignRight;
+                    font {
+                        family: Theme.fontFamilyHeading;
+                        pixelSize: Theme.fontSizeExtraSmall;
+                    }
+                    ExtraAnchors.horizontalFill: parent;
+                }
+            }
+            DelegateDownloadableImage {
+                size: Theme.iconSizeLarge;
+                fileItem: (currentChat && currentChat.photo ? currentChat.photo.big : null);
+                autoDownload: true;
+                anchors.verticalCenter: parent.verticalCenter;
             }
         }
     }

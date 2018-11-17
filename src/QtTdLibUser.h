@@ -113,10 +113,12 @@ public:
 
 class QtTdLibUserStatusOffline : public QtTdLibUserStatus, public FactoryNoId<QtTdLibUserStatusOffline> {
     Q_OBJECT
-    //was_online:int32
+    Q_TDLIB_PROPERTY_DATETIME (wasOnline)
 
 public:
     explicit QtTdLibUserStatusOffline (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
 class QtTdLibUserStatusRecently : public QtTdLibUserStatus, public FactoryNoId<QtTdLibUserStatusRecently> {
