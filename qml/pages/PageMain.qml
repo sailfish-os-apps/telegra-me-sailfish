@@ -357,230 +357,275 @@ Page {
         opacity: (enabled ? 1.0 : 0.0);
         anchors.fill: parent;
 
-        PageHeader {
-            id: headerConversations;
-            title: qsTr ("Conversations");
-            ExtraAnchors.topDock: parent;
+        SilicaFlickable {
+            id: flickerChats;
+            quickScroll: false;
+            contentWidth: width;
+            contentHeight: layoutChats.height;
+            anchors.fill: parent;
 
-            GlassItem {
-                color: {
-                    switch (TD_Global.connectionState ? TD_Global.connectionState.typeOf : -1) {
-                    case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return "red";
-                    case TD_ObjectType.CONNECTION_STATE_CONNECTING:          return "orange";
-                    case TD_ObjectType.CONNECTION_STATE_CONNECTING_TO_PROXY: return "orange";
-                    case TD_ObjectType.CONNECTION_STATE_UPDATING:            return "orange";
-                    case TD_ObjectType.CONNECTION_STATE_READY:               return "lime";
-                    }
-                    return "magenta";
-                }
-                anchors {
-                    left: parent.left;
-                    margins: Theme.paddingLarge;
-                    verticalCenter: parent.verticalCenter;
-                }
-            }
-        }
-        SilicaListView {
-            clip: true;
-            quickScroll: true;
-            model: TD_Global.sortedChatsList;
-            delegate: ListItem {
-                id: delegateChat;
-                contentHeight: (layoutChat.height + layoutChat.anchors.margins * 2);
-                menu: ContextMenu {
-                    MenuItem {
-                        text: (delegateChat.chatItem.isPinned ? qsTr ("Un-pin from favorites") : qsTr ("Pin to favorites"));
-                        onClicked: {
-                            // TODO
-                        }
-                    }
-                    MenuItem {
-                        text: (delegateChat.chatItem.notificationSettings.muteFor > 0 ? qsTr ("Un-mute notifications") : qsTr ("Mute notifications"));
-                        onClicked: {
-                            // TODO
-                        }
-                    }
-                    MenuItem {
-                        text: qsTr ("Remove chat history");
-                        onClicked: {
-                            // TODO
-                        }
-                    }
-                }
-                ExtraAnchors.horizontalFill: parent;
-                onClicked: {
-                    pageStack.push (compoPageChat, {
-                                        "currentChat" : chatItem
-                                    });
-                }
-                onUnreadCountChanged: {
-                    updateNotif ();
-                }
-                onLastMsgItemChanged: {
-                    updateNotif ();
-                }
-                onDescriptionChanged: {
-                    updateNotif ();
-                }
-                Component.onCompleted: {
-                    updateNotif ();
-                }
-                Component.onDestruction: {
-                    notification.close ();
-                }
+            Column {
+                id: layoutChats;
+                ExtraAnchors.topDock: parent;
 
-                readonly property TD_Chat           chatItem           : modelData;
-                readonly property TD_ChatPhoto      chatPhotoItem      : (chatItem ? chatItem.photo : null);
-                readonly property TD_Message        lastMsgItem        : ((chatItem.messagesModel.count > 0) ? chatItem.messagesModel.getLast () : null);
-                readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
-                readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
-                readonly property int               unreadCount        : (chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
-                readonly property string            description        : (lastMsgItem ? lastMsgItem.preview () : "");
-
-                function updateNotif () {
-                    if (lastMsgItem) {
-                        notification.body = description;
-                        notification.timestamp = lastMsgItem.date;
-                        notification.itemCount = unreadCount;
-                        if (TD_Global.currentChat !== chatItem && !lastMsgItem.isOutgoing) {
-                            notification.previewSummary = notification.summary;
-                            notification.previewBody    = notification.body;
+                Item {
+                    implicitHeight: headerConversations.height;
+                    ExtraAnchors.horizontalFill: parent;
+                    Container.forcedHeight: headerConversations.height;
+                }
+                Repeater {
+                    model: TD_Global.sortedChatsList;
+                    delegate: ListItem {
+                        id: delegateChat;
+                        visible: (inputFilter.value === "" || chatItem.title.toLowerCase ().indexOf (inputFilter.value) >= 0);
+                        contentHeight: (layoutChat.height + layoutChat.anchors.margins * 2);
+                        menu: ContextMenu {
+                            MenuItem {
+                                text: (delegateChat.chatItem.isPinned ? qsTr ("Un-pin from favorites") : qsTr ("Pin to favorites"));
+                                onClicked: {
+                                    // TODO
+                                }
+                            }
+                            MenuItem {
+                                text: (delegateChat.chatItem.notificationSettings.muteFor > 0 ? qsTr ("Un-mute notifications") : qsTr ("Mute notifications"));
+                                onClicked: {
+                                    // TODO
+                                }
+                            }
+                            MenuItem {
+                                text: qsTr ("Remove chat history");
+                                onClicked: {
+                                    // TODO
+                                }
+                            }
                         }
-                        else {
-                            notification.previewSummary = "";
-                            notification.previewBody    = "";
+                        ExtraAnchors.horizontalFill: parent;
+                        onClicked: {
+                            flickerChats.saveY = flickerChats.contentY;
+                            pageStack.push (compoPageChat, {
+                                                "currentChat" : chatItem
+                                            });
                         }
-                        if (unreadCount > 0) {
-                            notification.publish ();
+                        onUnreadCountChanged: {
+                            updateNotif ();
                         }
-                        else {
+                        onLastMsgItemChanged: {
+                            updateNotif ();
+                        }
+                        onDescriptionChanged: {
+                            updateNotif ();
+                        }
+                        Component.onCompleted: {
+                            updateNotif ();
+                        }
+                        Component.onDestruction: {
                             notification.close ();
                         }
-                    }
-                }
 
-                Notification {
-                    id: notification;
-                    icon: avatarChat.url;
-                    appIcon: avatarChat.url;
-                    appName: "Telegra'me";
-                    summary: delegateChat.chatItem.title;
-                    replacesId: delegateChat.chatItem.id;
-                    maxContentLines: 3;
-                    remoteActions: [
-                        {
-                            "name" : "default",
-                            "displayName ": "Show chat",
-                            "icon" : avatarChat.url,
-                            "service" : "org.uniqueconception.telegrame",
-                            "path" : "/org/uniqueconception/telegrame",
-                            "iface" : "org.uniqueconception.telegrame",
-                            "method" : "showChat",
-                            "arguments" : [
-                                "argument",
-                                delegateChat.chatItem.id,
+                        readonly property TD_Chat           chatItem           : modelData;
+                        readonly property TD_ChatPhoto      chatPhotoItem      : (chatItem ? chatItem.photo : null);
+                        readonly property TD_Message        lastMsgItem        : ((chatItem.messagesModel.count > 0) ? chatItem.messagesModel.getLast () : null);
+                        readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
+                        readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
+                        readonly property int               unreadCount        : (chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
+                        readonly property string            description        : (lastMsgItem ? lastMsgItem.preview () : "");
+
+                        function updateNotif () {
+                            if (lastMsgItem) {
+                                notification.body = description;
+                                notification.timestamp = lastMsgItem.date;
+                                notification.itemCount = unreadCount;
+                                if (TD_Global.currentChat !== chatItem && !lastMsgItem.isOutgoing) {
+                                    notification.previewSummary = notification.summary;
+                                    notification.previewBody    = notification.body;
+                                }
+                                else {
+                                    notification.previewSummary = "";
+                                    notification.previewBody    = "";
+                                }
+                                if (unreadCount > 0) {
+                                    notification.publish ();
+                                }
+                                else {
+                                    notification.close ();
+                                }
+                            }
+                        }
+
+                        Notification {
+                            id: notification;
+                            icon: avatarChat.url;
+                            appIcon: avatarChat.url;
+                            appName: "Telegra'me";
+                            summary: delegateChat.chatItem.title;
+                            replacesId: delegateChat.chatItem.id;
+                            maxContentLines: 3;
+                            remoteActions: [
+                                {
+                                    "name" : "default",
+                                    "displayName ": "Show chat",
+                                    "icon" : avatarChat.url,
+                                    "service" : "org.uniqueconception.telegrame",
+                                    "path" : "/org/uniqueconception/telegrame",
+                                    "iface" : "org.uniqueconception.telegrame",
+                                    "method" : "showChat",
+                                    "arguments" : [
+                                        "argument",
+                                        delegateChat.chatItem.id,
+                                    ]
+                                }
                             ]
-                        }
-                    ]
-                    onClicked: {
-                        while (pageStack.currentPage !== page) {
-                            pageStack.navigateBack ();
-                        }
-                        pageStack.push (compoPageChat, {
-                                            "currentChat" : delegateChat.chatItem
-                                        });
-                        window.activate ();
-                    }
-                }
-                RowContainer {
-                    id: layoutChat;
-                    spacing: Theme.paddingMedium;
-                    anchors.margins: Theme.paddingMedium;
-                    ExtraAnchors.topDock: parent;
-
-                    DelegateDownloadableImage {
-                        id: avatarChat;
-                        size: Theme.iconSizeMedium;
-                        fileItem: (delegateChat.chatPhotoItem ? delegateChat.chatPhotoItem.big : null);
-                        autoDownload: true;
-                        anchors.verticalCenter: parent.verticalCenter;
-                    }
-                    ColumnContainer {
-                        anchors.verticalCenter: parent.verticalCenter;
-                        Container.horizontalStretch: 1;
-
-                        LabelFixed {
-                            text: delegateChat.chatItem.title;
-                            elide: Text.ElideRight;
-                            ExtraAnchors.horizontalFill: parent;
+                            onClicked: {
+                                while (pageStack.currentPage !== page) {
+                                    pageStack.navigateBack ();
+                                }
+                                pageStack.push (compoPageChat, {
+                                                    "currentChat" : delegateChat.chatItem
+                                                });
+                                window.activate ();
+                            }
                         }
                         RowContainer {
-                            spacing: Theme.paddingSmall;
-                            ExtraAnchors.horizontalFill: parent;
+                            id: layoutChat;
+                            spacing: Theme.paddingMedium;
+                            anchors.margins: Theme.paddingMedium;
+                            ExtraAnchors.topDock: parent;
 
-                            LabelFixed {
-                                text: delegateChat.description;
-                                color: Theme.secondaryColor;
-                                elide: Text.ElideRight;
-                                maximumLineCount: 1;
-                                font.pixelSize: Theme.fontSizeExtraSmall;
+                            DelegateDownloadableImage {
+                                id: avatarChat;
+                                size: Theme.iconSizeMedium;
+                                fileItem: (delegateChat.chatPhotoItem ? delegateChat.chatPhotoItem.big : null);
+                                autoDownload: true;
+                                anchors.verticalCenter: parent.verticalCenter;
+                            }
+                            ColumnContainer {
                                 anchors.verticalCenter: parent.verticalCenter;
                                 Container.horizontalStretch: 1;
+
+                                LabelFixed {
+                                    text: delegateChat.chatItem.title;
+                                    elide: Text.ElideRight;
+                                    ExtraAnchors.horizontalFill: parent;
+                                }
+                                RowContainer {
+                                    spacing: Theme.paddingSmall;
+                                    ExtraAnchors.horizontalFill: parent;
+
+                                    LabelFixed {
+                                        text: delegateChat.description;
+                                        color: Theme.secondaryColor;
+                                        elide: Text.ElideRight;
+                                        maximumLineCount: 1;
+                                        font.pixelSize: Theme.fontSizeExtraSmall;
+                                        anchors.verticalCenter: parent.verticalCenter;
+                                        Container.horizontalStretch: 1;
+                                    }
+                                    Image {
+                                        source: "image://theme/icon-m-acknowledge?%1".arg (Theme.highlightColor);
+                                        visible: (delegateChat.lastMsgItem &&
+                                                  delegateChat.lastMsgItem.isOutgoing &&
+                                                  delegateChat.lastMsgItem.id <= delegateChat.chatItem.lastReadOutboxMessageId);
+                                        sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
+                                        anchors.verticalCenter: parent.verticalCenter;
+                                    }
+                                }
                             }
                             Image {
-                                source: "image://theme/icon-m-acknowledge?%1".arg (Theme.highlightColor);
-                                visible: (delegateChat.lastMsgItem &&
-                                          delegateChat.lastMsgItem.isOutgoing &&
-                                          delegateChat.lastMsgItem.id <= delegateChat.chatItem.lastReadOutboxMessageId);
+                                source: "image://theme/icon-s-task?#808080";
+                                visible: (delegateChat.chatItem && delegateChat.chatItem.isPinned);
                                 sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
                                 anchors.verticalCenter: parent.verticalCenter;
                             }
-                        }
-                    }
-                    Image {
-                        source: "image://theme/icon-s-task?#808080";
-                        visible: (delegateChat.chatItem && delegateChat.chatItem.isPinned);
-                        sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
-                        anchors.verticalCenter: parent.verticalCenter;
-                    }
-                    Image {
-                        source: "image://theme/icon-m-speaker-mute?#808080";
-                        visible: (delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0);
-                        sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
-                        anchors.verticalCenter: parent.verticalCenter;
-                    }
-                    Item {
-                        visible: (delegateChat.chatItem.unreadCount > 0);
-                        Container.forcedWidth: Theme.paddingMedium;
-                    }
-                    LabelFixed {
-                        text: delegateChat.chatItem.unreadCount;
-                        color: ((delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0)
-                                ? Theme.secondaryColor
-                                : Theme.highlightColor);
-                        visible: (delegateChat.chatItem.unreadCount > 0);
-                        anchors.verticalCenter: parent.verticalCenter;
+                            Image {
+                                source: "image://theme/icon-m-speaker-mute?#808080";
+                                visible: (delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0);
+                                sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
+                                anchors.verticalCenter: parent.verticalCenter;
+                            }
+                            Item {
+                                visible: (delegateChat.chatItem.unreadCount > 0);
+                                Container.forcedWidth: Theme.paddingMedium;
+                            }
+                            LabelFixed {
+                                text: delegateChat.chatItem.unreadCount;
+                                color: ((delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0)
+                                        ? Theme.secondaryColor
+                                        : Theme.highlightColor);
+                                visible: (delegateChat.chatItem.unreadCount > 0);
+                                anchors.verticalCenter: parent.verticalCenter;
 
-                        Rectangle {
-                            z: -1;
-                            color: Theme.secondaryColor;
-                            radius: (height * 0.5);
-                            opacity: 0.35;
-                            implicitWidth: Math.max (parent.width + Theme.paddingMedium * 2, implicitHeight);
-                            implicitHeight: (parent.height + Theme.paddingSmall * 2);
-                            anchors.centerIn: parent;
+                                Rectangle {
+                                    z: -1;
+                                    color: Theme.secondaryColor;
+                                    radius: (height * 0.5);
+                                    opacity: 0.35;
+                                    implicitWidth: Math.max (parent.width + Theme.paddingMedium * 2, implicitHeight);
+                                    implicitHeight: (parent.height + Theme.paddingSmall * 2);
+                                    anchors.centerIn: parent;
+                                }
+                            }
+                            Item {
+                                visible: (delegateChat.chatItem.unreadCount > 0);
+                                Container.forcedWidth: Theme.paddingMedium;
+                            }
                         }
-                    }
-                    Item {
-                        visible: (delegateChat.chatItem.unreadCount > 0);
-                        Container.forcedWidth: Theme.paddingMedium;
                     }
                 }
             }
-            anchors.top: headerConversations.bottom;
-            ExtraAnchors.bottomDock: parent;
-
             VerticalScrollDecorator { flickable: parent; }
+        }
+        Item {
+            id: headerConversations;
+            implicitHeight: layoutHeader.height;
+            ExtraAnchors.topDock: parent;
+
+            Rectangle {
+                color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
+                anchors.fill: parent;
+            }
+            ColumnContainer {
+                id: layoutHeader;
+                ExtraAnchors.topDock: parent;
+
+                RowContainer {
+                    spacing: Theme.paddingMedium;
+                    anchors.leftMargin: Theme.paddingMedium;
+                    anchors.rightMargin: Theme.paddingLarge;
+                    ExtraAnchors.horizontalFill: parent;
+
+                    GlassItem {
+                        color: {
+                            switch (TD_Global.connectionState ? TD_Global.connectionState.typeOf : -1) {
+                            case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return "red";
+                            case TD_ObjectType.CONNECTION_STATE_CONNECTING:          return "orange";
+                            case TD_ObjectType.CONNECTION_STATE_CONNECTING_TO_PROXY: return "orange";
+                            case TD_ObjectType.CONNECTION_STATE_UPDATING:            return "orange";
+                            case TD_ObjectType.CONNECTION_STATE_READY:               return "lime";
+                            }
+                            return "magenta";
+                        }
+                        anchors.verticalCenter: parent.verticalCenter;
+                    }
+                    LabelFixed {
+                        text: qsTr ("Conversations");
+                        color: Theme.highlightColor;
+                        horizontalAlignment: Text.AlignRight;
+                        font {
+                            family: Theme.fontFamilyHeading;
+                            pixelSize: Theme.fontSizeLarge;
+                        }
+                        anchors.verticalCenter: parent.verticalCenter;
+                        Container.horizontalStretch: 1;
+                    }
+                }
+                SearchField {
+                    id: inputFilter;
+                    placeholderText: qsTr ("Filter...");
+                    ExtraAnchors.horizontalFill: parent;
+
+                    readonly property string value : text.trim ().toLowerCase ();
+                }
+            }
         }
     }
 }
