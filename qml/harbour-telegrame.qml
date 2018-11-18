@@ -111,7 +111,7 @@ ApplicationWindow {
                 Container.forcedHeight: (implicitHeight + anchors.margins * 2);
                 ExtraAnchors.horizontalFill: parent;
 
-                Label {
+                LabelFixed {
                     text: (TD_Global.selectedPhotosCount > 0
                            ? (groupImagesInAlbums
                               ? qsTr ("Send %1 images as an album").arg (TD_Global.selectedPhotosCount)
@@ -213,7 +213,7 @@ ApplicationWindow {
                 Container.forcedHeight: (implicitHeight + anchors.margins * 2);
                 ExtraAnchors.horizontalFill: parent;
 
-                Label {
+                LabelFixed {
                     text: (TD_Global.selectedVideosCount > 0
                            ? (groupVideosInAlbums
                               ? qsTr ("Send %1 videos as an album").arg (TD_Global.selectedVideosCount)
@@ -311,7 +311,7 @@ ApplicationWindow {
                                 anchors.margins: Theme.paddingSmall;
                                 ExtraAnchors.bottomLeftCorner: parent;
                             }
-                            Label {
+                            LabelFixed {
                                 text: TD_Global.formatTime (model.duration * 1000, true);
                                 color: "gray";
                                 font.pixelSize: Theme.fontSizeExtraSmall;
@@ -432,7 +432,7 @@ ApplicationWindow {
                         modelDocuments.folder = modelDocuments.parentFolder;
                     }
                 }
-                Label {
+                LabelFixed {
                     text: TD_Global.localPathFromUrl (modelDocuments.folder);
                     elide: Text.ElideLeft;
                     color: Theme.highlightColor;
@@ -496,12 +496,12 @@ ApplicationWindow {
                         ColumnContainer {
                             Container.horizontalStretch: 1;
 
-                            Label {
+                            LabelFixed {
                                 text: model.fileName;
                                 elide: Text.ElideMiddle;
                                 ExtraAnchors.horizontalFill: parent;
                             }
-                            Label {
+                            LabelFixed {
                                 text: TD_Global.formatSize (model.fileSize);
                                 color: Theme.secondaryColor;
                                 visible: !model.fileIsDir;
@@ -565,7 +565,7 @@ ApplicationWindow {
                         autoPlay: true;
                     }
                 }
-                Label {
+                LabelFixed {
                     text: (btnRecord.active
                            ? qsTr ("Recording (%1)").arg (TD_Global.formatTime (TD_Global.recordingDuration, false))
                            : (currentRecording !== ""
@@ -695,14 +695,14 @@ ApplicationWindow {
                     ColumnContainer {
                         Container.horizontalStretch: 1;
 
-                        Label {
+                        LabelFixed {
                             text: (delegateMsgText.webPage ? delegateMsgText.webPage.siteName : "");
                             color: Theme.highlightColor;
                             visible: (text !== "");
                             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                             ExtraAnchors.horizontalFill: parent;
                         }
-                        Label {
+                        LabelFixed {
                             text: (delegateMsgText.webPage ? delegateMsgText.webPage.title : "");
                             elide: Text.ElideRight;
                             visible: (text !== "");
@@ -711,7 +711,7 @@ ApplicationWindow {
                             font.bold: true;
                             ExtraAnchors.horizontalFill: parent;
                         }
-                        Label {
+                        LabelFixed {
                             text: (delegateMsgText.webPage ? delegateMsgText.webPage.description : "");
                             elide: Text.ElideRight;
                             visible: (text !== "");
@@ -777,7 +777,7 @@ ApplicationWindow {
                 return ret;
             }
 
-            Label {
+            LabelFixed {
                 text: (delegateMsgPhoto.captionItem ? delegateMsgPhoto.captionItem.text : "");
                 visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
@@ -813,7 +813,7 @@ ApplicationWindow {
                 fileItem: (delegateMsgDocument.photoSizeItem ? delegateMsgDocument.photoSizeItem.photo : null);
                 autoDownload: true;
             }
-            Label {
+            LabelFixed {
                 text: (delegateMsgDocument.captionItem ? delegateMsgDocument.captionItem.text : "");
                 visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
@@ -848,10 +848,11 @@ ApplicationWindow {
                     }
 
                     Rectangle {
-                        color: "transparent";
+                        color: Theme.secondaryHighlightColor;
+                        opacity: 0.15;
                         border {
                             width: 1;
-                            color: Theme.secondaryColor;
+                            color: Theme.highlightColor;
                         }
                         anchors {
                             fill: parent;
@@ -881,13 +882,13 @@ ApplicationWindow {
                     anchors.verticalCenter: parent.verticalCenter;
                     Container.horizontalStretch: 1;
 
-                    Label {
+                    LabelFixed {
                         text: (delegateMsgDocument.documentItem ? delegateMsgDocument.documentItem.fileName : "");
                         elide: Text.ElideMiddle;
                         font.underline: true;
                         ExtraAnchors.horizontalFill: parent;
                     }
-                    Label {
+                    LabelFixed {
                         text: ((helperMsgDocumentFile.downloading || helperMsgDocumentFile.uploading)
                                ? "(%1 / %2)".arg (TD_Global.formatSize (helperMsgDocumentFile.currentSize)).arg (TD_Global.formatSize (helperMsgDocumentFile.totalSize))
                                : "(%1)".arg (TD_Global.formatSize (helperMsgDocumentFile.totalSize)));
@@ -906,7 +907,7 @@ ApplicationWindow {
                     }
                 }
             }
-            Label {
+            LabelFixed {
                 text: (helperMsgDocumentFile.downloading
                        ? qsTr ("Downloading, please wait...")
                        : (helperMsgDocumentFile.uploading
@@ -993,7 +994,7 @@ ApplicationWindow {
                 fileItem: (delegateMsgVideo.videoItem ? delegateMsgVideo.videoItem.video : null);
                 autoDownload: false;
             }
-            Label {
+            LabelFixed {
                 text: (delegateMsgVideo.captionItem ? delegateMsgVideo.captionItem.text : "");
                 visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
@@ -1103,20 +1104,20 @@ ApplicationWindow {
                 autoLoad: true;
                 autoPlay: true;
             }
-            Label {
+            LabelFixed {
                 text: (delegateMsgAudio.audioItem ? delegateMsgAudio.audioItem.fileName : "");
                 elide: Text.ElideRight;
                 font.pixelSize: Theme.fontSizeSmall;
                 ExtraAnchors.horizontalFill: parent;
             }
-            Label {
+            LabelFixed {
                 text: (delegateMsgAudio.audioItem ? delegateMsgAudio.audioItem.title : "");
                 visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.bold: true;
                 ExtraAnchors.horizontalFill: parent;
             }
-            Label {
+            LabelFixed {
                 text: (delegateMsgAudio.audioItem ? delegateMsgAudio.audioItem.performer : "");
                 visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
@@ -1201,7 +1202,7 @@ ApplicationWindow {
                         }
                     }
                 }
-                Label {
+                LabelFixed {
                     text: (delegateMsgAudio.audioItem
                            ? (playerAudio.playing
                               ? ("-" + TD_Global.formatTime (playerAudio.remaining, false))
@@ -1335,7 +1336,7 @@ ApplicationWindow {
                 autoLoad: true;
                 autoPlay: true;
             }
-            Label {
+            LabelFixed {
                 text: (delegateMsgVoiceNote.captionItem ? delegateMsgVoiceNote.captionItem.text : "");
                 visible: (text !== "");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
@@ -1434,7 +1435,7 @@ ApplicationWindow {
                             }
                         }
                     }
-                    Label {
+                    LabelFixed {
                         text: (delegateMsgVoiceNote.voiceNoteItem
                                ?  (playerVoiceNote.playing
                                    ? qsTr ("(Listening...)")
@@ -1445,7 +1446,7 @@ ApplicationWindow {
                         color: Theme.secondaryColor;
                         font.pixelSize: Theme.fontSizeSmall;
                     }
-                    Label {
+                    LabelFixed {
                         text: (delegateMsgVoiceNote.voiceNoteItem
                                ? (playerVoiceNote.playing
                                   ? ("-" + TD_Global.formatTime (playerVoiceNote.remaining, false))
@@ -1459,9 +1460,208 @@ ApplicationWindow {
         }
     }
     Component {
+        id: compoMsgChatJoinByLink;
+
+        LabelFixed {
+            text: qsTr ("Joined the group chat using the invite link");
+            color: Theme.secondaryHighlightColor;
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+            font.italic: true;
+
+            property TD_MessageChatJoinByLink messageContentItem : null;
+        }
+    }
+    Component {
+        id: compoMsgChatAddMembers;
+
+        ColumnContainer {
+            id: delegateMsgChatAddMembers;
+            spacing: Theme.paddingSmall;
+
+            property TD_MessageChatAddMembers messageContentItem : null;
+
+            LabelFixed {
+                text: qsTr ("Added members to this group chat :");
+                color: Theme.secondaryHighlightColor;
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                font.italic: true;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            Repeater {
+                model: delegateMsgChatAddMembers.messageContentItem.memberUserIds;
+                delegate: RowContainer {
+                    id: delegateAddedMember;
+                    spacing: Theme.paddingMedium;
+                    ExtraAnchors.horizontalFill: parent;
+
+                    readonly property TD_User userItem : TD_Global.getUserItemById (modelData);
+
+                    DelegateDownloadableImage {
+                        size: Theme.iconSizeMedium;
+                        fileItem: (delegateAddedMember.userItem && delegateAddedMember.userItem.profilePhoto
+                                   ? delegateAddedMember.userItem.profilePhoto.big
+                                   : null);
+                        autoDownload: true;
+                        anchors.verticalCenter: parent.verticalCenter;
+                    }
+                    LabelFixed {
+                        text: (delegateAddedMember.userItem ? delegateAddedMember.userItem.firstName + " " + delegateAddedMember.userItem.lastName : "");
+                        color: Theme.highlightColor;
+                        elide: Text.ElideRight;
+                        maximumLineCount: 1;
+                        anchors.verticalCenter: parent.verticalCenter;
+                        Container.horizontalStretch: 1;
+                    }
+                }
+            }
+        }
+    }
+    Component {
+        id: compoMsgChatDeleteMember;
+
+        ColumnContainer {
+            id: delegateMsgChatDeleteMember;
+            spacing: Theme.paddingSmall;
+
+            property TD_MessageChatDeleteMember messageContentItem : null;
+
+            LabelFixed {
+                text: qsTr ("Remove member from this group chat :");
+                color: Theme.secondaryHighlightColor;
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                font.italic: true;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            RowContainer {
+                id: delegateRemovedMember;
+                spacing: Theme.paddingMedium;
+                ExtraAnchors.horizontalFill: parent;
+
+                readonly property TD_User userItem : TD_Global.getUserItemById (delegateMsgChatDeleteMember.messageContentItem.userId);
+
+                DelegateDownloadableImage {
+                    size: Theme.iconSizeMedium;
+                    fileItem: (delegateRemovedMember.userItem && delegateRemovedMember.userItem.profilePhoto
+                               ? delegateRemovedMember.userItem.profilePhoto.big
+                               : null);
+                    autoDownload: true;
+                    anchors.verticalCenter: parent.verticalCenter;
+                }
+                LabelFixed {
+                    text: (delegateRemovedMember.userItem ? delegateRemovedMember.userItem.firstName + " " + delegateRemovedMember.userItem.lastName : "");
+                    color: Theme.highlightColor;
+                    elide: Text.ElideRight;
+                    maximumLineCount: 1;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    Container.horizontalStretch: 1;
+                }
+            }
+        }
+    }
+    Component {
+        id: compoMsgChatChangeTitle;
+
+        LabelFixed {
+            text: qsTr ("Changed the group title to '%1'").arg (messageContentItem.title);
+            color: Theme.secondaryHighlightColor;
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+            font.italic: true;
+
+            property TD_MessageChatChangeTitle messageContentItem : null;
+        }
+    }
+    Component {
+        id: compoMsgChatUpgradeFrom;
+
+        LabelFixed {
+            text: qsTr ("Upgraded from basic group");
+            color: Theme.secondaryHighlightColor;
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+            font.italic: true;
+
+            property TD_MessageChatUpgradeFrom messageContentItem : null;
+        }
+    }
+    Component {
+        id: compoMsgChatUpgradeTo;
+
+        LabelFixed {
+            text: qsTr ("Upgraded to supergroup");
+            color: Theme.secondaryHighlightColor;
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+            font.italic: true;
+
+            property TD_MessageChatUpgradeTo messageContentItem : null;
+        }
+    }
+    Component {
+        id: compoMsgChatContactRegistered;
+
+        LabelFixed {
+            text: qsTr ("Registered in Telegram");
+            color: Theme.secondaryHighlightColor;
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+            font.italic: true;
+
+            property TD_MessageContactRegistered messageContentItem : null;
+        }
+    }
+    Component {
+        id: compoMsgCall;
+
+        LabelFixed {
+            text: {
+                if (callDiscardReasonItem) {
+                    switch (callDiscardReasonItem.typeOf) {
+                    case TD_ObjectType.CALL_DISCARD_REASON_HUNG_UP:      return qsTr ("Call finished (%1)").arg (TD_Global.formatTime (messageContentItem.duration, false));
+                    case TD_ObjectType.CALL_DISCARD_REASON_MISSED:       return qsTr ("Call missed");
+                    case TD_ObjectType.CALL_DISCARD_REASON_DECLINED:     return qsTr ("Call declined");
+                    case TD_ObjectType.CALL_DISCARD_REASON_DISCONNECTED: return qsTr ("Call disconnected");
+                    case TD_ObjectType.CALL_DISCARD_REASON_EMPTY:        return qsTr ("Call unknown state");
+                    }
+                }
+                return qsTr ("Call");
+            }
+            color: Theme.secondaryHighlightColor;
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+            font.italic: true;
+
+            property TD_MessageCall messageContentItem : null;
+
+            readonly property TD_CallDiscardReason callDiscardReasonItem : (messageContentItem ? messageContentItem.discardReason : null);
+        }
+    }
+    Component {
+        id: compoMsgChatChangePhoto;
+
+        ColumnContainer {
+            id: delegateMsgChatChangePhoto;
+            spacing: Theme.paddingSmall;
+
+            property TD_MessageChatChangePhoto messageContentItem : null;
+
+            readonly property TD_Photo     photoItem     : (messageContentItem                     ? messageContentItem.photo   : null);
+            readonly property TD_PhotoSize photoSizeItem : (photoItem && photoItem.sizes.count > 0 ? photoItem.sizes.getLast () : null);
+
+            LabelFixed {
+                text: qsTr ("Changed the group photo :");
+                color: Theme.secondaryHighlightColor;
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                font.italic: true;
+            }
+            DelegateDownloadableImage {
+                size: Theme.iconSizeLarge;
+                fileItem: (delegateMsgChatChangePhoto.photoSizeItem
+                           ? delegateMsgChatChangePhoto.photoSizeItem.photo
+                           : null);
+                autoDownload: true;
+            }
+        }
+    }
+    Component {
         id: compoMsgUnsupported;
 
-        Label {
+        LabelFixed {
             text: qsTr ("<Unsupported>");
             color: "magenta";
 

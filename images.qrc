@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>images/cd-box.svg</file>
+        <file>images/Telegram_logo.svg</file>
     </qresource>
 </RCC>

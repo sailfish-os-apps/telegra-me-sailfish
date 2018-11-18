@@ -162,6 +162,8 @@ public:
     explicit QtTdLibMessageChatChangeTitle (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageChatChangePhoto : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatChangePhoto> {
@@ -172,6 +174,8 @@ public:
     explicit QtTdLibMessageChatChangePhoto (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageChatDeletePhoto : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatDeletePhoto> {
@@ -179,6 +183,8 @@ class QtTdLibMessageChatDeletePhoto : public QtTdLibMessageContent, public Facto
 
 public:
     explicit QtTdLibMessageChatDeletePhoto (QObject * parent = Q_NULLPTR);
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageChatAddMembers : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatAddMembers> {
@@ -189,6 +195,8 @@ public:
     explicit QtTdLibMessageChatAddMembers (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageChatJoinByLink : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatJoinByLink> {
@@ -196,6 +204,8 @@ class QtTdLibMessageChatJoinByLink : public QtTdLibMessageContent, public Factor
 
 public:
     explicit QtTdLibMessageChatJoinByLink (QObject * parent = Q_NULLPTR);
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageChatDeleteMember : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatDeleteMember> {
@@ -206,6 +216,8 @@ public:
     explicit QtTdLibMessageChatDeleteMember (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageChatUpgradeTo : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatUpgradeTo> {
@@ -216,6 +228,8 @@ public:
     explicit QtTdLibMessageChatUpgradeTo (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageChatUpgradeFrom : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatUpgradeFrom> {
@@ -227,6 +241,8 @@ public:
     explicit QtTdLibMessageChatUpgradeFrom (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageContactRegistered : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageContactRegistered> {
@@ -234,6 +250,8 @@ class QtTdLibMessageContactRegistered : public QtTdLibMessageContent, public Fac
 
 public:
     explicit QtTdLibMessageContactRegistered (QObject * parent = Q_NULLPTR);
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibCallDiscardReason : public QtTdLibAbstractObject {
@@ -317,17 +335,17 @@ class QtTdLibMessage : public QtTdLibAbstractInt53IdObject, public FactoryInt53I
     Q_TDLIB_PROPERTY_ID53      (replyToMessageId)
     Q_TDLIB_PROPERTY_ID64      (mediaAlbumId)
     Q_TDLIB_PROPERTY_BOOL      (isOutgoing)
+    Q_TDLIB_PROPERTY_BOOL      (canBeEdited)
+    Q_TDLIB_PROPERTY_BOOL      (canBeForwarded)
+    Q_TDLIB_PROPERTY_BOOL      (canBeDeletedOnlyForSelf)
+    Q_TDLIB_PROPERTY_BOOL      (canBeDeletedForAllUsers)
+    Q_TDLIB_PROPERTY_BOOL      (isChannelPost)
+    Q_TDLIB_PROPERTY_BOOL      (containsUnreadMention)
     Q_TDLIB_PROPERTY_SUBOBJECT (content, QtTdLibMessageContent)
     //ttl:int32
     //ttl_expires_in:double
     //via_bot_user_id:int32
     //author_signature:string
-    //can_be_edited:Bool
-    //can_be_forwarded:Bool
-    //can_be_deleted_only_for_self:Bool
-    //can_be_deleted_for_all_users:Bool
-    //is_channel_post:Bool
-    //contains_unread_mention:Bool
     //sending_state:MessageSendingState
     //reply_markup:ReplyMarkup
     //forward_info:MessageForwardInfo
@@ -337,6 +355,8 @@ public:
     virtual ~QtTdLibMessage (void);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    Q_INVOKABLE QString preview (void) const;
 };
 
 #endif // QtTdLibMessage_H

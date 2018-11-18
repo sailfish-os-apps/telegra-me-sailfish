@@ -10,5 +10,6 @@
         <file>qml/components/HelperFileState.qml</file>
         <file>qml/components/WrapperVideoPlayer.qml</file>
         <file>qml/components/WrapperAudioPlayer.qml</file>
+        <file>qml/components/LabelFixed.qml</file>
     </qresource>
 </RCC>

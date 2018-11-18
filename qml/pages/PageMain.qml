@@ -124,12 +124,12 @@ Page {
                                         anchors.fill: parent;
                                     }
                                 }
-                                Label {
+                                LabelFixed {
                                     text: modelData ["name"];
                                     anchors.verticalCenter: parent.verticalCenter;
                                     Container.horizontalStretch: 1;
                                 }
-                                Label {
+                                LabelFixed {
                                     text: ("+" + modelData ["code"]);
                                     opacity: 0.65;
                                     anchors.verticalCenter: parent.verticalCenter;
@@ -161,7 +161,7 @@ Page {
             }
             ExtraAnchors.horizontalFill: parent;
 
-            Label {
+            LabelFixed {
                 text: qsTr ("Choose a country and enter phone number :");
                 color: Theme.highlightColor;
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
@@ -207,7 +207,7 @@ Page {
                         horizontalAlignment: Image.AlignHCenter;
                         anchors.verticalCenter: parent.verticalCenter;
                     }
-                    Label {
+                    LabelFixed {
                         text: (currentName !== "" ? currentName : qsTr ("Select a country/region..."));
                         anchors.verticalCenter: parent.verticalCenter;
                     }
@@ -251,7 +251,7 @@ Page {
                     opacity: 0.15;
                     anchors.fill: parent;
                 }
-                Label {
+                LabelFixed {
                     id: lblConnect;
                     text: qsTr ("Connect");
                     anchors {
@@ -281,14 +281,14 @@ Page {
             }
             ExtraAnchors.horizontalFill: parent;
 
-            Label {
+            LabelFixed {
                 text: qsTr ("Enter the verification code you received :");
                 color: Theme.highlightColor;
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.family: Theme.fontFamilyHeading;
                 ExtraAnchors.horizontalFill: parent;
             }
-            Label {
+            LabelFixed {
                 text: {
                     if (authWaitCode) {
                         switch (authWaitCode.typeOf) {
@@ -340,7 +340,7 @@ Page {
                     opacity: 0.15;
                     anchors.fill: parent;
                 }
-                Label {
+                LabelFixed {
                     id: lblCheckCode;
                     text: qsTr ("Check code");
                     anchors {
@@ -435,16 +435,7 @@ Page {
                 readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
                 readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
                 readonly property int               unreadCount        : (chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
-                readonly property string            description        : {
-                    var tmp = "";
-                    if (lastMsgUserItem) {
-                        tmp += (lastMsgUserItem.firstName + " " + lastMsgUserItem.lastName + " : ");
-                    }
-                    if (lastMsgContentItem) {
-                        tmp += lastMsgContentItem.asString ();
-                    }
-                    return tmp;
-                }
+                readonly property string            description        : (lastMsgItem ? lastMsgItem.preview () : "");
 
                 function updateNotif () {
                     if (lastMsgItem) {
@@ -518,21 +509,19 @@ Page {
                         anchors.verticalCenter: parent.verticalCenter;
                         Container.horizontalStretch: 1;
 
-                        Label {
+                        LabelFixed {
                             text: delegateChat.chatItem.title;
                             elide: Text.ElideRight;
-                            maximumLineCount: 1;
                             ExtraAnchors.horizontalFill: parent;
                         }
                         RowContainer {
                             spacing: Theme.paddingSmall;
                             ExtraAnchors.horizontalFill: parent;
 
-                            Label {
+                            LabelFixed {
                                 text: delegateChat.description;
                                 color: Theme.secondaryColor;
                                 elide: Text.ElideRight;
-                                wrapMode: Text.NoWrap;
                                 maximumLineCount: 1;
                                 font.pixelSize: Theme.fontSizeExtraSmall;
                                 anchors.verticalCenter: parent.verticalCenter;
@@ -564,7 +553,7 @@ Page {
                         visible: (delegateChat.chatItem.unreadCount > 0);
                         Container.forcedWidth: Theme.paddingMedium;
                     }
-                    Label {
+                    LabelFixed {
                         text: delegateChat.chatItem.unreadCount;
                         color: ((delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0)
                                 ? Theme.secondaryColor

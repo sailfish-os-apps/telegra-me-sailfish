@@ -100,18 +100,28 @@ Page {
                         }
                         MenuItem {
                             text: qsTr ("Forward");
+                            visible: delegateMsg.messageItem.canBeForwarded;
                             onClicked: {
                                 // TODO
                             }
                         }
                         MenuItem {
                             text: qsTr ("Edit");
+                            visible: delegateMsg.messageItem.canBeEdited;
                             onClicked: {
                                 // TODO
                             }
                         }
                         MenuItem {
-                            text: qsTr ("Delete");
+                            text: qsTr ("Delete only for me");
+                            visible: delegateMsg.messageItem.canBeDeletedOnlyForSelf;
+                            onClicked: {
+                                // TODO
+                            }
+                        }
+                        MenuItem {
+                            text: qsTr ("Delete for all users");
+                            visible: delegateMsg.messageItem.canBeDeletedForAllUsers;
                             onClicked: {
                                 // TODO
                             }
@@ -140,7 +150,7 @@ Page {
                     }
                     ColumnContainer {
                         id: layoutMessage;
-                        spacing: Theme.paddingMedium;
+                        spacing: Theme.paddingSmall;
                         ExtraAnchors.topDock: parent;
 
                         Item {
@@ -161,22 +171,25 @@ Page {
                             }
                             RowContainer {
                                 id: layoutMsgContent;
-                                spacing: Theme.paddingSmall;
+                                spacing: Theme.paddingLarge;
                                 anchors.margins: Theme.paddingLarge;
                                 ExtraAnchors.topDock: parent;
 
                                 DelegateDownloadableImage {
                                     size: Theme.iconSizeMedium;
-                                    fileItem: (delegateMsg.userItem && delegateMsg.userItem.profilePhoto ? delegateMsg.userItem.profilePhoto.big : null);
+                                    fileItem: (!delegateMsg.messageItem.isChannelPost
+                                               ? (delegateMsg.userItem && delegateMsg.userItem.profilePhoto ? delegateMsg.userItem.profilePhoto.big : null)
+                                               : (currentChat && currentChat.photo ? currentChat.photo.big : null));
                                     autoDownload: true;
                                 }
                                 ColumnContainer {
                                     spacing: 1;
                                     Container.horizontalStretch: 1;
 
-                                    Label {
+                                    LabelFixed {
                                         text: (delegateMsg.userItem ? delegateMsg.userItem.firstName + " " + delegateMsg.userItem.lastName : "");
                                         color: Theme.highlightColor;
+                                        visible: !delegateMsg.messageItem.isChannelPost;
                                         ExtraAnchors.horizontalFill: parent;
                                     }
                                     Loader {
@@ -184,14 +197,23 @@ Page {
                                         sourceComponent: {
                                             if (delegateMsg.messageItem && delegateMsg.messageItem.content) {
                                                 switch (delegateMsg.messageItem.content.typeOf) {
-                                                case TD_ObjectType.MESSAGE_TEXT:       return compoMsgText;
-                                                case TD_ObjectType.MESSAGE_PHOTO:      return compoMsgPhoto;
-                                                case TD_ObjectType.MESSAGE_DOCUMENT:   return compoMsgDocument;
-                                                case TD_ObjectType.MESSAGE_STICKER:    return compoMsgSticker;
-                                                case TD_ObjectType.MESSAGE_VIDEO:      return compoMsgVideo;
-                                                case TD_ObjectType.MESSAGE_AUDIO:      return compoMsgAudio;
-                                                case TD_ObjectType.MESSAGE_ANIMATION:  return compoMsgAnimation;
-                                                case TD_ObjectType.MESSAGE_VOICE_NOTE: return compoMsgVoiceNote;
+                                                case TD_ObjectType.MESSAGE_TEXT:               return compoMsgText;
+                                                case TD_ObjectType.MESSAGE_PHOTO:              return compoMsgPhoto;
+                                                case TD_ObjectType.MESSAGE_DOCUMENT:           return compoMsgDocument;
+                                                case TD_ObjectType.MESSAGE_STICKER:            return compoMsgSticker;
+                                                case TD_ObjectType.MESSAGE_VIDEO:              return compoMsgVideo;
+                                                case TD_ObjectType.MESSAGE_AUDIO:              return compoMsgAudio;
+                                                case TD_ObjectType.MESSAGE_ANIMATION:          return compoMsgAnimation;
+                                                case TD_ObjectType.MESSAGE_VOICE_NOTE:         return compoMsgVoiceNote;
+                                                case TD_ObjectType.MESSAGE_CALL:               return compoMsgCall;
+                                                case TD_ObjectType.MESSAGE_CHAT_JOIN_BY_LINK:  return compoMsgChatJoinByLink;
+                                                case TD_ObjectType.MESSAGE_CHAT_ADD_MEMBERS:   return compoMsgChatAddMembers;
+                                                case TD_ObjectType.MESSAGE_CHAT_DELETE_MEMBER: return compoMsgChatDeleteMember;
+                                                case TD_ObjectType.MESSAGE_CHAT_CHANGE_TITLE:  return compoMsgChatChangeTitle;
+                                                case TD_ObjectType.MESSAGE_CHAT_CHANGE_PHOTO:  return compoMsgChatChangePhoto;
+                                                case TD_ObjectType.MESSAGE_CHAT_UPGRADE_FROM:  return compoMsgChatUpgradeFrom;
+                                                case TD_ObjectType.MESSAGE_CHAT_UPGRADE_TO:    return compoMsgChatUpgradeTo;
+                                                case TD_ObjectType.MESSAGE_CONTACT_REGISTERED: return compoMsgChatContactRegistered;
                                                 }
                                             }
                                             return compoMsgUnsupported;
@@ -202,7 +224,7 @@ Page {
                                         spacing: Theme.paddingMedium;
                                         anchors.right: parent.right;
 
-                                        Label {
+                                        LabelFixed {
                                             text: Qt.formatDateTime (delegateMsg.messageItem.date);
                                             color: Theme.secondaryColor;
                                             font.pixelSize: Theme.fontSizeExtraSmall;
@@ -218,7 +240,7 @@ Page {
                                 }
                             }
                         }
-                        Label {
+                        LabelFixed {
                             id: lblNewMessages;
                             text: qsTr ("New messages");
                             color: Theme.highlightColor;
@@ -284,10 +306,10 @@ Page {
                 Container.horizontalStretch: 1;
                 anchors.verticalCenter: parent.verticalCenter;
 
-                Label {
+                LabelFixed {
                     text: (currentChat ? currentChat.title : "");
                     color: Theme.highlightColor;
-                    truncationMode: TruncationMode.Fade;
+                    elide: Text.ElideRight;
                     horizontalAlignment: Text.AlignRight;
                     font {
                         family: Theme.fontFamilyHeading;
@@ -295,7 +317,11 @@ Page {
                     }
                     ExtraAnchors.horizontalFill: parent;
                 }
-                Label {
+                LabelFixed {
+                    color: Theme.secondaryColor;
+                    elide: Text.ElideRight;
+                    visible: (text !== "");
+                    horizontalAlignment: Text.AlignRight;
                     text: {
                         if (currentChat) {
                             switch (currentChat.type.typeOf) {
@@ -321,10 +347,6 @@ Page {
                         }
                         return "";
                     }
-                    visible: (text !== "");
-                    color: Theme.secondaryColor;
-                    truncationMode: TruncationMode.Fade;
-                    horizontalAlignment: Text.AlignRight;
                     font {
                         family: Theme.fontFamilyHeading;
                         pixelSize: Theme.fontSizeExtraSmall;

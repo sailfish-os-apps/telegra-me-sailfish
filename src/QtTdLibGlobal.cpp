@@ -833,6 +833,20 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             }
             break;
         }
+        case QtTdLibObjectType::UPDATE_CHAT_TITLE: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_title_withJSON (json ["title"]);
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_CHAT_PHOTO: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_photo_withJSON (json ["photo"], &QtTdLibChatPhoto::create);
+            }
+            break;
+        }
         case QtTdLibObjectType::UPDATE_CHAT_ORDER: {
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
             if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {

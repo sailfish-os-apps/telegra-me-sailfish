@@ -1,6 +1,7 @@
 
 #include "QtTdLibChat.h"
 #include "QtTdLibMessage.h"
+#include "QtTdLibUser.h"
 
 QtTdLibMessageContent::QtTdLibMessageContent (const QtTdLibObjectType::Type typeOf, QObject * parent)
     : QtTdLibAbstractObject { typeOf, parent }
@@ -69,15 +70,40 @@ QtTdLibMessage::~QtTdLibMessage (void) {
 }
 
 void QtTdLibMessage::updateFromJson (const QJsonObject & json) {
-    set_date_withJSON             (json ["date"]);
-    set_senderUserId_withJSON     (json ["sender_user_id"]);
-    set_chatId_withJSON           (json ["chat_id"]);
-    set_isOutgoing_withJSON       (json ["is_outgoing"]);
-    set_editDate_withJSON         (json ["edit_date"]);
-    set_views_withJSON            (json ["views"]);
-    set_replyToMessageId_withJSON (json ["reply_to_message_id"]);
-    set_mediaAlbumId_withJSON     (json ["media_album_id"]);
-    set_content_withJSON          (json ["content"], &QtTdLibMessageContent::createAbstract);
+    set_date_withJSON                    (json ["date"]);
+    set_senderUserId_withJSON            (json ["sender_user_id"]);
+    set_chatId_withJSON                  (json ["chat_id"]);
+    set_isOutgoing_withJSON              (json ["is_outgoing"]);
+    set_editDate_withJSON                (json ["edit_date"]);
+    set_views_withJSON                   (json ["views"]);
+    set_replyToMessageId_withJSON        (json ["reply_to_message_id"]);
+    set_mediaAlbumId_withJSON            (json ["media_album_id"]);
+    set_canBeEdited_withJSON             (json ["can_be_edited"]);
+    set_canBeForwarded_withJSON          (json ["can_be_forwarded"]);
+    set_canBeDeletedOnlyForSelf_withJSON (json ["can_be_deleted_only_for_self"]);
+    set_canBeDeletedForAllUsers_withJSON (json ["can_be_deleted_for_all_users"]);
+    set_isChannelPost_withJSON           (json ["is_channel_post"]);
+    set_containsUnreadMention_withJSON   (json ["contains_unread_mention"]);
+    set_content_withJSON                 (json ["content"], &QtTdLibMessageContent::createAbstract);
+}
+
+QString QtTdLibMessage::preview (void) const {
+    QString ret { };
+    if (QtTdLibUser * userItem = { QtTdLibCollection::allUsers.value (m_senderUserId, Q_NULLPTR) }) {
+        ret += userItem->get_firstName ();
+        ret += ' ';
+        ret += userItem->get_lastName ();
+        ret += " : ";
+    }
+    else if (QtTdLibChat * chatItem = { QtTdLibCollection::allChats.value (m_chatId, Q_NULLPTR) }) {
+        ret += chatItem->get_title ();
+        ret += " : ";
+    }
+    else { }
+    if (m_content) {
+        ret += m_content->asString ();
+    }
+    return ret;
 }
 
 QtTdLibMessagePhoto::QtTdLibMessagePhoto (QObject * parent)
@@ -259,6 +285,10 @@ void QtTdLibMessageChatChangeTitle::updateFromJson (const QJsonObject & json) {
     set_title_withJSON (json ["title"]);
 }
 
+QString QtTdLibMessageChatChangeTitle::asString (void) const {
+    return tr ("Changed title to '%1'").arg (m_title);
+}
+
 QtTdLibMessageChatChangePhoto::QtTdLibMessageChatChangePhoto (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_CHAT_CHANGE_PHOTO, parent }
 { }
@@ -267,9 +297,17 @@ void QtTdLibMessageChatChangePhoto::updateFromJson (const QJsonObject & json) {
     set_photo_withJSON (json ["photo"], &QtTdLibPhoto::create);
 }
 
+QString QtTdLibMessageChatChangePhoto::asString (void) const {
+    return tr ("Changed photo");
+}
+
 QtTdLibMessageChatDeletePhoto::QtTdLibMessageChatDeletePhoto (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_CHAT_DELETE_PHOTO, parent }
 { }
+
+QString QtTdLibMessageChatDeletePhoto::asString (void) const {
+    return tr ("Delete photo");
+}
 
 QtTdLibMessageChatAddMembers::QtTdLibMessageChatAddMembers (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_CHAT_ADD_MEMBERS, parent }
@@ -285,9 +323,26 @@ void QtTdLibMessageChatAddMembers::updateFromJson (const QJsonObject & json) {
     set_memberUserIds (memberUserIds);
 }
 
+QString QtTdLibMessageChatAddMembers::asString (void) const {
+    QString ret { };
+    ret += tr ("Added ");
+    QStringList tmp { };
+    for (const QVariant & userIdVar : m_memberUserIds) {
+        if (QtTdLibUser * userItem = { QtTdLibCollection::allUsers.value (userIdVar.toString ().toLongLong (), Q_NULLPTR) }) {
+            tmp.append (userItem->get_firstName () % ' ' % userItem->get_lastName ());
+        }
+    }
+    ret += tmp.join (", ");
+    return ret;
+}
+
 QtTdLibMessageChatJoinByLink::QtTdLibMessageChatJoinByLink (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_CHAT_JOIN_BY_LINK, parent }
 { }
+
+QString QtTdLibMessageChatJoinByLink::asString (void) const {
+    return tr ("Joined chat");
+}
 
 QtTdLibMessageChatDeleteMember::QtTdLibMessageChatDeleteMember (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_CHAT_DELETE_MEMBER, parent }
@@ -297,12 +352,27 @@ void QtTdLibMessageChatDeleteMember::updateFromJson (const QJsonObject & json) {
     set_userId_withJSON (json ["user_id"]);
 }
 
+QString QtTdLibMessageChatDeleteMember::asString (void) const {
+    QString ret { };
+    ret += tr ("Removed ");
+    if (QtTdLibUser * userItem = { QtTdLibCollection::allUsers.value (m_userId, Q_NULLPTR) }) {
+        ret += userItem->get_firstName ();
+        ret += ' ';
+        ret += userItem->get_lastName ();
+    }
+    return ret;
+}
+
 QtTdLibMessageChatUpgradeTo::QtTdLibMessageChatUpgradeTo (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_CHAT_UPGRADE_TO, parent }
 { }
 
 void QtTdLibMessageChatUpgradeTo::updateFromJson (const QJsonObject & json) {
     set_supergroupId_withJSON (json ["supergroup_id"]);
+}
+
+QString QtTdLibMessageChatUpgradeTo::asString (void) const {
+    return tr ("Upgraded to super-group");
 }
 
 QtTdLibMessageChatUpgradeFrom::QtTdLibMessageChatUpgradeFrom (QObject * parent)
@@ -314,9 +384,17 @@ void QtTdLibMessageChatUpgradeFrom::updateFromJson (const QJsonObject & json) {
     set_title_withJSON        (json ["title"]);
 }
 
+QString QtTdLibMessageChatUpgradeFrom::asString (void) const {
+    return tr ("Upgraded from basic group");
+}
+
 QtTdLibMessageContactRegistered::QtTdLibMessageContactRegistered (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_CONTACT_REGISTERED, parent }
 { }
+
+QString QtTdLibMessageContactRegistered::asString (void) const {
+    return tr ("Registered in Telegram");
+}
 
 QtTdLibMessageCall::QtTdLibMessageCall (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_CALL, parent }
