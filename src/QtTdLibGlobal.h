@@ -1,13 +1,20 @@
 ﻿#ifndef QTTDLIBGLOBAL_H
 #define QTTDLIBGLOBAL_H
 
-#include <QAudioDecoder>
+#include <QAudioEncoderSettings>
 #include <QAudioRecorder>
+#include <QDBusAbstractAdaptor>
+#include <QDBusConnection>
+#include <QDBusConnectionInterface>
+#include <QDir>
+#include <QMimeDatabase>
 #include <QObject>
 #include <QQmlEngine>
-#include <QMimeDatabase>
 #include <QSortFilterProxyModel>
-#include <QDBusAbstractAdaptor>
+#include <QStringBuilder>
+#include <QTimer>
+#include <QtMath>
+#include <QUrl>
 
 #include "QtTdLibCommon.h"
 #include "QtTdLibJsonWrapper.h"
@@ -100,8 +107,9 @@ public:
 
     Q_INVOKABLE void loadMoreMessages (QtTdLibChat * chatItem, const int count);
 
-    Q_INVOKABLE void refreshBasiGroupFullInfo  (QtTdLibBasicGroup * basicGroupItem);
+    Q_INVOKABLE void refreshBasicGroupFullInfo (QtTdLibBasicGroup * basicGroupItem);
     Q_INVOKABLE void refreshSupergroupFullInfo (QtTdLibSupergroup * supergroupItem);
+    Q_INVOKABLE void refreshSupergroupMembers  (QtTdLibSupergroup * supergroupItem, const int count, const int offset = 0);
 
     Q_INVOKABLE void sendMessageText      (QtTdLibChat * chatItem, const QString & text);
     Q_INVOKABLE void sendMessagePhoto     (QtTdLibChat * chatItem, const bool groupInAlbum = true);

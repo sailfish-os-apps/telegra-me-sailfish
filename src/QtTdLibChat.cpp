@@ -125,6 +125,7 @@ void QtTdLibChatNotificationSettings::updateFromJson (const QJsonObject & json) 
 
 QtTdLibSupergroup::QtTdLibSupergroup (const qint32 id, QObject * parent)
     : QtTdLibAbstractInt32IdObject { QtTdLibObjectType::SUPERGROUP, id, parent }
+    , m_members { new QQmlObjectListModel<QtTdLibChatMember> { this } }
 {
     QtTdLibCollection::allSupergroups.insert (id, this);
 }

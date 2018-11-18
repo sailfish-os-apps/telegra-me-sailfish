@@ -60,6 +60,14 @@ int main (int argc, char * argv []) {
     qmlRegisterType<QtTdLibChatTypePrivate>                       ("harbour.Telegrame", 1, 0, "TD_ChatTypePrivate");
     qmlRegisterType<QtTdLibChatTypeSecret>                        ("harbour.Telegrame", 1, 0, "TD_ChatTypeSecret");
     qmlRegisterType<QtTdLibChatTypeSupergroup>                    ("harbour.Telegrame", 1, 0, "TD_ChatTypeSupergroup");
+    qmlRegisterType<QtTdLibChatMember>                            ("harbour.Telegrame", 1, 0, "TD_ChatMember");
+    qmlRegisterType<QtTdLibChatMemberStatus>                      ("harbour.Telegrame", 1, 0, "TD_ChatMemberStatus");
+    qmlRegisterType<QtTdLibChatMemberStatusAdministrator>         ("harbour.Telegrame", 1, 0, "TD_ChatMemberStatusAdministrator");
+    qmlRegisterType<QtTdLibChatMemberStatusBanned>                ("harbour.Telegrame", 1, 0, "TD_ChatMemberStatusBanned");
+    qmlRegisterType<QtTdLibChatMemberStatusCreator>               ("harbour.Telegrame", 1, 0, "TD_ChatMemberStatusCreator");
+    qmlRegisterType<QtTdLibChatMemberStatusLeft>                  ("harbour.Telegrame", 1, 0, "TD_ChatMemberStatusLeft");
+    qmlRegisterType<QtTdLibChatMemberStatusMember>                ("harbour.Telegrame", 1, 0, "TD_ChatMemberStatusMember");
+    qmlRegisterType<QtTdLibChatMemberStatusRestricted>            ("harbour.Telegrame", 1, 0, "TD_ChatMemberStatusRestricted");
     qmlRegisterType<QtTdLibConnectionState>                       ("harbour.Telegrame", 1, 0, "TD_ConnectionState");
     qmlRegisterType<QtTdLibConnectionStateConnecting>             ("harbour.Telegrame", 1, 0, "TD_ConnectionStateConnecting");
     qmlRegisterType<QtTdLibConnectionStateConnectingToProxy>      ("harbour.Telegrame", 1, 0, "TD_ConnectionStateConnectingToProxy");

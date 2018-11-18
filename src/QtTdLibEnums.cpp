@@ -30,6 +30,7 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "chatNotificationSettings", QtTdLibObjectType::CHAT_NOTIFICATION_SETTINGS },
         { "chatPhoto", QtTdLibObjectType::CHAT_PHOTO },
         { "chatMember", QtTdLibObjectType::CHAT_MEMBER },
+        { "chatMembers", QtTdLibObjectType::CHAT_MEMBERS },
         { "chatMemberStatusAdministrator", QtTdLibObjectType::CHAT_MEMBER_STATUS_ADMINISTRATOR },
         { "chatMemberStatusBanned", QtTdLibObjectType::CHAT_MEMBER_STATUS_BANNED },
         { "chatMemberStatusCreator", QtTdLibObjectType::CHAT_MEMBER_STATUS_CREATOR },

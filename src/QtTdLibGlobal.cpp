@@ -1,19 +1,6 @@
 
 #include "QtTdLibGlobal.h"
 
-#include <QUrl>
-#include <QDir>
-#include <QStringBuilder>
-#include <QImageReader>
-#include <QAudioEncoderSettings>
-#include <QAudioBuffer>
-#include <QAudioDecoder>
-#include <QTimer>
-#include <QDateTime>
-#include <QtMath>
-#include <QDBusConnection>
-#include <QDBusConnectionInterface>
-
 const QString dbusServiceName { "org.uniqueconception.telegrame" };
 const QString dbusObjectPath  { "/org/uniqueconception/telegrame" };
 const QString dbusInterface   { "org.uniqueconception.telegrame" };
@@ -321,8 +308,8 @@ void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
                   { "@type", "openChat" },
                   { "chat_id", chatItem->get_id () },
               });
-        if (chatItem->get_messagesModel ()->count () < 15) {
-            loadMoreMessages (chatItem, 15); // FIXME : maybe a better way...
+        if (chatItem->get_messagesModel ()->count () < qMax (chatItem->get_unreadCount (), 15)) {
+            loadMoreMessages (chatItem, qMax (chatItem->get_unreadCount (), 15)); // FIXME : maybe a better way...
         }
     }
 }
@@ -368,7 +355,7 @@ void QtTdLibGlobal::loadMoreMessages (QtTdLibChat * chatItem, const int count) {
     }
 }
 
-void QtTdLibGlobal::refreshBasiGroupFullInfo (QtTdLibBasicGroup * basicGroupItem) {
+void QtTdLibGlobal::refreshBasicGroupFullInfo (QtTdLibBasicGroup * basicGroupItem) {
     if (basicGroupItem != Q_NULLPTR) {
         send (QJsonObject {
                   { "@type", "getBasicGroupFullInfo" },
@@ -382,6 +369,21 @@ void QtTdLibGlobal::refreshSupergroupFullInfo (QtTdLibSupergroup * supergroupIte
         send (QJsonObject {
                   { "@type", "getSupergroupFullInfo" },
                   { "supergroup_id", supergroupItem->get_id_asJSON () },
+              });
+    }
+}
+
+void QtTdLibGlobal::refreshSupergroupMembers (QtTdLibSupergroup * supergroupItem, const int count, const int offset) {
+    if (supergroupItem != Q_NULLPTR) {
+        send (QJsonObject {
+                  { "@type", "getSupergroupMembers" },
+                  { "supergroup_id", supergroupItem->get_id_asJSON () },
+                  { "offset", offset },
+                  { "limit", count },
+                  { "@extra", QJsonObject {
+                        { "supergroup_id", supergroupItem->get_id_asJSON () },
+                    }
+                  }
               });
     }
 }
@@ -714,6 +716,19 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             }
             break;
         }
+        case QtTdLibObjectType::CHAT_MEMBERS: {
+            const qint32 supergroupId { QtTdLibId32Helper::fromJsonToCpp (json ["@extra"].toObject () ["supergroup_id"]) };
+            if (QtTdLibSupergroup * supergroupItem = { getSupergroupItemById (supergroupId) }) {
+                const QJsonArray membersJson = json ["members"].toArray ();
+                QList<QtTdLibChatMember *> members { };
+                members.reserve (membersJson.count ());
+                for (const QJsonValue & memberVar : membersJson) {
+                    members.append (QtTdLibChatMember::create (memberVar.toObject ()));
+                }
+                supergroupItem->get_members ()->clear ();
+                supergroupItem->get_members ()->append (members);
+            }
+        }
         case QtTdLibObjectType::UPDATE_BASIC_GROUP: {
             const QJsonObject basicGroupJson { json ["basic_group"].toObject () };
             const qint32 basicGroupId { QtTdLibId32Helper::fromJsonToCpp (basicGroupJson ["id"]) };
@@ -972,9 +987,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             break;
         }
         default: {
-            if (!json.contains ("@extra")) {
-                qWarning () << "UNHANDLED" << json;
-            }
+            qWarning () << "UNHANDLED" << json;
             break;
         }
     }

@@ -359,7 +359,7 @@ Page {
 
         SilicaFlickable {
             id: flickerChats;
-            quickScroll: false;
+            quickScroll: true;
             contentWidth: width;
             contentHeight: layoutChats.height;
             anchors.fill: parent;
@@ -378,22 +378,26 @@ Page {
                     delegate: ListItem {
                         id: delegateChat;
                         visible: (inputFilter.value === "" || chatItem.title.toLowerCase ().indexOf (inputFilter.value) >= 0);
-                        contentHeight: (layoutChat.height + layoutChat.anchors.margins * 2);
+                        contentHeight: (Theme.iconSizeMedium + Theme.paddingMedium * 2);
+                        implicitHeight: (Theme.iconSizeMedium + Theme.paddingMedium * 2);
                         menu: ContextMenu {
                             MenuItem {
                                 text: (delegateChat.chatItem.isPinned ? qsTr ("Un-pin from favorites") : qsTr ("Pin to favorites"));
+                                enabled: false;
                                 onClicked: {
                                     // TODO
                                 }
                             }
                             MenuItem {
                                 text: (delegateChat.chatItem.notificationSettings.muteFor > 0 ? qsTr ("Un-mute notifications") : qsTr ("Mute notifications"));
+                                enabled: false;
                                 onClicked: {
                                     // TODO
                                 }
                             }
                             MenuItem {
                                 text: qsTr ("Remove chat history");
+                                enabled: false;
                                 onClicked: {
                                     // TODO
                                 }
@@ -488,7 +492,8 @@ Page {
                             id: layoutChat;
                             spacing: Theme.paddingMedium;
                             anchors.margins: Theme.paddingMedium;
-                            ExtraAnchors.topDock: parent;
+                            anchors.verticalCenter: parent.verticalCenter;
+                            ExtraAnchors.horizontalFill: parent;
 
                             DelegateDownloadableImage {
                                 id: avatarChat;

@@ -119,6 +119,7 @@ class QtTdLibSupergroup : public QtTdLibAbstractInt32IdObject, public FactoryInt
     Q_TDLIB_PROPERTY_ID32      (upgradedFromBasicGroupId)
     Q_TDLIB_PROPERTY_ID64      (upgradedFromMaxMessageId)
     Q_TDLIB_PROPERTY_SUBOBJECT (status, QtTdLibChatMemberStatus)
+    QML_OBJMODEL_PROPERTY      (members, QtTdLibChatMember)
 
 public:
     explicit QtTdLibSupergroup (const qint32 id = 0, QObject * parent = Q_NULLPTR);

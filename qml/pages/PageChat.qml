@@ -16,35 +16,22 @@ Page {
         else {
             autoMoveMode = stayAtBottom;
         }
-        if (currentChat) {
-            switch (currentChat.type.typeOf) {
-            case TD_ObjectType.CHAT_TYPE_SECRET:
-            case TD_ObjectType.CHAT_TYPE_PRIVATE:
-                var userItem = TD_Global.getUserItemById (currentChat.type.userId);
-                if (userItem) {
-
-                }
-                break;
-            case TD_ObjectType.CHAT_TYPE_BASIC_GROUP:
-                var basicGroupItem = TD_Global.getBasicGroupItemById (currentChat.type.basicGroupId);
-                if (basicGroupItem) {
-                    TD_Global.refreshBasiGroupFullInfo (basicGroupItem);
-                }
-                break;
-            case TD_ObjectType.CHAT_TYPE_SUPERGROUP:
-               var supergroupItem = TD_Global.getSupergroupItemById (currentChat.type.supergroupId);
-                if (supergroupItem) {
-                    TD_Global.refreshSupergroupFullInfo (supergroupItem);
-                }
-                break;
-            }
-        }
     }
     Component.onDestruction: {
         TD_Global.closeChat (currentChat);
     }
 
     property TD_Chat currentChat : null;
+
+    readonly property TD_User       currentChatUserItem       : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_PRIVATE
+                                                                 ? TD_Global.getUserItemById (currentChat.type ["userId"])
+                                                                 : null);
+    readonly property TD_BasicGroup currentChatBasicGroupItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_BASIC_GROUP
+                                                                 ? TD_Global.getBasicGroupItemById (currentChat.type ["basicGroupId"])
+                                                                 : null);
+    readonly property TD_Supergroup currentChatSupergroupItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_SUPERGROUP
+                                                                 ? TD_Global.getSupergroupItemById (currentChat.type ["supergroupId"])
+                                                                 : null);
 
     Binding {
         target: window;
@@ -56,7 +43,40 @@ Page {
         running: true;
         interval: 350;
         onTriggered: {
-            pageStack.pushAttached (compoPageChatInfo, { });
+            if (currentChatUserItem) {
+                pageStack.pushAttached (compoPageChatInfoPrivate, {
+                                            "chatItem" : currentChat,
+                                            "userItem" : currentChatUserItem,
+                                        });
+            }
+            else if (currentChatBasicGroupItem) {
+                pageStack.pushAttached (compoPageChatInfoBasicGroup, {
+                                            "chatItem"       : currentChat,
+                                            "basicGroupItem" : currentChatBasicGroupItem,
+                                        });
+            }
+            else if (currentChatSupergroupItem) {
+                pageStack.pushAttached (compoPageChatInfoSupergroup, {
+                                            "chatItem"       : currentChat,
+                                            "supergroupItem" : currentChatSupergroupItem,
+                                        });
+            }
+            else { }
+        }
+    }
+    Timer {
+        repeat: true;
+        running: true;
+        interval: 60000;
+        triggeredOnStart: true;
+        onTriggered: {
+            if (currentChatBasicGroupItem) {
+                TD_Global.refreshBasicGroupFullInfo (currentChatBasicGroupItem);
+            }
+            if (currentChatSupergroupItem) {
+                TD_Global.refreshSupergroupFullInfo (currentChatSupergroupItem);
+                TD_Global.refreshSupergroupMembers  (currentChatSupergroupItem, 50);
+            }
         }
     }
     SilicaFlickable {
@@ -117,6 +137,7 @@ Page {
                     menu: ContextMenu {
                         MenuItem {
                             text: qsTr ("Reply");
+                            enabled: false;
                             onClicked: {
                                 // TODO
                             }
@@ -124,6 +145,7 @@ Page {
                         MenuItem {
                             text: qsTr ("Forward");
                             visible: delegateMsg.messageItem.canBeForwarded;
+                            enabled: false;
                             onClicked: {
                                 // TODO
                             }
@@ -131,6 +153,7 @@ Page {
                         MenuItem {
                             text: qsTr ("Edit");
                             visible: delegateMsg.messageItem.canBeEdited;
+                            enabled: false;
                             onClicked: {
                                 // TODO
                             }
@@ -138,6 +161,7 @@ Page {
                         MenuItem {
                             text: qsTr ("Delete only for me");
                             visible: delegateMsg.messageItem.canBeDeletedOnlyForSelf;
+                            enabled: false;
                             onClicked: {
                                 // TODO
                             }
@@ -145,6 +169,7 @@ Page {
                         MenuItem {
                             text: qsTr ("Delete for all users");
                             visible: delegateMsg.messageItem.canBeDeletedForAllUsers;
+                            enabled: false;
                             onClicked: {
                                 // TODO
                             }
