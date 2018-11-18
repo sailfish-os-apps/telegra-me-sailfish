@@ -5,6 +5,144 @@
 #include "QtTdLibFile.h"
 #include "QtTdLibMessage.h"
 
+class QtTdLibChatMemberStatus : public QtTdLibAbstractObject {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibChatMemberStatus (const QtTdLibObjectType::Type typeOf = QtTdLibObjectType::INVALID, QObject * parent = Q_NULLPTR);
+
+    static QtTdLibChatMemberStatus * createAbstract (const QJsonObject & json, QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibChatMemberStatusAdministrator : public QtTdLibChatMemberStatus, public FactoryNoId<QtTdLibChatMemberStatusAdministrator> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_BOOL (canBeEdited)
+    Q_TDLIB_PROPERTY_BOOL (canChangeInfo)
+    Q_TDLIB_PROPERTY_BOOL (canPostMessages)
+    Q_TDLIB_PROPERTY_BOOL (canEditMessages)
+    Q_TDLIB_PROPERTY_BOOL (canDeleteMessages)
+    Q_TDLIB_PROPERTY_BOOL (canInviteUsers)
+    Q_TDLIB_PROPERTY_BOOL (canRestrictMembers)
+    Q_TDLIB_PROPERTY_BOOL (canPinMessages)
+    Q_TDLIB_PROPERTY_BOOL (canPromoteMembers)
+
+public:
+    explicit QtTdLibChatMemberStatusAdministrator (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibChatMemberStatusBanned : public QtTdLibChatMemberStatus, public FactoryNoId<QtTdLibChatMemberStatusBanned> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_DATETIME (bannedUntilDate)
+
+public:
+    explicit QtTdLibChatMemberStatusBanned (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibChatMemberStatusCreator : public QtTdLibChatMemberStatus, public FactoryNoId<QtTdLibChatMemberStatusCreator> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_BOOL (isMember)
+
+public:
+    explicit QtTdLibChatMemberStatusCreator (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibChatMemberStatusLeft : public QtTdLibChatMemberStatus, public FactoryNoId<QtTdLibChatMemberStatusLeft> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibChatMemberStatusLeft (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibChatMemberStatusMember : public QtTdLibChatMemberStatus, public FactoryNoId<QtTdLibChatMemberStatusMember> {
+    Q_OBJECT
+
+public:
+    explicit QtTdLibChatMemberStatusMember (QObject * parent = Q_NULLPTR);
+};
+
+class QtTdLibChatMemberStatusRestricted : public QtTdLibChatMemberStatus, public FactoryNoId<QtTdLibChatMemberStatusRestricted> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_BOOL     (isMember)
+    Q_TDLIB_PROPERTY_BOOL     (canSendMessages)
+    Q_TDLIB_PROPERTY_BOOL     (canSendMediaMessages)
+    Q_TDLIB_PROPERTY_BOOL     (canSendOtherMessages)
+    Q_TDLIB_PROPERTY_BOOL     (canAddWebPagePreviews)
+    Q_TDLIB_PROPERTY_DATETIME (restrictedUntilDate)
+
+public:
+    explicit QtTdLibChatMemberStatusRestricted (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibChatMember : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibChatMember> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_ID32      (userId)
+    Q_TDLIB_PROPERTY_ID32      (inviterUserId)
+    Q_TDLIB_PROPERTY_DATETIME  (joinedChatDate)
+    Q_TDLIB_PROPERTY_SUBOBJECT (status, QtTdLibChatMemberStatus)
+    //object_ptr< botInfo > &&bot_info
+
+public:
+    explicit QtTdLibChatMember (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibSupergroup : public QtTdLibAbstractInt32IdObject, public FactoryInt32Id<QtTdLibSupergroup> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_STRING    (username)
+    Q_TDLIB_PROPERTY_DATETIME  (date)
+    Q_TDLIB_PROPERTY_INT32     (memberCount)
+    Q_TDLIB_PROPERTY_BOOL      (anyoneCanInvite)
+    Q_TDLIB_PROPERTY_BOOL      (signMessages)
+    Q_TDLIB_PROPERTY_BOOL      (isChannel)
+    Q_TDLIB_PROPERTY_BOOL      (isVerified)
+    Q_TDLIB_PROPERTY_STRING    (restrictionReason)
+    Q_TDLIB_PROPERTY_STRING    (description)
+    Q_TDLIB_PROPERTY_INT32     (administratorCount)
+    Q_TDLIB_PROPERTY_INT32     (restrictedCount)
+    Q_TDLIB_PROPERTY_INT32     (bannedCount)
+    Q_TDLIB_PROPERTY_BOOL      (canGetMembers)
+    Q_TDLIB_PROPERTY_BOOL      (canSetUsername)
+    Q_TDLIB_PROPERTY_BOOL      (canSetStickerSet)
+    Q_TDLIB_PROPERTY_BOOL      (isAllHistoryAvailable)
+    Q_TDLIB_PROPERTY_ID64      (stickerSetId)
+    Q_TDLIB_PROPERTY_STRING    (inviteLink)
+    Q_TDLIB_PROPERTY_ID64      (pinnedMessageId)
+    Q_TDLIB_PROPERTY_ID32      (upgradedFromBasicGroupId)
+    Q_TDLIB_PROPERTY_ID64      (upgradedFromMaxMessageId)
+    Q_TDLIB_PROPERTY_SUBOBJECT (status, QtTdLibChatMemberStatus)
+
+public:
+    explicit QtTdLibSupergroup (const qint32 id = 0, QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
+class QtTdLibBasicGroup : public QtTdLibAbstractInt32IdObject, public FactoryInt32Id<QtTdLibBasicGroup> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_INT32     (memberCount)
+    Q_TDLIB_PROPERTY_BOOL      (isActive)
+    Q_TDLIB_PROPERTY_BOOL      (everyoneIsAdministrator)
+    Q_TDLIB_PROPERTY_ID32      (upgradedToSupergroupId)
+    Q_TDLIB_PROPERTY_ID32      (creatorUserId)
+    Q_TDLIB_PROPERTY_STRING    (inviteLink)
+    Q_TDLIB_PROPERTY_SUBOBJECT (status, QtTdLibChatMemberStatus)
+    QML_OBJMODEL_PROPERTY      (members, QtTdLibChatMember)
+
+public:
+    explicit QtTdLibBasicGroup (const qint32 id = 0, QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+};
+
 class QtTdLibChatPhoto : public QtTdLibAbstractObject, public FactoryNoId<QtTdLibChatPhoto> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT (big,   QtTdLibFile)

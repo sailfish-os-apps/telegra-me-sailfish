@@ -10,6 +10,8 @@
 QHash<qint32, QtTdLibUser *>           QtTdLibCollection::allUsers        { };
 QHash<qint32, QtTdLibFile *>           QtTdLibCollection::allFiles        { };
 QHash<qint64, QtTdLibChat *>           QtTdLibCollection::allChats        { };
+QHash<qint32, QtTdLibBasicGroup *>     QtTdLibCollection::allBasicGroups  { };
+QHash<qint32, QtTdLibSupergroup *>     QtTdLibCollection::allSupergroups  { };
 QHash<qint64, QtTdLibStickerSetInfo *> QtTdLibCollection::allStickersSets { };
 
 QtTdLibAbstractObject::QtTdLibAbstractObject (const QtTdLibObjectType::Type typeOf, QObject * parent)

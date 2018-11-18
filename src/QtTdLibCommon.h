@@ -17,6 +17,8 @@ class QtTdLibUser;
 class QtTdLibFile;
 class QtTdLibChat;
 class QtTdLibMessage;
+class QtTdLibBasicGroup;
+class QtTdLibSupergroup;
 class QtTdLibStickerSetInfo;
 
 struct QtTdLibId32Helper {
@@ -51,7 +53,7 @@ struct QtTdLibId64Helper {
     private: bool m_##NAME { false }; \
     public: bool get_##NAME (void) const { return m_##NAME; } \
     public: QJsonValue get_##NAME##_asJSON (void) const { return QJsonValue { m_##NAME }; } \
-    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (json.toBool ()); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { if (!json.isUndefined ()) { set_##NAME (json.toBool ()); } } \
     public Q_SLOTS: void set_##NAME (const bool NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
@@ -61,7 +63,7 @@ struct QtTdLibId64Helper {
     private: QString m_##NAME { "" }; \
     public: const QString & get_##NAME (void) const { return m_##NAME; } \
     public: QJsonValue get_##NAME##_asJSON (void) const { return QJsonValue { m_##NAME }; } \
-    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (json.toString ()); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { if (!json.isUndefined ()) { set_##NAME (json.toString ()); } } \
     public Q_SLOTS: void set_##NAME (const QString & NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
@@ -71,7 +73,7 @@ struct QtTdLibId64Helper {
     private: QDateTime m_##NAME { }; \
     public: const QDateTime & get_##NAME (void) const { return m_##NAME; } \
     public: QJsonValue get_##NAME##_asJSON (void) const { return QJsonValue { (m_##NAME.toMSecsSinceEpoch () / 1000) }; } \
-    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (QDateTime::fromMSecsSinceEpoch (json.toDouble () * 1000)); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { if (!json.isUndefined ()) { set_##NAME (QDateTime::fromMSecsSinceEpoch (json.toDouble () * 1000)); } } \
     public Q_SLOTS: void set_##NAME (const QDateTime & NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
@@ -81,7 +83,7 @@ struct QtTdLibId64Helper {
     private: double m_##NAME { 0.0 }; \
     public: double get_##NAME (void) const { return m_##NAME; } \
     public: QJsonValue get_##NAME##_asJSON (void) const { return QJsonValue { m_##NAME }; } \
-    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (json.toDouble ()); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { if (!json.isUndefined ()) { set_##NAME (json.toDouble ()); } } \
     public Q_SLOTS: void set_##NAME (const double NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
@@ -92,7 +94,7 @@ struct QtTdLibId64Helper {
     public: qint32 get_##NAME (void) const { return m_##NAME; } \
     public: int get_##NAME##_forQML (void) const { return m_##NAME; } \
     public: QJsonValue get_##NAME##_asJSON (void) const { return QJsonValue { m_##NAME }; } \
-    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (json.toInt ()); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { if (!json.isUndefined ()) { set_##NAME (json.toInt ()); } } \
     public Q_SLOTS: void set_##NAME (const qint32 NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
@@ -103,7 +105,7 @@ struct QtTdLibId64Helper {
     public: qint64 get_##NAME (void) const { return m_##NAME; } \
     public: QString get_##NAME##_forQML (void) const { return QString::number (m_##NAME); } \
     public: QJsonValue get_##NAME##_asJSON (void) const { return QJsonValue (QString::number (m_##NAME)); } \
-    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (json.toString ().toLongLong ()); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { if (!json.isUndefined ()) { set_##NAME (json.toString ().toLongLong ()); } } \
     public Q_SLOTS: void set_##NAME (const qint64 NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
@@ -114,7 +116,7 @@ struct QtTdLibId64Helper {
     public: qint32 get_##NAME (void) const { return m_##NAME; } \
     public: QString get_##NAME##_forQML (void) const { return QtTdLibId32Helper::fromCppToQml (m_##NAME); } \
     public: QJsonValue get_##NAME##_asJSON (void) const { return QtTdLibId32Helper::fromCppToJson (m_##NAME); } \
-    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (QtTdLibId32Helper::fromJsonToCpp (json)); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { if (!json.isUndefined ()) { set_##NAME (QtTdLibId32Helper::fromJsonToCpp (json)); } } \
     public Q_SLOTS: void set_##NAME (const qint32 NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
@@ -125,7 +127,7 @@ struct QtTdLibId64Helper {
     public: qint64 get_##NAME (void) const { return m_##NAME; } \
     public: QString get_##NAME##_forQML (void) const { return QtTdLibId53Helper::fromCppToQml (m_##NAME); } \
     public: QJsonValue get_##NAME##_asJSON (void) const { return QtTdLibId53Helper::fromCppToJson (m_##NAME); } \
-    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (QtTdLibId53Helper::fromJsonToCpp (json)); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { if (!json.isUndefined ()) { set_##NAME (QtTdLibId53Helper::fromJsonToCpp (json)); } } \
     public Q_SLOTS: void set_##NAME (const qint64 NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
@@ -136,7 +138,7 @@ struct QtTdLibId64Helper {
     public: qint64 get_##NAME (void) const { return m_##NAME; } \
     public: QString get_##NAME##_forQML (void) const { return QtTdLibId64Helper::fromCppToQml (m_##NAME); } \
     public: QJsonValue get_##NAME##_asJSON (void) const { return QtTdLibId64Helper::fromCppToJson (m_##NAME); } \
-    public: void set_##NAME##_withJSON (const QJsonValue & json) { set_##NAME (QtTdLibId64Helper::fromJsonToCpp (json)); } \
+    public: void set_##NAME##_withJSON (const QJsonValue & json) { if (!json.isUndefined ()) { set_##NAME (QtTdLibId64Helper::fromJsonToCpp (json)); } } \
     public Q_SLOTS: void set_##NAME (const qint64 NAME) { if (m_##NAME != NAME) { m_##NAME = NAME; Q_EMIT NAME##Changed (); } } \
     Q_SIGNALS: void NAME##Changed (void); \
     private:
@@ -149,14 +151,10 @@ struct QtTdLibId64Helper {
     public: template<class T> void set_##NAME##_withJSON (const QJsonValue & json, T * (* factory) (const QJsonObject &, QObject *)) { \
     const QJsonObject object { json.toObject () }; \
     if (m_##NAME != Q_NULLPTR && !m_##NAME->isCompatibleWith (object)) { \
-    if (!QtTdLibCollection::IsCollectable<T>::VALUE) { \
-    m_##NAME->deleteLater (); \
-    } \
+    if (!QtTdLibCollection::IsCollectable<T>::VALUE) { m_##NAME->deleteLater (); } \
     set_##NAME (Q_NULLPTR); \
     } \
-    if (m_##NAME != Q_NULLPTR) { \
-    m_##NAME->updateFromJson (object); \
-    } \
+    if (m_##NAME != Q_NULLPTR && m_##NAME->isCompatibleWith (object)) { m_##NAME->updateFromJson (object);  } \
     else if (m_##NAME == Q_NULLPTR && !object ["@type"].toString ().isEmpty ()) { \
     set_##NAME (factory (object, (!QtTdLibCollection::IsCollectable<T>::VALUE ? this : Q_NULLPTR))); \
     } \
@@ -272,11 +270,14 @@ template<>        struct IsCollectable<QtTdLibUser>           { static constexpr
 template<>        struct IsCollectable<QtTdLibFile>           { static constexpr bool VALUE { true }; };
 template<>        struct IsCollectable<QtTdLibChat>           { static constexpr bool VALUE { true }; };
 template<>        struct IsCollectable<QtTdLibMessage>        { static constexpr bool VALUE { true }; };
+template<>        struct IsCollectable<QtTdLibSupergroup>     { static constexpr bool VALUE { true }; };
 template<>        struct IsCollectable<QtTdLibStickerSetInfo> { static constexpr bool VALUE { true }; };
 
 extern QHash<qint32, QtTdLibUser *>           allUsers;
 extern QHash<qint32, QtTdLibFile *>           allFiles;
 extern QHash<qint64, QtTdLibChat *>           allChats;
+extern QHash<qint32, QtTdLibBasicGroup *>     allBasicGroups;
+extern QHash<qint32, QtTdLibSupergroup *>     allSupergroups;
 extern QHash<qint64, QtTdLibStickerSetInfo *> allStickersSets;
 
 }

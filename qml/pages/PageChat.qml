@@ -16,6 +16,29 @@ Page {
         else {
             autoMoveMode = stayAtBottom;
         }
+        if (currentChat) {
+            switch (currentChat.type.typeOf) {
+            case TD_ObjectType.CHAT_TYPE_SECRET:
+            case TD_ObjectType.CHAT_TYPE_PRIVATE:
+                var userItem = TD_Global.getUserItemById (currentChat.type.userId);
+                if (userItem) {
+
+                }
+                break;
+            case TD_ObjectType.CHAT_TYPE_BASIC_GROUP:
+                var basicGroupItem = TD_Global.getBasicGroupItemById (currentChat.type.basicGroupId);
+                if (basicGroupItem) {
+                    TD_Global.refreshBasiGroupFullInfo (basicGroupItem);
+                }
+                break;
+            case TD_ObjectType.CHAT_TYPE_SUPERGROUP:
+               var supergroupItem = TD_Global.getSupergroupItemById (currentChat.type.supergroupId);
+                if (supergroupItem) {
+                    TD_Global.refreshSupergroupFullInfo (supergroupItem);
+                }
+                break;
+            }
+        }
     }
     Component.onDestruction: {
         TD_Global.closeChat (currentChat);
@@ -148,6 +171,12 @@ Page {
                         value: delegateMsg.messageItem.content;
                         when: (loaderMsgContent.item && delegateMsg.messageItem && delegateMsg.messageItem.content);
                     }
+                    Binding {
+                        target: loaderMsgContent.item;
+                        property: "messageItem";
+                        value: delegateMsg.messageItem;
+                        when: (loaderMsgContent.item && delegateMsg.messageItem);
+                    }
                     ColumnContainer {
                         id: layoutMessage;
                         spacing: Theme.paddingSmall;
@@ -197,23 +226,25 @@ Page {
                                         sourceComponent: {
                                             if (delegateMsg.messageItem && delegateMsg.messageItem.content) {
                                                 switch (delegateMsg.messageItem.content.typeOf) {
-                                                case TD_ObjectType.MESSAGE_TEXT:               return compoMsgText;
-                                                case TD_ObjectType.MESSAGE_PHOTO:              return compoMsgPhoto;
-                                                case TD_ObjectType.MESSAGE_DOCUMENT:           return compoMsgDocument;
-                                                case TD_ObjectType.MESSAGE_STICKER:            return compoMsgSticker;
-                                                case TD_ObjectType.MESSAGE_VIDEO:              return compoMsgVideo;
-                                                case TD_ObjectType.MESSAGE_AUDIO:              return compoMsgAudio;
-                                                case TD_ObjectType.MESSAGE_ANIMATION:          return compoMsgAnimation;
-                                                case TD_ObjectType.MESSAGE_VOICE_NOTE:         return compoMsgVoiceNote;
-                                                case TD_ObjectType.MESSAGE_CALL:               return compoMsgCall;
-                                                case TD_ObjectType.MESSAGE_CHAT_JOIN_BY_LINK:  return compoMsgChatJoinByLink;
-                                                case TD_ObjectType.MESSAGE_CHAT_ADD_MEMBERS:   return compoMsgChatAddMembers;
-                                                case TD_ObjectType.MESSAGE_CHAT_DELETE_MEMBER: return compoMsgChatDeleteMember;
-                                                case TD_ObjectType.MESSAGE_CHAT_CHANGE_TITLE:  return compoMsgChatChangeTitle;
-                                                case TD_ObjectType.MESSAGE_CHAT_CHANGE_PHOTO:  return compoMsgChatChangePhoto;
-                                                case TD_ObjectType.MESSAGE_CHAT_UPGRADE_FROM:  return compoMsgChatUpgradeFrom;
-                                                case TD_ObjectType.MESSAGE_CHAT_UPGRADE_TO:    return compoMsgChatUpgradeTo;
-                                                case TD_ObjectType.MESSAGE_CONTACT_REGISTERED: return compoMsgChatContactRegistered;
+                                                case TD_ObjectType.MESSAGE_TEXT:                    return compoMsgText;
+                                                case TD_ObjectType.MESSAGE_PHOTO:                   return compoMsgPhoto;
+                                                case TD_ObjectType.MESSAGE_DOCUMENT:                return compoMsgDocument;
+                                                case TD_ObjectType.MESSAGE_STICKER:                 return compoMsgSticker;
+                                                case TD_ObjectType.MESSAGE_VIDEO:                   return compoMsgVideo;
+                                                case TD_ObjectType.MESSAGE_AUDIO:                   return compoMsgAudio;
+                                                case TD_ObjectType.MESSAGE_ANIMATION:               return compoMsgAnimation;
+                                                case TD_ObjectType.MESSAGE_VOICE_NOTE:              return compoMsgVoiceNote;
+                                                case TD_ObjectType.MESSAGE_CALL:                    return compoMsgCall;
+                                                case TD_ObjectType.MESSAGE_CHAT_JOIN_BY_LINK:       return compoMsgChatJoinByLink;
+                                                case TD_ObjectType.MESSAGE_CHAT_ADD_MEMBERS:        return compoMsgChatAddMembers;
+                                                case TD_ObjectType.MESSAGE_CHAT_DELETE_MEMBER:      return compoMsgChatDeleteMember;
+                                                case TD_ObjectType.MESSAGE_CHAT_CHANGE_TITLE:       return compoMsgChatChangeTitle;
+                                                case TD_ObjectType.MESSAGE_CHAT_CHANGE_PHOTO:       return compoMsgChatChangePhoto;
+                                                case TD_ObjectType.MESSAGE_CHAT_UPGRADE_FROM:       return compoMsgChatUpgradeFrom;
+                                                case TD_ObjectType.MESSAGE_CHAT_UPGRADE_TO:         return compoMsgChatUpgradeTo;
+                                                case TD_ObjectType.MESSAGE_CONTACT_REGISTERED:      return compoMsgChatContactRegistered;
+                                                case TD_ObjectType.MESSAGE_BASIC_GROUP_CHAT_CREATE: return compoMsgBasicGroupChatCreate;
+                                                case TD_ObjectType.MESSAGE_SUPERGROUP_CHAT_CREATE:  return compoMsgSupergroupChatCreate;
                                                 }
                                             }
                                             return compoMsgUnsupported;
@@ -340,8 +371,16 @@ Page {
                                 }
                                 break;
                             case TD_ObjectType.CHAT_TYPE_BASIC_GROUP:
+                                var basicGroupItem = TD_Global.getBasicGroupItemById (currentChat.type.basicGroupId);
+                                if (basicGroupItem) {
+                                    return qsTr ("%1 members").arg (basicGroupItem.memberCount);
+                                }
+                                break;
                             case TD_ObjectType.CHAT_TYPE_SUPERGROUP:
-                                // TODO : online/offline members count
+                                var supergroupItem = TD_Global.getSupergroupItemById (currentChat.type.supergroupId);
+                                if (supergroupItem) {
+                                    return qsTr ("%1 members").arg (supergroupItem.memberCount);
+                                }
                                 break;
                             }
                         }

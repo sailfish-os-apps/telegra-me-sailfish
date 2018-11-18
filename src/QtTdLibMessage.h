@@ -142,6 +142,8 @@ public:
     explicit QtTdLibMessageBasicGroupChatCreate (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageSupergroupChatCreate : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageSupergroupChatCreate> {
@@ -152,6 +154,8 @@ public:
     explicit QtTdLibMessageSupergroupChatCreate (QObject * parent = Q_NULLPTR);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
 };
 
 class QtTdLibMessageChatChangeTitle : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessageChatChangeTitle> {

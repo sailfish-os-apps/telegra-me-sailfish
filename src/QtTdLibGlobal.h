@@ -76,9 +76,13 @@ public:
     Q_INVOKABLE QString getMimeTypeForPath    (const QString & path) const;
     Q_INVOKABLE QString getSvgIconForMimeType (const QString & type) const;
 
-    Q_INVOKABLE QtTdLibFile * getFileItemById (const qint32 id) const;
-    Q_INVOKABLE QtTdLibUser * getUserItemById (const qint32 id) const;
-    Q_INVOKABLE QtTdLibChat * getChatItemById (const qint64 id) const;
+    Q_INVOKABLE QtTdLibFile       * getFileItemById       (const qint32    id) const;
+    Q_INVOKABLE QtTdLibUser       * getUserItemById       (const qint32    id) const;
+    Q_INVOKABLE QtTdLibBasicGroup * getBasicGroupItemById (const qint32    id) const;
+    Q_INVOKABLE QtTdLibSupergroup * getSupergroupItemById (const qint32    id) const;
+    Q_INVOKABLE QtTdLibChat       * getChatItemById       (const QString & id) const;
+
+    QtTdLibChat * getChatItemById (const qint64 id) const;
 
     Q_INVOKABLE void selectPhoto       (const QString & path, const int width, const int height);
     Q_INVOKABLE void deselectPhoto     (const QString & path);
@@ -95,6 +99,9 @@ public:
     Q_INVOKABLE void markAllMessagesAsRead (QtTdLibChat * chatItem);
 
     Q_INVOKABLE void loadMoreMessages (QtTdLibChat * chatItem, const int count);
+
+    Q_INVOKABLE void refreshBasiGroupFullInfo  (QtTdLibBasicGroup * basicGroupItem);
+    Q_INVOKABLE void refreshSupergroupFullInfo (QtTdLibSupergroup * supergroupItem);
 
     Q_INVOKABLE void sendMessageText      (QtTdLibChat * chatItem, const QString & text);
     Q_INVOKABLE void sendMessagePhoto     (QtTdLibChat * chatItem, const bool groupInAlbum = true);

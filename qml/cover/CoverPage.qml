@@ -1,13 +1,11 @@
 import QtQuick 2.6;
 import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
+import harbour.Telegrame 1.0;
 import "../components";
 
 CoverBackground {
     id: cover;
-
-    property alias label : lbl.text;
-    property alias count : cnt.text;
 
     Image {
         source: "qrc:///images/Telegram_logo.svg";
@@ -20,26 +18,34 @@ CoverBackground {
         }
         ExtraAnchors.topDock: parent;
     }
-    Column {
+    ColumnContainer {
         spacing: Theme.paddingLarge;
-        anchors.centerIn: parent;
+        anchors {
+            margins: Theme.paddingLarge;
+            verticalCenter: parent.verticalCenter;
+        }
+        ExtraAnchors.horizontalFill: parent;
 
         LabelFixed {
             text: "Telegra'me";
+            color: Theme.primaryColor;
             font.pixelSize: Theme.fontSizeLarge;
             anchors.horizontalCenter: parent.horizontalCenter;
         }
         LabelFixed {
-            id: cnt;
-            color: Theme.highlightColor;
+            text: TD_Global.unreadMessagesCount;
+            color: (TD_Global.unreadMessagesCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
             font.pixelSize: Theme.fontSizeHuge;
             anchors.horizontalCenter: parent.horizontalCenter;
         }
         LabelFixed {
-            text: qsTr ("unread\nmessages");
-            font.pixelSize: Theme.fontSizeLarge;
+            text: qsTr ("unread messages");
+            color: Theme.primaryColor;
+            opacity: (TD_Global.unreadMessagesCount > 0 ? 1.0 : 0.35);
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             horizontalAlignment: Text.AlignHCenter;
-            anchors.horizontalCenter: parent.horizontalCenter;
+            font.pixelSize: Theme.fontSizeLarge;
+            ExtraAnchors.horizontalFill: parent;
         }
         Rectangle {
             color: Theme.secondaryColor;
@@ -48,8 +54,21 @@ CoverBackground {
             anchors.horizontalCenter: parent.horizontalCenter;
         }
         LabelFixed {
-            id: lbl;
-            anchors.horizontalCenter: parent.horizontalCenter;
+            color: Theme.primaryColor;
+            horizontalAlignment: Text.AlignHCenter;
+            text: {
+                if (TD_Global.connectionState) {
+                    switch (TD_Global.connectionState.typeOf) {
+                    case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return qsTr ("Waiting");
+                    case TD_ObjectType.CONNECTION_STATE_CONNECTING:          return qsTr ("Connecting");
+                    case TD_ObjectType.CONNECTION_STATE_CONNECTING_TO_PROXY: return qsTr ("Proxying");
+                    case TD_ObjectType.CONNECTION_STATE_UPDATING:            return qsTr ("Updating");
+                    case TD_ObjectType.CONNECTION_STATE_READY:               return qsTr ("Ready");
+                    }
+                }
+                return "";
+            }
+            ExtraAnchors.horizontalFill: parent;
         }
     }
 }

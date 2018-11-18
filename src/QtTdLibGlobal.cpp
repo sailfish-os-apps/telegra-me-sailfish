@@ -226,6 +226,18 @@ QtTdLibUser * QtTdLibGlobal::getUserItemById (const qint32 id) const {
     return QtTdLibCollection::allUsers.value (id, Q_NULLPTR);
 }
 
+QtTdLibBasicGroup * QtTdLibGlobal::getBasicGroupItemById (const qint32 id) const {
+    return QtTdLibCollection::allBasicGroups.value (id, Q_NULLPTR);
+}
+
+QtTdLibSupergroup * QtTdLibGlobal::getSupergroupItemById (const qint32 id) const {
+    return QtTdLibCollection::allSupergroups.value (id, Q_NULLPTR);
+}
+
+QtTdLibChat * QtTdLibGlobal::getChatItemById (const QString & id) const {
+    return getChatItemById (id.toLongLong ());
+}
+
 QtTdLibChat * QtTdLibGlobal::getChatItemById (const qint64 id) const {
     return QtTdLibCollection::allChats.value (id, Q_NULLPTR);
 }
@@ -352,6 +364,24 @@ void QtTdLibGlobal::loadMoreMessages (QtTdLibChat * chatItem, const int count) {
                   { "offset", 0 }, // Specify 0 to get results from exactly the from_message_id or a negative offset to get the specified message and some newer messages
                   { "limit", count }, // The maximum number of messages to be returned; must be positive and can't be greater than 100. If the offset is negative, the limit must be greater than -offset. Fewer messages may be returned than specified by the limit, even if the end of the message history has not been reached
                   { "only_local", false }, // If true, returns only messages that are available locally without sending network requests
+              });
+    }
+}
+
+void QtTdLibGlobal::refreshBasiGroupFullInfo (QtTdLibBasicGroup * basicGroupItem) {
+    if (basicGroupItem != Q_NULLPTR) {
+        send (QJsonObject {
+                  { "@type", "getBasicGroupFullInfo" },
+                  { "basic_group_id", basicGroupItem->get_id_asJSON () },
+              });
+    }
+}
+
+void QtTdLibGlobal::refreshSupergroupFullInfo (QtTdLibSupergroup * supergroupItem) {
+    if (supergroupItem != Q_NULLPTR) {
+        send (QJsonObject {
+                  { "@type", "getSupergroupFullInfo" },
+                  { "supergroup_id", supergroupItem->get_id_asJSON () },
               });
     }
 }
@@ -666,6 +696,42 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             }
             break;
         }
+        case QtTdLibObjectType::UPDATE_SUPERGROUP: {
+            const QJsonObject supergroupJson { json ["supergroup"].toObject () };
+            const qint32 supergroupId { QtTdLibId32Helper::fromJsonToCpp (supergroupJson ["id"]) };
+            if (QtTdLibSupergroup * supergroupItem = { getSupergroupItemById (supergroupId) }) {
+                supergroupItem->updateFromJson (supergroupJson);
+            }
+            else {
+                QtTdLibSupergroup::create (supergroupJson, this);
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_SUPERGROUP_FULL_INFO: {
+            const qint32 supergroupId { QtTdLibId32Helper::fromJsonToCpp (json ["supergroup_id"]) };
+            if (QtTdLibSupergroup * supergroupItem = { getSupergroupItemById (supergroupId) }) {
+                supergroupItem->updateFromJson (json ["supergroup_full_info"].toObject ());
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_BASIC_GROUP: {
+            const QJsonObject basicGroupJson { json ["basic_group"].toObject () };
+            const qint32 basicGroupId { QtTdLibId32Helper::fromJsonToCpp (basicGroupJson ["id"]) };
+            if (QtTdLibBasicGroup * basicGroupItem = { getBasicGroupItemById (basicGroupId) }) {
+                basicGroupItem->updateFromJson (basicGroupJson);
+            }
+            else {
+                QtTdLibBasicGroup::create (basicGroupJson, this);
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_BASIC_GROUP_FULL_INFO: {
+            const qint32 basicGroupId { QtTdLibId32Helper::fromJsonToCpp (json ["basic_group_id"]) };
+            if (QtTdLibBasicGroup * basicGroupItem = { getBasicGroupItemById (basicGroupId) }) {
+                basicGroupItem->updateFromJson (json ["basic_group_full_info"].toObject ());
+            }
+            break;
+        }
         case QtTdLibObjectType::UPDATE_USER_STATUS: {
             const QJsonObject statusJson { json ["status"].toObject () };
             const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (json ["user_id"]) };
@@ -905,7 +971,12 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             m_savedAnimationsList->append (animationsList);
             break;
         }
-        default: break;
+        default: {
+            if (!json.contains ("@extra")) {
+                qWarning () << "UNHANDLED" << json;
+            }
+            break;
+        }
     }
 }
 

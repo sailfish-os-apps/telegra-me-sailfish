@@ -13,23 +13,9 @@ import "components";
 
 ApplicationWindow {
     id: window;
-    allowedOrientations: defaultAllowedOrientations;
-    cover: Component {
-        CoverPage {
-            count: TD_Global.unreadMessagesCount;
-            label: {
-                switch (TD_Global.connectionState ? TD_Global.connectionState.typeOf : -1) {
-                case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return qsTr ("Waiting...");
-                case TD_ObjectType.CONNECTION_STATE_CONNECTING:          return qsTr ("Connecting...");
-                case TD_ObjectType.CONNECTION_STATE_CONNECTING_TO_PROXY: return qsTr ("Proxying...");
-                case TD_ObjectType.CONNECTION_STATE_UPDATING:            return qsTr ("Updating...");
-                case TD_ObjectType.CONNECTION_STATE_READY:               return qsTr ("Ready");
-                }
-                return "";
-            }
-        }
-    }
+    cover: compoPageCover;
     initialPage: compoPageMain;
+    allowedOrientations: (Orientation.Portrait | Orientation.PortraitMask);
 
     property int currentMsgType : TD_ObjectType.MESSAGE_TEXT;
 
@@ -646,6 +632,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgText;
 
+            property TD_Message     messageItem        : null;
             property TD_MessageText messageContentItem : null;
 
             readonly property TD_FormattedText formattedTextItem : (messageContentItem ? messageContentItem.text    : null);
@@ -764,6 +751,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgPhoto;
 
+            property TD_Message      messageItem        : null;
             property TD_MessagePhoto messageContentItem : null;
 
             readonly property TD_Photo         photoItem     : (messageContentItem ? messageContentItem.photo   : null);
@@ -796,7 +784,9 @@ ApplicationWindow {
 
         ColumnContainer {
             id: delegateMsgDocument;
+            spacing: Theme.paddingMedium;
 
+            property TD_Message         messageItem        : null;
             property TD_MessageDocument messageContentItem : null;
 
             readonly property TD_FormattedText captionItem   : (messageContentItem  ? messageContentItem.caption   : null);
@@ -929,6 +919,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgSticker;
 
+            property TD_Message        messageItem        : null;
             property TD_MessageSticker messageContentItem : null;
 
             readonly property TD_Sticker stickerItem : (messageContentItem ? messageContentItem.sticker : null);
@@ -983,6 +974,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgVideo;
 
+            property TD_Message      messageItem        : null;
             property TD_MessageVideo messageContentItem : null;
 
             readonly property TD_FormattedText captionItem   : (messageContentItem  ? messageContentItem.caption : null);
@@ -1087,6 +1079,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgAudio;
 
+            property TD_Message      messageItem        : null;
             property TD_MessageAudio messageContentItem : null;
 
             readonly property TD_Audio     audioItem     : (messageContentItem ? messageContentItem.audio      : null);
@@ -1222,6 +1215,7 @@ ApplicationWindow {
             id: delegateMsgAnimation;
             implicitHeight: placeholderAnim.height;
 
+            property TD_Message          messageItem        : null;
             property TD_MessageAnimation messageContentItem : null;
 
             property bool paused : true;
@@ -1319,6 +1313,7 @@ ApplicationWindow {
             id: delegateMsgVoiceNote;
             spacing: Theme.paddingSmall;
 
+            property TD_Message          messageItem        : null;
             property TD_MessageVoiceNote messageContentItem : null;
 
             readonly property TD_FormattedText captionItem   : (messageContentItem ? messageContentItem.caption   : null);
@@ -1468,6 +1463,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Message               messageItem        : null;
             property TD_MessageChatJoinByLink messageContentItem : null;
         }
     }
@@ -1478,6 +1474,7 @@ ApplicationWindow {
             id: delegateMsgChatAddMembers;
             spacing: Theme.paddingSmall;
 
+            property TD_Message               messageItem        : null;
             property TD_MessageChatAddMembers messageContentItem : null;
 
             LabelFixed {
@@ -1523,10 +1520,13 @@ ApplicationWindow {
             id: delegateMsgChatDeleteMember;
             spacing: Theme.paddingSmall;
 
+            property TD_Message                 messageItem        : null;
             property TD_MessageChatDeleteMember messageContentItem : null;
 
             LabelFixed {
-                text: qsTr ("Remove member from this group chat :");
+                text: (delegateMsgChatDeleteMember.messageItem.senderUserId !== delegateMsgChatDeleteMember.messageContentItem.userId
+                       ? qsTr ("Remove member from this group chat :")
+                       : qsTr ("Left this group chat"));
                 color: Theme.secondaryHighlightColor;
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.italic: true;
@@ -1535,6 +1535,7 @@ ApplicationWindow {
             RowContainer {
                 id: delegateRemovedMember;
                 spacing: Theme.paddingMedium;
+                visible: (delegateMsgChatDeleteMember.messageItem.senderUserId !== delegateMsgChatDeleteMember.messageContentItem.userId);
                 ExtraAnchors.horizontalFill: parent;
 
                 readonly property TD_User userItem : TD_Global.getUserItemById (delegateMsgChatDeleteMember.messageContentItem.userId);
@@ -1567,6 +1568,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Message                messageItem        : null;
             property TD_MessageChatChangeTitle messageContentItem : null;
         }
     }
@@ -1579,6 +1581,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Message                messageItem        : null;
             property TD_MessageChatUpgradeFrom messageContentItem : null;
         }
     }
@@ -1591,6 +1594,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Message              messageItem        : null;
             property TD_MessageChatUpgradeTo messageContentItem : null;
         }
     }
@@ -1603,7 +1607,34 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Message                  messageItem        : null;
             property TD_MessageContactRegistered messageContentItem : null;
+        }
+    }
+    Component {
+        id: compoMsgBasicGroupChatCreate;
+
+        LabelFixed {
+            text: qsTr ("Group chat '%1' created").arg (messageContentItem.title);
+            color: Theme.secondaryHighlightColor;
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+            font.italic: true;
+
+            property TD_Message                     messageItem        : null;
+            property TD_MessageBasicGroupChatCreate messageContentItem : null;
+        }
+    }
+    Component {
+        id: compoMsgSupergroupChatCreate;
+
+        LabelFixed {
+            text: qsTr ("Supergroup chat '%1' created").arg (messageContentItem.title);
+            color: Theme.secondaryHighlightColor;
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+            font.italic: true;
+
+            property TD_Message                     messageItem        : null;
+            property TD_MessageSupergroupChatCreate messageContentItem : null;
         }
     }
     Component {
@@ -1626,6 +1657,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Message     messageItem        : null;
             property TD_MessageCall messageContentItem : null;
 
             readonly property TD_CallDiscardReason callDiscardReasonItem : (messageContentItem ? messageContentItem.discardReason : null);
@@ -1638,6 +1670,7 @@ ApplicationWindow {
             id: delegateMsgChatChangePhoto;
             spacing: Theme.paddingSmall;
 
+            property TD_Message                messageItem        : null;
             property TD_MessageChatChangePhoto messageContentItem : null;
 
             readonly property TD_Photo     photoItem     : (messageContentItem                     ? messageContentItem.photo   : null);
@@ -1665,8 +1698,14 @@ ApplicationWindow {
             text: qsTr ("<Unsupported>");
             color: "magenta";
 
+            property TD_Message        messageItem        : null;
             property TD_MessageContent messageContentItem : null;
         }
+    }
+    Component {
+        id: compoPageCover;
+
+        CoverPage { }
     }
     Component {
         id: compoPageMain;

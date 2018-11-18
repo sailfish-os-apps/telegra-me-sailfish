@@ -269,12 +269,20 @@ void QtTdLibMessageBasicGroupChatCreate::updateFromJson (const QJsonObject & jso
     set_memberUserIds (memberUserIds);
 }
 
+QString QtTdLibMessageBasicGroupChatCreate::asString (void) const {
+    return tr ("Group chat created");
+}
+
 QtTdLibMessageSupergroupChatCreate::QtTdLibMessageSupergroupChatCreate (QObject * parent)
     : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_SUPERGROUP_CHAT_CREATE, parent }
 { }
 
 void QtTdLibMessageSupergroupChatCreate::updateFromJson (const QJsonObject & json) {
     set_title_withJSON (json ["title"]);
+}
+
+QString QtTdLibMessageSupergroupChatCreate::asString (void) const {
+    return tr ("Supergroup chat created");
 }
 
 QtTdLibMessageChatChangeTitle::QtTdLibMessageChatChangeTitle (QObject * parent)
