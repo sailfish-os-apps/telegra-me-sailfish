@@ -401,9 +401,8 @@ Page {
                         }
                         ExtraAnchors.horizontalFill: parent;
                         onClicked: {
-                            flickerChats.saveY = flickerChats.contentY;
                             pageStack.push (compoPageChat, {
-                                                "currentChat" : chatItem
+                                                "currentChat" : chatItem,
                                             });
                         }
                         onUnreadCountChanged: {
