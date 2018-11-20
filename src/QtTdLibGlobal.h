@@ -101,6 +101,8 @@ public:
     Q_INVOKABLE bool isVideoSelected   (const QString & path) const;
     Q_INVOKABLE void unselectAllVideos (void);
 
+    Q_INVOKABLE void setUserOnlineState (const bool online);
+
     Q_INVOKABLE void openChat              (QtTdLibChat * chatItem);
     Q_INVOKABLE void closeChat             (QtTdLibChat * chatItem);
     Q_INVOKABLE void markAllMessagesAsRead (QtTdLibChat * chatItem);

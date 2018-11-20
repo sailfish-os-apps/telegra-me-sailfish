@@ -300,6 +300,18 @@ void QtTdLibGlobal::unselectAllVideos (void) {
     set_selectedVideosCount (0);
 }
 
+void QtTdLibGlobal::setUserOnlineState (const bool online) {
+    send (QJsonObject {
+              { "@type", "setOption" },
+              { "name", "online" },
+              { "value", QJsonObject {
+                    { "@type", "optionValueBoolean" },
+                    { "value", online },
+                }
+              },
+          });
+}
+
 void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
     closeChat (m_currentChat);
     if (chatItem != Q_NULLPTR) {

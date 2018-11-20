@@ -119,7 +119,7 @@ Page {
     }
     SilicaFlickable {
         id: flickerMessages;
-        quickScroll: true;
+        quickScroll: false;
         anchors.fill: parent;
         onDraggingVerticallyChanged: {
             if (Qt.application.state === Qt.ApplicationActive) {
@@ -353,6 +353,65 @@ Page {
                     viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
                     viewMessages.current = currentChat.messagesModel.firstItem;
                     TD_Global.loadMoreMessages (currentChat, 30);
+                }
+            }
+        }
+    }
+    Item {
+        opacity: (enabled ? 1.0 : 0.0);
+        enabled: (flickerMessages.flickingVertically || flickerMessages.draggingVertically);
+        implicitWidth: Theme.itemSizeLarge;
+        anchors {
+            topMargin: viewMessages.spaceBefore;
+            bottomMargin: viewMessages.spaceAfter;
+        }
+        ExtraAnchors.rightDock: parent;
+
+        Behavior on opacity { NumberAnimation { duration: 650; } }
+        Rectangle {
+            color: Theme.highlightColor;
+            opacity: 0.15;
+            anchors.fill: parent;
+        }
+        Rectangle {
+            y: (parent.height * flickerMessages.visibleArea.yPosition);
+            color: Theme.primaryColor;
+            implicitWidth: Theme.paddingSmall;
+            implicitHeight: (flickerMessages.visibleArea.heightRatio * parent.height);
+            anchors.right: parent.right;
+        }
+        ColumnContainer {
+            spacing: Theme.paddingMedium;
+            anchors.centerIn: parent;
+
+            MouseArea {
+                opacity: (flickerMessages.atYBeginning ? 0.15 : 1.0);
+                implicitWidth: Theme.itemSizeMedium;
+                implicitHeight: Theme.itemSizeMedium;
+                onClicked: {
+                    autoScrollDown = false;
+                    viewMessages.behavior = FastObjectListView.KEEP_AT_TOP;
+                    viewMessages.current = currentChat.messagesModel.firstItem;
+                }
+
+                Image {
+                    source: "image://theme/icon-m-page-up";
+                    sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                    anchors.centerIn: parent;
+                }
+            }
+            MouseArea {
+                opacity: (flickerMessages.atYEnd ? 0.15 : 1.0);
+                implicitWidth: Theme.itemSizeMedium;
+                implicitHeight: Theme.itemSizeMedium;
+                onClicked: {
+                    autoScrollDown = true;
+                }
+
+                Image {
+                    source: "image://theme/icon-m-page-down";
+                    sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                    anchors.centerIn: parent;
                 }
             }
         }

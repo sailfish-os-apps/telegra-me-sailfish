@@ -16,6 +16,15 @@ ApplicationWindow {
     cover: compoPageCover;
     initialPage: compoPageMain;
     allowedOrientations: (Orientation.Portrait | Orientation.PortraitMask);
+    onActiveChanged: {
+        TD_Global.setUserOnlineState (active);
+    }
+    Component.onCompleted: {
+        TD_Global.setUserOnlineState (true);
+    }
+    Component.onDestruction: {
+        TD_Global.setUserOnlineState (false);
+    }
 
     property int currentMsgType : TD_ObjectType.MESSAGE_TEXT;
 
@@ -29,6 +38,8 @@ ApplicationWindow {
     property bool showInputPanel : false;
 
     property bool autoScrollDown : false;
+
+    readonly property bool active : (Qt.application.state === Qt.ApplicationActive);
 
     Item {
         id: footerChat;
