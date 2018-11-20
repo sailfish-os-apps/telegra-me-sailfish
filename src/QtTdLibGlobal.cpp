@@ -308,7 +308,7 @@ void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
                   { "@type", "openChat" },
                   { "chat_id", chatItem->get_id () },
               });
-        if (chatItem->get_messagesModel ()->count () < qMax (chatItem->get_unreadCount (), 15)) {
+        if (chatItem->messagesModel.count () < qMax (chatItem->get_unreadCount (), 15)) {
             loadMoreMessages (chatItem, qMax (chatItem->get_unreadCount (), 15)); // FIXME : maybe a better way...
         }
     }
@@ -327,7 +327,7 @@ void QtTdLibGlobal::closeChat (QtTdLibChat * chatItem) {
 void QtTdLibGlobal::markAllMessagesAsRead (QtTdLibChat * chatItem) {
     if (chatItem != Q_NULLPTR) {
         QJsonArray messageIdsJson { };
-        for (QtTdLibMessage * messageItem : (* chatItem->get_messagesModel ())) {
+        for (QtTdLibMessage * messageItem : chatItem->messagesModel) {
             if (messageItem->get_id () > chatItem->get_lastReadInboxMessageId ()) {
                 messageIdsJson.append (messageItem->get_id_asJSON ());
             }
@@ -343,11 +343,11 @@ void QtTdLibGlobal::markAllMessagesAsRead (QtTdLibChat * chatItem) {
 }
 
 void QtTdLibGlobal::loadMoreMessages (QtTdLibChat * chatItem, const int count) {
-    if (chatItem != Q_NULLPTR && !chatItem->get_messagesModel ()->isEmpty () && count > 0) {
+    if (chatItem != Q_NULLPTR && !chatItem->messagesModel.isEmpty () && count > 0) {
         send (QJsonObject {
                   { "@type", "getChatHistory" },
                   { "chat_id",  chatItem->get_id () },
-                  { "from_message_id", chatItem->get_messagesModel ()->first ()->get_id () }, // Identifier of the message starting from which history must be fetched; use 0 to get results from the begining
+                  { "from_message_id", chatItem->messagesModel.getFirst ()->get_id () }, // Identifier of the message starting from which history must be fetched; use 0 to get results from the begining
                   { "offset", 0 }, // Specify 0 to get results from exactly the from_message_id or a negative offset to get the specified message and some newer messages
                   { "limit", count }, // The maximum number of messages to be returned; must be positive and can't be greater than 100. If the offset is negative, the limit must be greater than -offset. Fewer messages may be returned than specified by the limit, even if the end of the message history has not been reached
                   { "only_local", false }, // If true, returns only messages that are available locally without sending network requests

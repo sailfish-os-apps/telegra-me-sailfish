@@ -28,12 +28,7 @@ ApplicationWindow {
 
     property bool showInputPanel : false;
 
-    property int autoMoveMode : stayFree;
-
-    readonly property int stayFree          : 0;
-    readonly property int stayAtTop         : 1;
-    readonly property int stayAtBottom      : 2;
-    readonly property int stayOnLastReadMsg : 3;
+    property bool autoScrollDown : false;
 
     Item {
         id: footerChat;
@@ -84,7 +79,7 @@ ApplicationWindow {
                         var tmp = inputMsg.text.trim ();
                         if (tmp !== "") {
                             TD_Global.sendMessageText (TD_Global.currentChat, tmp);
-                            autoMoveMode = stayAtBottom;
+                            autoScrollDown = true;
                         }
                         inputMsg.text = "";
                     }
@@ -129,7 +124,7 @@ ApplicationWindow {
                         if (TD_Global.selectedPhotosCount > 0) {
                             TD_Global.sendMessagePhoto (TD_Global.currentChat, groupImagesInAlbums);
                             TD_Global.unselectAllPhotos ();
-                            autoMoveMode = stayAtBottom;
+                            autoScrollDown = true;
                         }
                     }
                 }
@@ -231,7 +226,7 @@ ApplicationWindow {
                         if (TD_Global.selectedVideosCount > 0) {
                             TD_Global.sendMessageVideo (TD_Global.currentChat, groupVideosInAlbums);
                             TD_Global.unselectAllVideos ();
-                            autoMoveMode = stayAtBottom;
+                            autoScrollDown = true;
                         }
                     }
                 }
@@ -323,7 +318,7 @@ ApplicationWindow {
                     implicitHeight: GridView.view.cellHeight;
                     onClicked: {
                         TD_Global.sendMessageSticker (TD_Global.currentChat, stickerItem);
-                        autoMoveMode = stayAtBottom;
+                        autoScrollDown = true;
                     }
 
                     readonly property TD_Sticker stickerItem : modelData;

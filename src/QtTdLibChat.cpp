@@ -12,7 +12,6 @@ void QtTdLibChatPhoto::updateFromJson (const QJsonObject & json) {
 
 QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
     : QtTdLibAbstractInt53IdObject { QtTdLibObjectType::CHAT, id, parent }
-    , m_messagesModel              { new QQmlObjectListModel<QtTdLibMessage> { this } }
 {
     QtTdLibCollection::allChats.insert (id, this);
 }
@@ -27,17 +26,17 @@ QtTdLibMessage * QtTdLibChat::getMessageItemById (const qint64 id) const {
 
 void QtTdLibChat::addMessageItem (QtTdLibMessage * messageItem) {
     if (messageItem != Q_NULLPTR) {
-        if (m_messagesModel->isEmpty () || messageItem->get_id () > m_messagesModel->last ()->get_id ()) {
-            m_messagesModel->append (messageItem);
+        if (messagesModel.isEmpty () || messageItem->get_id () > messagesModel.getLast ()->get_id ()) {
+            messagesModel.append (messageItem);
         }
-        else if (messageItem->get_id () < m_messagesModel->first ()->get_id ()) {
-            m_messagesModel->prepend (messageItem);
+        else if (messageItem->get_id () < messagesModel.getFirst ()->get_id ()) {
+            messagesModel.prepend (messageItem);
         }
         else {
             int idx { 0 };
-            while (idx < m_messagesModel->count ()) {
-                if (m_messagesModel->at (idx)->get_id () > messageItem->get_id ()) {
-                    m_messagesModel->insert (idx, messageItem);
+            while (idx < messagesModel.count ()) {
+                if (messagesModel.getAt (idx)->get_id () > messageItem->get_id ()) {
+                    messagesModel.insert (messageItem, idx);
                     break;
                 }
                 ++idx;
@@ -48,7 +47,7 @@ void QtTdLibChat::addMessageItem (QtTdLibMessage * messageItem) {
 
 void QtTdLibChat::removeMessageItem (QtTdLibMessage * messageItem) {
     if (messageItem != Q_NULLPTR) {
-        m_messagesModel->remove (messageItem);
+        messagesModel.remove (messageItem);
     }
 }
 

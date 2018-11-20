@@ -427,7 +427,7 @@ Page {
 
                         readonly property TD_Chat           chatItem           : modelData;
                         readonly property TD_ChatPhoto      chatPhotoItem      : (chatItem ? chatItem.photo : null);
-                        readonly property TD_Message        lastMsgItem        : ((chatItem.messagesModel.count > 0) ? chatItem.messagesModel.getLast () : null);
+                        readonly property TD_Message        lastMsgItem        : (chatItem ? chatItem.messagesModel.lastItem : null);
                         readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
                         readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
                         readonly property int               unreadCount        : (chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);

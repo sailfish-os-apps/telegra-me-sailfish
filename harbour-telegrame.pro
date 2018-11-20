@@ -38,6 +38,7 @@ SOURCES += \
     $$PWD/libQtQmlTricks/gui/containers/QQuickGridContainer.cpp \
     $$PWD/libQtQmlTricks/gui/containers/QQuickRowContainer.cpp \
     $$PWD/libQtQmlTricks/gui/helpers/QQuickExtraAnchors.cpp \
+    $$PWD/libQtQmlTricks/gui/containers/QQuickFastObjectListView.cpp \
     $$PWD/libQtQmlTricks/QtQmlTricks.cpp \
     $$PWD/src/QtTdLibCommon.cpp \
     $$PWD/src/QtTdLibConnection.cpp \
@@ -56,12 +57,14 @@ HEADERS += \
     $$PWD/libQtQmlTricks/core/macros/QmlEnumHelpers.h \
     $$PWD/libQtQmlTricks/core/macros/QmlPropertyHelpers.h \
     $$PWD/libQtQmlTricks/core/models/QQmlObjectListModel.h \
+    $$PWD/libQtQmlTricks/core/models/QQmlFastObjectListModel.h \
     $$PWD/libQtQmlTricks/gui/containers/QQmlContainerEnums.h \
     $$PWD/libQtQmlTricks/gui/containers/QQuickAbstractContainerBase.h \
     $$PWD/libQtQmlTricks/gui/containers/QQuickColumnContainer.h \
     $$PWD/libQtQmlTricks/gui/containers/QQuickContainerAttachedObject.h \
     $$PWD/libQtQmlTricks/gui/containers/QQuickGridContainer.h \
     $$PWD/libQtQmlTricks/gui/containers/QQuickRowContainer.h \
+    $$PWD/libQtQmlTricks/gui/containers/QQuickFastObjectListView.h \
     $$PWD/libQtQmlTricks/gui/helpers/QQuickExtraAnchors.h \
     $$PWD/libQtQmlTricks/QtQmlTricks.h \
     $$PWD/src/QtTdLibCommon.h \

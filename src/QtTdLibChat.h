@@ -1,6 +1,8 @@
 #ifndef QTTDCHAT_H
 #define QTTDCHAT_H
 
+#include "QQmlFastObjectListModel.h"
+
 #include "QtTdLibCommon.h"
 #include "QtTdLibFile.h"
 #include "QtTdLibMessage.h"
@@ -235,7 +237,7 @@ class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<Q
     Q_TDLIB_PROPERTY_SUBOBJECT (type, QtTdLibChatType)
     Q_TDLIB_PROPERTY_SUBOBJECT (photo, QtTdLibChatPhoto)
     Q_TDLIB_PROPERTY_SUBOBJECT (notificationSettings, QtTdLibChatNotificationSettings)
-    QML_OBJMODEL_PROPERTY      (messagesModel, QtTdLibMessage)
+    QML_FASTOBJMODEL_PROPERTY  (messagesModel, QtTdLibMessage)
     //last_message:message
     //draft_message:draftMessage
 
