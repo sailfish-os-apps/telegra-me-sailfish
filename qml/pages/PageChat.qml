@@ -11,6 +11,7 @@ Page {
     Component.onCompleted: {
         TD_Global.openChat (currentChat);
         if (currentChat.messagesModel.count > 0 && currentChat.lastReadInboxMessageId !== currentChat.messagesModel.lastItem ["id"]) {
+            autoScrollDown = false;
             viewMessages.current = currentChat.getMessageItemById (currentChat.lastReadInboxMessageId);
             viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
         }
@@ -86,38 +87,64 @@ Page {
         running: false;
         interval: 150;
         onTriggered: {
-            if (flickerMessages.atYEnd || flickerMessages.contentHeight < flickerMessages.height) {
-                autoScrollDown = true;
-                TD_Global.markAllMessagesAsRead (currentChat);
+            if (Qt.application.state === Qt.ApplicationActive) {
+                if (!flickerMessages.draggingVertically && !flickerMessages.flickingVertically) {
+                    if (flickerMessages.atYEnd || flickerMessages.contentHeight < flickerMessages.height) {
+                        autoScrollDown = true;
+                        TD_Global.markAllMessagesAsRead (currentChat);
+                    }
+                    else if (flickerMessages.contentY < Theme.paddingMedium) {
+                        autoScrollDown = false;
+                        viewMessages.current = currentChat.messagesModel.firstItem;
+                        viewMessages.behavior = FastObjectListView.KEEP_AT_TOP;
+                    }
+                    else {
+                        autoScrollDown = false;
+                    }
+                }
             }
-            else if (flickerMessages.contentY < Theme.paddingMedium) {
-                viewMessages.current = currentChat.messagesModel.firstItem;
-                viewMessages.behavior = FastObjectListView.KEEP_AT_TOP;
-            }
-            else { }
         }
     }
     Binding {
         target: viewMessages;
         property: "current";
         value: (currentChat ? currentChat.messagesModel.lastItem : null);
-        when: (viewMessages.behavior === FastObjectListView.KEEP_AT_BOTTOM);
+        when: (autoScrollDown && Qt.application.state === Qt.ApplicationActive);
     }
     Binding {
         target: viewMessages;
         property: "behavior";
         value: FastObjectListView.KEEP_AT_BOTTOM;
-        when: autoScrollDown;
+        when: (autoScrollDown && Qt.application.state === Qt.ApplicationActive);
     }
     SilicaFlickable {
         id: flickerMessages;
         quickScroll: true;
         anchors.fill: parent;
-        onMovementStarted: {
-            autoScrollDown = false;
+        onDraggingVerticallyChanged: {
+            if (Qt.application.state === Qt.ApplicationActive) {
+                if (draggingVertically) {
+                    autoScrollDown = false;
+                }
+                else {
+                    timerSetMode.restart ();
+                }
+            }
         }
-        onMovementEnded: {
-            timerSetMode.restart ();
+        onFlickingVerticallyChanged: {
+            if (Qt.application.state === Qt.ApplicationActive) {
+                if (draggingVertically) {
+                    autoScrollDown = false;
+                }
+                else {
+                    timerSetMode.restart ();
+                }
+            }
+        }
+        onContentYChanged: {
+            if (Qt.application.state === Qt.ApplicationActive) {
+                timerSetMode.restart ();
+            }
         }
 
         FastObjectListView {
@@ -315,9 +342,10 @@ Page {
 
             MenuItem {
                 text: qsTr ("Load 30 older messages...");
-                onClicked: {
-                    viewMessages.current = currentChat.messagesModel.firstItem;
+                onDelayedClick: {
+                    autoScrollDown = false;
                     viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
+                    viewMessages.current = currentChat.messagesModel.firstItem;
                     TD_Global.loadMoreMessages (currentChat, 30);
                 }
             }
