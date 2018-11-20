@@ -197,6 +197,12 @@ Page {
                     }
                 }
                 ExtraAnchors.horizontalFill: parent;
+                onMenuOpenChanged: {
+                    if (menuOpen) {
+                        viewMessages.current = messageItem;
+                        viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
+                    }
+                }
 
                 readonly property TD_Message messageItem : modelItem;
                 readonly property TD_User    userItem    : (messageItem ? TD_Global.getUserItemById (messageItem.senderUserId) : null);
