@@ -10,31 +10,90 @@ Page {
     allowedOrientations: Orientation.All;
     Component.onCompleted: {
         TD_Global.openChat (currentChat);
-        if (currentChat.messagesModel.count > 0 && currentChat.lastReadInboxMessageId !== currentChat.messagesModel.lastItem ["id"]) {
-            autoScrollDown = false;
-            viewMessages.current = currentChat.getMessageItemById (currentChat.lastReadInboxMessageId);
-            viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
-        }
-        else {
-            autoScrollDown = true;
+        if (currentChat.lastReadInboxMessageId === currentChat.messagesModel.lastItem ["id"]) {
+            TD_Global.autoScrollDownRequested (true);
         }
     }
     Component.onDestruction: {
         TD_Global.closeChat (currentChat);
     }
+    onLastMessageItemChanged: {
+        if (currentlyOnApp) {
+            if (autoScrollDown) {
+                viewMessages.current = lastMessageItem;
+                viewMessages.behavior = FastObjectListView.KEEP_AT_BOTTOM;
+                TD_Global.markAllMessagesAsRead (currentChat);
+            }
+        }
+    }
+    onLastReadMessageItemChanged: {
+        if (initialized) {
+            if (currentlyOnApp) {
+                if (autoScrollDown) {
+                    if (lastReadMessageItem && currentChat.messagesModel.lastItem) {
+                        TD_Global.markAllMessagesAsRead (currentChat);
+                    }
+                }
+            }
+        }
+        else {
+            if (lastReadMessageItem) {
+                viewMessages.current = lastReadMessageItem;
+                viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
+                initialized = true;
+            }
+        }
+    }
+    onCurrentlyOnAppChanged: {
+        if (!currentlyOnApp) {
+            TD_Global.autoScrollDownRequested (false);
+            viewMessages.current = lastMessageItem;
+            viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
+        }
+    }
+
+    property bool initialized    : false;
+    property bool autoScrollDown : false;
 
     property TD_Chat currentChat : null;
 
-    readonly property TD_User       currentChatUserItem       : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_PRIVATE
-                                                                 ? TD_Global.getUserItemById (currentChat.type ["userId"])
-                                                                 : null);
+    readonly property TD_Message lastMessageItem : (currentChat
+                                                    ? currentChat.messagesModel.lastItem
+                                                    : null);
+
+    readonly property TD_Message lastReadMessageItem : (currentChat && currentChat.messagesModel.count > 0
+                                                        ? currentChat.getMessageItemById (currentChat.lastReadInboxMessageId)
+                                                        : null);
+
+    readonly property TD_User currentChatUserItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_PRIVATE
+                                                     ? TD_Global.getUserItemById (currentChat.type ["userId"])
+                                                     : null);
+
     readonly property TD_BasicGroup currentChatBasicGroupItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_BASIC_GROUP
                                                                  ? TD_Global.getBasicGroupItemById (currentChat.type ["basicGroupId"])
                                                                  : null);
+
     readonly property TD_Supergroup currentChatSupergroupItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_SUPERGROUP
                                                                  ? TD_Global.getSupergroupItemById (currentChat.type ["supergroupId"])
                                                                  : null);
 
+    readonly property bool currentlyOnApp : (Qt.application.state === Qt.ApplicationActive);
+
+    Connections {
+        target: TD_Global;
+        onAutoScrollDownRequested: {
+            autoScrollDown = active;
+            if (active) {
+                viewMessages.current = currentChat.messagesModel.lastItem;
+                viewMessages.behavior = FastObjectListView.KEEP_AT_BOTTOM;
+                TD_Global.markAllMessagesAsRead (currentChat);
+            }
+            else {
+                viewMessages.behavior = FastObjectListView.FREE_MOVE;
+                viewMessages.current = null;
+            }
+        }
+    }
     Binding {
         target: window;
         property: "showInputPanel";
@@ -81,69 +140,18 @@ Page {
             }
         }
     }
-    Timer {
-        id: timerSetMode;
-        repeat: false;
-        running: false;
-        interval: 150;
-        onTriggered: {
-            if (Qt.application.state === Qt.ApplicationActive) {
-                if (!flickerMessages.draggingVertically && !flickerMessages.flickingVertically) {
-                    if (flickerMessages.atYEnd || flickerMessages.contentHeight < flickerMessages.height) {
-                        autoScrollDown = true;
-                        TD_Global.markAllMessagesAsRead (currentChat);
-                    }
-                    else if (flickerMessages.contentY < Theme.paddingMedium) {
-                        autoScrollDown = false;
-                        viewMessages.current = currentChat.messagesModel.firstItem;
-                        viewMessages.behavior = FastObjectListView.KEEP_AT_TOP;
-                    }
-                    else {
-                        autoScrollDown = false;
-                    }
-                }
-            }
-        }
-    }
-    Binding {
-        target: viewMessages;
-        property: "current";
-        value: (currentChat ? currentChat.messagesModel.lastItem : null);
-        when: (autoScrollDown && Qt.application.state === Qt.ApplicationActive);
-    }
-    Binding {
-        target: viewMessages;
-        property: "behavior";
-        value: FastObjectListView.KEEP_AT_BOTTOM;
-        when: (autoScrollDown && Qt.application.state === Qt.ApplicationActive);
-    }
     SilicaFlickable {
         id: flickerMessages;
         quickScroll: false;
         anchors.fill: parent;
         onDraggingVerticallyChanged: {
-            if (Qt.application.state === Qt.ApplicationActive) {
-                if (draggingVertically) {
-                    autoScrollDown = false;
-                }
-                else {
-                    timerSetMode.restart ();
-                }
+            if (atYEnd !== autoScrollDown) {
+                TD_Global.autoScrollDownRequested (atYEnd);
             }
         }
         onFlickingVerticallyChanged: {
-            if (Qt.application.state === Qt.ApplicationActive) {
-                if (draggingVertically) {
-                    autoScrollDown = false;
-                }
-                else {
-                    timerSetMode.restart ();
-                }
-            }
-        }
-        onContentYChanged: {
-            if (Qt.application.state === Qt.ApplicationActive) {
-                timerSetMode.restart ();
+            if (atYEnd !== autoScrollDown) {
+                TD_Global.autoScrollDownRequested (atYEnd);
             }
         }
 
@@ -157,14 +165,14 @@ Page {
                 contentHeight: layoutMessage.height;
                 menu: ContextMenu {
                     MenuItem {
-                        text: qsTr ("Reply");
+                        text: qsTr ("Reply [TODO]");
                         enabled: false;
                         onClicked: {
                             // TODO
                         }
                     }
                     MenuItem {
-                        text: qsTr ("Forward");
+                        text: qsTr ("Forward [TODO]");
                         visible: delegateMsg.messageItem.canBeForwarded;
                         enabled: false;
                         onClicked: {
@@ -172,7 +180,7 @@ Page {
                         }
                     }
                     MenuItem {
-                        text: qsTr ("Edit");
+                        text: qsTr ("Edit [TODO]");
                         visible: delegateMsg.messageItem.canBeEdited;
                         enabled: false;
                         onClicked: {
@@ -180,7 +188,7 @@ Page {
                         }
                     }
                     MenuItem {
-                        text: qsTr ("Delete only for me");
+                        text: qsTr ("Delete only for me [TODO]");
                         visible: delegateMsg.messageItem.canBeDeletedOnlyForSelf;
                         enabled: false;
                         onClicked: {
@@ -188,7 +196,7 @@ Page {
                         }
                     }
                     MenuItem {
-                        text: qsTr ("Delete for all users");
+                        text: qsTr ("Delete for all users [TODO]");
                         visible: delegateMsg.messageItem.canBeDeletedForAllUsers;
                         enabled: false;
                         onClicked: {
@@ -202,11 +210,21 @@ Page {
                         viewMessages.current = messageItem;
                         viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
                     }
+                    else {
+                        viewMessages.current = null;
+                        viewMessages.behavior = FastObjectListView.FREE_MOVE;
+                    }
                 }
 
                 readonly property TD_Message messageItem : modelItem;
                 readonly property TD_User    userItem    : (messageItem ? TD_Global.getUserItemById (messageItem.senderUserId) : null);
 
+                Rectangle {
+                    color: Theme.secondaryHighlightColor;
+                    opacity: 0.05;
+                    visible: (delegateMsg.messageItem === viewMessages.current);
+                    anchors.fill: parent;
+                }
                 Binding {
                     target: loaderMsgContent.item;
                     property: "messageContentItem";
@@ -349,7 +367,7 @@ Page {
             MenuItem {
                 text: qsTr ("Load 30 older messages...");
                 onDelayedClick: {
-                    autoScrollDown = false;
+                    TD_Global.autoScrollDownRequested (false);
                     viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
                     viewMessages.current = currentChat.messagesModel.firstItem;
                     TD_Global.loadMoreMessages (currentChat, 30);
@@ -358,9 +376,67 @@ Page {
         }
     }
     Item {
-        opacity: (enabled ? 1.0 : 0.0);
-        enabled: (flickerMessages.flickingVertically || flickerMessages.draggingVertically);
+        id: scrollBar;
+        state: (flickerMessages.flickingVertically || flickerMessages.draggingVertically ? "shown" : "hidden");
+        opacity: 0.0;
+        enabled: false;
         implicitWidth: Theme.itemSizeLarge;
+        states: [
+            State {
+                name: "shown";
+            },
+            State {
+                name: "hidden";
+            }
+        ]
+        transitions: [
+            Transition {
+                from: "hidden";
+                to: "shown";
+
+                SequentialAnimation {
+                    alwaysRunToEnd: true;
+
+                    PauseAnimation {
+                        duration: 150;
+                    }
+                    PropertyAction {
+                        target: scrollBar;
+                        property: "enabled";
+                        value: true;
+                    }
+                    PropertyAnimation {
+                        target: scrollBar;
+                        property: "opacity";
+                        to: 1.0;
+                        duration: 350;
+                    }
+                }
+            },
+            Transition {
+                from: "shown";
+                to: "hidden";
+
+                SequentialAnimation {
+                    alwaysRunToEnd: true;
+
+                    PauseAnimation {
+                        duration: 850;
+                    }
+                    PropertyAnimation {
+                        target: scrollBar;
+                        property: "opacity";
+                        to: 0.0;
+                        duration: 350;
+                    }
+                    PropertyAction {
+                        target: scrollBar;
+                        property: "enabled";
+                        value: false;
+                    }
+                }
+            }
+        ]
         anchors {
             topMargin: viewMessages.spaceBefore;
             bottomMargin: viewMessages.spaceAfter;
@@ -381,35 +457,34 @@ Page {
             anchors.right: parent.right;
         }
         ColumnContainer {
-            spacing: Theme.paddingMedium;
             anchors.centerIn: parent;
 
             MouseArea {
                 opacity: (flickerMessages.atYBeginning ? 0.15 : 1.0);
-                implicitWidth: Theme.itemSizeMedium;
-                implicitHeight: Theme.itemSizeMedium;
+                implicitWidth: Theme.itemSizeLarge;
+                implicitHeight: Theme.itemSizeLarge;
                 onClicked: {
-                    autoScrollDown = false;
+                    TD_Global.autoScrollDownRequested (false);
                     viewMessages.behavior = FastObjectListView.KEEP_AT_TOP;
                     viewMessages.current = currentChat.messagesModel.firstItem;
                 }
 
                 Image {
-                    source: "image://theme/icon-m-page-up";
+                    source: "image://theme/icon-m-page-up?%1".arg (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
                     sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
                     anchors.centerIn: parent;
                 }
             }
             MouseArea {
                 opacity: (flickerMessages.atYEnd ? 0.15 : 1.0);
-                implicitWidth: Theme.itemSizeMedium;
-                implicitHeight: Theme.itemSizeMedium;
+                implicitWidth: Theme.itemSizeLarge;
+                implicitHeight: Theme.itemSizeLarge;
                 onClicked: {
-                    autoScrollDown = true;
+                    TD_Global.autoScrollDownRequested (true);
                 }
 
                 Image {
-                    source: "image://theme/icon-m-page-down";
+                    source: "image://theme/icon-m-page-down?%1".arg (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
                     sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
                     anchors.centerIn: parent;
                 }

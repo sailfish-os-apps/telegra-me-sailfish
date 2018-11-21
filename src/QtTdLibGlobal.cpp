@@ -80,9 +80,10 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
           }
     , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { this } }
     , m_audioRecorder { new QAudioRecorder { this } }
+    , m_autoPreFetcher { new QTimer { this } }
 {
     QDBusConnection dbus { QDBusConnection::sessionBus () };
-    qDebug() << "Register object" << dbus.registerObject (dbusObjectPath, m_dbusAdaptor);
+    dbus.registerObject (dbusObjectPath, m_dbusAdaptor);
     if (!dbus.interface ()->isServiceRegistered (dbusServiceName)) {
         dbus.registerService (dbusServiceName);
     }
@@ -102,6 +103,8 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
             set_recordingDuration (int (m_audioRecorder->duration ()));
         }
     });
+    m_autoPreFetcher->setSingleShot (true);
+    connect (m_autoPreFetcher, &QTimer::timeout, this, &QtTdLibGlobal::onPrefetcherTick);
     connect (m_tdLibJsonWrapper, &QtTdLibJsonWrapper::recv, this, &QtTdLibGlobal::onFrame);
     m_tdLibJsonWrapper->start ();
 }
@@ -320,9 +323,7 @@ void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
                   { "@type", "openChat" },
                   { "chat_id", chatItem->get_id () },
               });
-        if (chatItem->messagesModel.count () < qMax (chatItem->get_unreadCount (), 15)) {
-            loadMoreMessages (chatItem, qMax (chatItem->get_unreadCount (), 15)); // FIXME : maybe a better way...
-        }
+        m_autoPreFetcher->start (0);
     }
 }
 
@@ -356,6 +357,7 @@ void QtTdLibGlobal::markAllMessagesAsRead (QtTdLibChat * chatItem) {
 
 void QtTdLibGlobal::loadMoreMessages (QtTdLibChat * chatItem, const int count) {
     if (chatItem != Q_NULLPTR && !chatItem->messagesModel.isEmpty () && count > 0) {
+        qWarning () << "LOAD MORE...";
         send (QJsonObject {
                   { "@type", "getChatHistory" },
                   { "chat_id",  chatItem->get_id () },
@@ -856,6 +858,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
         }
         case QtTdLibObjectType::MESSAGES: {
             const QJsonArray messagesListJson = json ["messages"].toArray ();
+            qWarning () << "GOT" << messagesListJson.count () << "MESSAGES";
             for (const QJsonValue & tmp : messagesListJson) {
                 const QJsonObject messageJson { tmp.toObject () };
                 const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["chat_id"]) };
@@ -869,6 +872,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     }
                 }
             }
+            m_autoPreFetcher->start (0);
             break;
         }
         case QtTdLibObjectType::UPDATE_DELETE_MESSAGES: {
@@ -1001,6 +1005,15 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
         default: {
             qWarning () << "UNHANDLED" << json;
             break;
+        }
+    }
+}
+
+void QtTdLibGlobal::onPrefetcherTick (void) { // FIXME : maybe a better way...
+    if (m_currentChat != Q_NULLPTR) {
+        if (m_currentChat->messagesModel.count () < 50 ||
+            m_currentChat->getMessageItemById (m_currentChat->get_lastReadInboxMessageId ()) == Q_NULLPTR) {
+            loadMoreMessages (m_currentChat, 30);
         }
     }
 }

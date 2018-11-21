@@ -125,9 +125,11 @@ public:
 
 signals:
     void showChatRequested (const QString & chatId);
+    void autoScrollDownRequested (const bool active);
 
 protected:
     void onFrame (const QJsonObject & json);
+    void onPrefetcherTick (void);
 
 private:
     const QHash<QString, QString> m_svgIconForMimetype;
@@ -149,6 +151,7 @@ private:
 
     QtTdLibJsonWrapper * m_tdLibJsonWrapper;
     QAudioRecorder * m_audioRecorder;
+    QTimer * m_autoPreFetcher;
     QMimeDatabase m_mimeDb;
 };
 

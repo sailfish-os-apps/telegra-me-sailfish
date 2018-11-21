@@ -37,8 +37,6 @@ ApplicationWindow {
 
     property bool showInputPanel : false;
 
-    property bool autoScrollDown : false;
-
     readonly property bool active : (Qt.application.state === Qt.ApplicationActive);
 
     Item {
@@ -90,7 +88,7 @@ ApplicationWindow {
                         var tmp = inputMsg.text.trim ();
                         if (tmp !== "") {
                             TD_Global.sendMessageText (TD_Global.currentChat, tmp);
-                            autoScrollDown = true;
+                            TD_Global.autoScrollDownRequested (true);
                         }
                         inputMsg.text = "";
                     }
@@ -135,7 +133,7 @@ ApplicationWindow {
                         if (TD_Global.selectedPhotosCount > 0) {
                             TD_Global.sendMessagePhoto (TD_Global.currentChat, groupImagesInAlbums);
                             TD_Global.unselectAllPhotos ();
-                            autoScrollDown = true;
+                            TD_Global.autoScrollDownRequested (true);
                         }
                     }
                 }
@@ -237,7 +235,7 @@ ApplicationWindow {
                         if (TD_Global.selectedVideosCount > 0) {
                             TD_Global.sendMessageVideo (TD_Global.currentChat, groupVideosInAlbums);
                             TD_Global.unselectAllVideos ();
-                            autoScrollDown = true;
+                            TD_Global.autoScrollDownRequested (true);
                         }
                     }
                 }
@@ -329,7 +327,7 @@ ApplicationWindow {
                     implicitHeight: GridView.view.cellHeight;
                     onClicked: {
                         TD_Global.sendMessageSticker (TD_Global.currentChat, stickerItem);
-                        autoScrollDown = true;
+                        TD_Global.autoScrollDownRequested (true);
                     }
 
                     readonly property TD_Sticker stickerItem : modelData;
@@ -586,6 +584,60 @@ ApplicationWindow {
                     }
                 }
             }
+            RowContainer {
+                visible: (currentMsgType === TD_ObjectType.MESSAGE_AUDIO);
+                spacing: Theme.paddingMedium;
+                anchors.margins: Theme.paddingSmall;
+                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                ExtraAnchors.horizontalFill: parent;
+
+                Item {
+                    Container.horizontalStretch: 1;
+                }
+                LabelFixed {
+                    text: qsTr ("Send music file [TODO]");
+                    anchors.verticalCenter: parent.verticalCenter;
+                }
+                Item {
+                    Container.horizontalStretch: 1;
+                }
+            }
+            RowContainer {
+                visible: (currentMsgType === TD_ObjectType.MESSAGE_ANIMATION);
+                spacing: Theme.paddingMedium;
+                anchors.margins: Theme.paddingSmall;
+                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                ExtraAnchors.horizontalFill: parent;
+
+                Item {
+                    Container.horizontalStretch: 1;
+                }
+                LabelFixed {
+                    text: qsTr ("Send GIF animation [TODO]");
+                    anchors.verticalCenter: parent.verticalCenter;
+                }
+                Item {
+                    Container.horizontalStretch: 1;
+                }
+            }
+            RowContainer {
+                visible: (currentMsgType === TD_ObjectType.MESSAGE_VIDEO_NOTE);
+                spacing: Theme.paddingMedium;
+                anchors.margins: Theme.paddingSmall;
+                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                ExtraAnchors.horizontalFill: parent;
+
+                Item {
+                    Container.horizontalStretch: 1;
+                }
+                LabelFixed {
+                    text: qsTr ("Send video bubble note [TODO]");
+                    anchors.verticalCenter: parent.verticalCenter;
+                }
+                Item {
+                    Container.horizontalStretch: 1;
+                }
+            }
             GridContainer {
                 id: selectorMsgType;
                 cols: capacity;
@@ -600,11 +652,11 @@ ApplicationWindow {
                         TD_ObjectType.MESSAGE_TEXT,
                         TD_ObjectType.MESSAGE_PHOTO,
                         TD_ObjectType.MESSAGE_VIDEO,
-                        //TD_ObjectType.MESSAGE_AUDIO,
+                        TD_ObjectType.MESSAGE_AUDIO,
                         TD_ObjectType.MESSAGE_STICKER,
-                        //TD_ObjectType.MESSAGE_ANIMATION,
+                        TD_ObjectType.MESSAGE_ANIMATION,
                         TD_ObjectType.MESSAGE_VOICE_NOTE,
-                        //TD_ObjectType.MESSAGE_VIDEO_NOTE,
+                        TD_ObjectType.MESSAGE_VIDEO_NOTE,
                         TD_ObjectType.MESSAGE_DOCUMENT,
                     ];
                     delegate: RectangleButton {
@@ -1829,7 +1881,7 @@ ApplicationWindow {
                             size: Theme.iconSizeMedium;
                             anchors.verticalCenter: parent.verticalCenter;
                             onClicked: {
-                                // TODO
+                                Qt.openUrlExternally ("tel:+" + pageChatInfoPrivate.userItem.phoneNumber);
                             }
                         }
                         LabelFixed {
@@ -1863,7 +1915,7 @@ ApplicationWindow {
 
                 PullDownMenu {
                     MenuItem {
-                        text: qsTr ("Leave group");
+                        text: qsTr ("Leave group [TODO]");
                         enabled: false;
                         onClicked: {
                             // TODO
@@ -2050,6 +2102,7 @@ ApplicationWindow {
                                                 case TD_ObjectType.USER_STATUS_EMPTY:      return qsTr ("");
                                                 }
                                             }
+                                            return "";
                                         }
                                         color: Theme.secondaryColor;
                                         font {
@@ -2083,7 +2136,7 @@ ApplicationWindow {
 
                 PullDownMenu {
                     MenuItem {
-                        text: qsTr ("Leave group");
+                        text: qsTr ("Leave group [TODO]");
                         enabled: false;
                         onClicked: {
                             // TODO

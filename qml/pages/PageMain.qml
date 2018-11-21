@@ -382,21 +382,21 @@ Page {
                         implicitHeight: (Theme.iconSizeMedium + Theme.paddingMedium * 2);
                         menu: ContextMenu {
                             MenuItem {
-                                text: (delegateChat.chatItem.isPinned ? qsTr ("Un-pin from favorites") : qsTr ("Pin to favorites"));
+                                text: (delegateChat.chatItem.isPinned ? qsTr ("Un-pin from favorites [TODO]") : qsTr ("Pin to favorites [TODO]"));
                                 enabled: false;
                                 onClicked: {
                                     // TODO
                                 }
                             }
                             MenuItem {
-                                text: (delegateChat.chatItem.notificationSettings.muteFor > 0 ? qsTr ("Un-mute notifications") : qsTr ("Mute notifications"));
+                                text: (delegateChat.chatItem.notificationSettings.muteFor > 0 ? qsTr ("Un-mute notifications [TODO]") : qsTr ("Mute notifications [TODO]"));
                                 enabled: false;
                                 onClicked: {
                                     // TODO
                                 }
                             }
                             MenuItem {
-                                text: qsTr ("Remove chat history");
+                                text: qsTr ("Remove chat history [TODO]");
                                 enabled: false;
                                 onClicked: {
                                     // TODO
