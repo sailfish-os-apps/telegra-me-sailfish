@@ -1009,11 +1009,11 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
     }
 }
 
-void QtTdLibGlobal::onPrefetcherTick (void) { // FIXME : maybe a better way...
+void QtTdLibGlobal::onPrefetcherTick (void) {
     if (m_currentChat != Q_NULLPTR) {
         if (m_currentChat->messagesModel.count () < 50 ||
             m_currentChat->getMessageItemById (m_currentChat->get_lastReadInboxMessageId ()) == Q_NULLPTR) {
-            loadMoreMessages (m_currentChat, 30);
+            loadMoreMessages (m_currentChat, 50); // FIXME : maybe a better way...
         }
     }
 }
