@@ -292,6 +292,30 @@ ApplicationWindow {
                                 anchors.fill: parent;
                             }
                             Rectangle {
+                                color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.65);
+                                implicitHeight: (layoutVideoInfo.height + layoutVideoInfo.anchors.margins * 2);
+                                ExtraAnchors.bottomDock: parent;
+
+                                RowContainer {
+                                    id: layoutVideoInfo;
+                                    spacing: Theme.paddingMedium;
+                                    anchors.margins: Theme.paddingSmall;
+                                    ExtraAnchors.bottomDock: parent;
+
+                                    Image {
+                                        source: "image://theme/icon-m-video?%1".arg (Theme.primaryColor);
+                                        sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
+                                        anchors.verticalCenter: parent.verticalCenter;
+                                    }
+                                    LabelFixed {
+                                        text: TD_Global.formatTime (model.duration * 1000, true);
+                                        color: Theme.primaryColor;
+                                        font.pixelSize: Theme.fontSizeExtraSmall;
+                                        anchors.verticalCenter: parent.verticalCenter;
+                                    }
+                                }
+                            }
+                            Rectangle {
                                 color: "transparent";
                                 visible: delegateVideoSelect.selected;
                                 border {
@@ -299,19 +323,6 @@ ApplicationWindow {
                                     color: Theme.highlightColor;
                                 }
                                 anchors.fill: parent;
-                            }
-                            Image {
-                                source: "image://theme/icon-m-video?#808080";
-                                sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
-                                anchors.margins: Theme.paddingSmall;
-                                ExtraAnchors.bottomLeftCorner: parent;
-                            }
-                            LabelFixed {
-                                text: TD_Global.formatTime (model.duration * 1000, true);
-                                color: "gray";
-                                font.pixelSize: Theme.fontSizeExtraSmall;
-                                anchors.margins: Theme.paddingSmall;
-                                ExtraAnchors.bottomRightCorner: parent;
                             }
                         }
                     }
