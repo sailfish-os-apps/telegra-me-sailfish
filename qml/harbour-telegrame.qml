@@ -2071,7 +2071,22 @@ ApplicationWindow {
                                             family: Theme.fontFamilyHeading;
                                             pixelSize: Theme.fontSizeExtraSmall;
                                         }
-                                        ExtraAnchors.horizontalFill: parent;
+
+                                        Rectangle {
+                                            color: "lime";
+                                            radius: (Theme.paddingMedium * 0.5);
+                                            visible: (delegateBasicGroupMember.memberUserItem &&
+                                                      delegateBasicGroupMember.memberUserItem.status &&
+                                                      delegateBasicGroupMember.memberUserItem.status.typeOf === TD_ObjectType.USER_STATUS_ONLINE);
+                                            antialiasing: true;
+                                            implicitWidth: Theme.paddingMedium;
+                                            implicitHeight: Theme.paddingMedium;
+                                            anchors {
+                                                left: parent.right;
+                                                margins: Theme.paddingMedium;
+                                                verticalCenter: parent.verticalCenter;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -2291,7 +2306,22 @@ ApplicationWindow {
                                             family: Theme.fontFamilyHeading;
                                             pixelSize: Theme.fontSizeExtraSmall;
                                         }
-                                        ExtraAnchors.horizontalFill: parent;
+
+                                        Rectangle {
+                                            color: "lime";
+                                            radius: (Theme.paddingMedium * 0.5);
+                                            visible: (delegateSupergroupMember.memberUserItem &&
+                                                      delegateSupergroupMember.memberUserItem.status &&
+                                                      delegateSupergroupMember.memberUserItem.status.typeOf === TD_ObjectType.USER_STATUS_ONLINE);
+                                            antialiasing: true;
+                                            implicitWidth: Theme.paddingMedium;
+                                            implicitHeight: Theme.paddingMedium;
+                                            anchors {
+                                                left: parent.right;
+                                                margins: Theme.paddingMedium;
+                                                verticalCenter: parent.verticalCenter;
+                                            }
+                                        }
                                     }
                                 }
                             }

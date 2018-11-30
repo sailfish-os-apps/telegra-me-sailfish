@@ -540,17 +540,15 @@ Page {
                     color: Theme.secondaryColor;
                     elide: Text.ElideRight;
                     visible: (text !== "");
-                    horizontalAlignment: Text.AlignRight;
                     text: {
                         if (currentChat) {
                             switch (currentChat.type.typeOf) {
                             case TD_ObjectType.CHAT_TYPE_SECRET:
                             case TD_ObjectType.CHAT_TYPE_PRIVATE:
-                                var userItem = TD_Global.getUserItemById (currentChat.type.userId);
-                                if (userItem && userItem.status) {
-                                    switch (userItem.status.typeOf) {
+                                if (currentChatUserItem && currentChatUserItem.status) {
+                                    switch (currentChatUserItem.status.typeOf) {
                                     case TD_ObjectType.USER_STATUS_ONLINE:     return qsTr ("Online");
-                                    case TD_ObjectType.USER_STATUS_OFFLINE:    return qsTr ("Offline since %1").arg (Qt.formatDateTime (userItem.status.wasOnline));
+                                    case TD_ObjectType.USER_STATUS_OFFLINE:    return qsTr ("Offline since %1").arg (Qt.formatDateTime (currentChatUserItem.status.wasOnline));
                                     case TD_ObjectType.USER_STATUS_LAST_MONTH: return qsTr ("Seen last month");
                                     case TD_ObjectType.USER_STATUS_LAST_WEEK:  return qsTr ("Seen last week");
                                     case TD_ObjectType.USER_STATUS_RECENTLY:   return qsTr ("Recently");
@@ -578,7 +576,23 @@ Page {
                         family: Theme.fontFamilyHeading;
                         pixelSize: Theme.fontSizeExtraSmall;
                     }
-                    ExtraAnchors.horizontalFill: parent;
+                    anchors.right: parent.right;
+
+                    Rectangle {
+                        color: "lime";
+                        radius: (Theme.paddingMedium * 0.5);
+                        visible: (currentChatUserItem &&
+                                  currentChatUserItem.status &&
+                                  currentChatUserItem.status.typeOf === TD_ObjectType.USER_STATUS_ONLINE);
+                        antialiasing: true;
+                        implicitWidth: Theme.paddingMedium;
+                        implicitHeight: Theme.paddingMedium;
+                        anchors {
+                            right: parent.left;
+                            margins: Theme.paddingMedium;
+                            verticalCenter: parent.verticalCenter;
+                        }
+                    }
                 }
             }
             DelegateDownloadableImage {
