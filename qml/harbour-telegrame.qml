@@ -61,6 +61,11 @@ ApplicationWindow {
                 anchors.margins: Theme.paddingSmall;
                 ExtraAnchors.horizontalFill: parent;
                 Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                onVisibleChanged: {
+                    if (!visible && inputMsg.activeFocus) {
+                        inputMsg.focus = false;
+                    }
+                }
 
                 Item {
                     implicitHeight: Math.min (inputMsg.implicitHeight, Theme.itemSizeLarge * 2);
@@ -584,60 +589,6 @@ ApplicationWindow {
                     }
                 }
             }
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_AUDIO);
-                spacing: Theme.paddingMedium;
-                anchors.margins: Theme.paddingSmall;
-                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
-                ExtraAnchors.horizontalFill: parent;
-
-                Item {
-                    Container.horizontalStretch: 1;
-                }
-                LabelFixed {
-                    text: qsTr ("Send music file [TODO]");
-                    anchors.verticalCenter: parent.verticalCenter;
-                }
-                Item {
-                    Container.horizontalStretch: 1;
-                }
-            }
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_ANIMATION);
-                spacing: Theme.paddingMedium;
-                anchors.margins: Theme.paddingSmall;
-                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
-                ExtraAnchors.horizontalFill: parent;
-
-                Item {
-                    Container.horizontalStretch: 1;
-                }
-                LabelFixed {
-                    text: qsTr ("Send GIF animation [TODO]");
-                    anchors.verticalCenter: parent.verticalCenter;
-                }
-                Item {
-                    Container.horizontalStretch: 1;
-                }
-            }
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_VIDEO_NOTE);
-                spacing: Theme.paddingMedium;
-                anchors.margins: Theme.paddingSmall;
-                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
-                ExtraAnchors.horizontalFill: parent;
-
-                Item {
-                    Container.horizontalStretch: 1;
-                }
-                LabelFixed {
-                    text: qsTr ("Send video bubble note [TODO]");
-                    anchors.verticalCenter: parent.verticalCenter;
-                }
-                Item {
-                    Container.horizontalStretch: 1;
-                }
-            }
             GridContainer {
                 id: selectorMsgType;
                 cols: capacity;
@@ -652,11 +603,11 @@ ApplicationWindow {
                         TD_ObjectType.MESSAGE_TEXT,
                         TD_ObjectType.MESSAGE_PHOTO,
                         TD_ObjectType.MESSAGE_VIDEO,
-                        TD_ObjectType.MESSAGE_AUDIO,
+                        //TD_ObjectType.MESSAGE_AUDIO,
                         TD_ObjectType.MESSAGE_STICKER,
-                        TD_ObjectType.MESSAGE_ANIMATION,
+                        //TD_ObjectType.MESSAGE_ANIMATION,
                         TD_ObjectType.MESSAGE_VOICE_NOTE,
-                        TD_ObjectType.MESSAGE_VIDEO_NOTE,
+                        //TD_ObjectType.MESSAGE_VIDEO_NOTE,
                         TD_ObjectType.MESSAGE_DOCUMENT,
                     ];
                     delegate: RectangleButton {
@@ -1792,21 +1743,21 @@ ApplicationWindow {
 
                 PullDownMenu {
                     MenuItem {
-                        text: qsTr ("Delete contact");
+                        text: qsTr ("Delete contact [TODO]");
                         enabled: false;
                         onClicked: {
                             // TODO
                         }
                     }
                     MenuItem {
-                        text: qsTr ("Block user");
+                        text: qsTr ("Block user [TODO]");
                         enabled: false;
                         onClicked: {
                             // TODO
                         }
                     }
                     MenuItem {
-                        text: qsTr ("Edit contact");
+                        text: qsTr ("Edit contact [TODO]");
                         enabled: false;
                         onClicked: {
                             // TODO
@@ -1859,7 +1810,7 @@ ApplicationWindow {
                             size: Theme.iconSizeMedium;
                             anchors.verticalCenter: parent.verticalCenter;
                             onClicked: {
-                                // TODO
+                                Clipboard.text = pageChatInfoPrivate.userItem.username;
                             }
                         }
                         LabelFixed {
@@ -2012,7 +1963,7 @@ ApplicationWindow {
                             size: Theme.iconSizeMedium;
                             anchors.verticalCenter: parent.verticalCenter;
                             onClicked: {
-                                // TODO
+                                Clipboard.text = pageChatInfoBasicGroup.basicGroupItem.inviteLink;
                             }
                         }
                         LabelFixed {
@@ -2209,7 +2160,7 @@ ApplicationWindow {
                             size: Theme.iconSizeMedium;
                             anchors.verticalCenter: parent.verticalCenter;
                             onClicked: {
-                                // TODO
+                                Clipboard.text = pageChatInfoSupergroup.supergroupItem.username;
                             }
                         }
                         LabelFixed {
@@ -2231,7 +2182,7 @@ ApplicationWindow {
                             size: Theme.iconSizeMedium;
                             anchors.verticalCenter: parent.verticalCenter;
                             onClicked: {
-                                // TODO
+                                Clipboard.text = pageChatInfoSupergroup.supergroupItem.inviteLink;
                             }
                         }
                         LabelFixed {

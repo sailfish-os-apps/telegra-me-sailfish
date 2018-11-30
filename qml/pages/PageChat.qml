@@ -10,7 +10,7 @@ Page {
     allowedOrientations: Orientation.All;
     Component.onCompleted: {
         TD_Global.openChat (currentChat);
-        if (currentChat.lastReadInboxMessageId === currentChat.messagesModel.lastItem ["id"]) {
+        if (currentChat.unreadCount === 0 || currentChat.lastReadInboxMessageId === currentChat.messagesModel.lastItem ["id"]) {
             TD_Global.autoScrollDownRequested (true);
         }
     }
@@ -188,19 +188,17 @@ Page {
                         }
                     }
                     MenuItem {
-                        text: qsTr ("Delete only for me [TODO]");
+                        text: qsTr ("Delete only for me");
                         visible: delegateMsg.messageItem.canBeDeletedOnlyForSelf;
-                        enabled: false;
                         onClicked: {
-                            // TODO
+                            delegateMsg.showRemorseItem (false);
                         }
                     }
                     MenuItem {
-                        text: qsTr ("Delete for all users [TODO]");
+                        text: qsTr ("Delete for all users");
                         visible: delegateMsg.messageItem.canBeDeletedForAllUsers;
-                        enabled: false;
                         onClicked: {
-                            // TODO
+                            delegateMsg.showRemorseItem (true);
                         }
                     }
                 }
@@ -219,6 +217,13 @@ Page {
                 readonly property TD_Message messageItem : modelItem;
                 readonly property TD_User    userItem    : (messageItem ? TD_Global.getUserItemById (messageItem.senderUserId) : null);
 
+                function showRemorseItem (forAll) {
+                    remorse.execute (delegateMsg, qsTr ("Deleting"), function () {
+                        TD_Global.removeMessage (currentChat, messageItem, forAll);
+                    });
+                }
+
+                RemorseItem { id: remorse; }
                 Rectangle {
                     color: Theme.secondaryHighlightColor;
                     opacity: 0.05;
@@ -316,7 +321,9 @@ Page {
                                     anchors.right: parent.right;
 
                                     LabelFixed {
-                                        text: Qt.formatDateTime (delegateMsg.messageItem.date);
+                                        text: ((delegateMsg.messageItem.editDate.getFullYear () > 2000)
+                                               ? (qsTr ("edited") + " " + Qt.formatDateTime (delegateMsg.messageItem.editDate))
+                                               : Qt.formatDateTime (delegateMsg.messageItem.date));
                                         color: Theme.secondaryColor;
                                         font.pixelSize: Theme.fontSizeExtraSmall;
                                         anchors.verticalCenter: parent.verticalCenter;

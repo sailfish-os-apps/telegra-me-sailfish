@@ -348,7 +348,7 @@ void QtTdLibGlobal::markAllMessagesAsRead (QtTdLibChat * chatItem) {
         if (!messageIdsJson.isEmpty ()) {
             send (QJsonObject {
                       { "@type", "viewMessages" },
-                      { "chat_id", chatItem->get_id () },
+                      { "chat_id", chatItem->get_id_asJSON () },
                       { "message_ids", messageIdsJson },
                   });
         }
@@ -360,11 +360,25 @@ void QtTdLibGlobal::loadMoreMessages (QtTdLibChat * chatItem, const int count) {
         qWarning () << "LOAD MORE...";
         send (QJsonObject {
                   { "@type", "getChatHistory" },
-                  { "chat_id",  chatItem->get_id () },
+                  { "chat_id",  chatItem->get_id_asJSON () },
                   { "from_message_id", chatItem->messagesModel.getFirst ()->get_id () }, // Identifier of the message starting from which history must be fetched; use 0 to get results from the begining
                   { "offset", 0 }, // Specify 0 to get results from exactly the from_message_id or a negative offset to get the specified message and some newer messages
                   { "limit", count }, // The maximum number of messages to be returned; must be positive and can't be greater than 100. If the offset is negative, the limit must be greater than -offset. Fewer messages may be returned than specified by the limit, even if the end of the message history has not been reached
                   { "only_local", false }, // If true, returns only messages that are available locally without sending network requests
+              });
+    }
+}
+
+void QtTdLibGlobal::removeMessage (QtTdLibChat * chatItem, QtTdLibMessage * messageItem, const bool forAll) {
+    if (chatItem != Q_NULLPTR && messageItem != Q_NULLPTR) {
+        send (QJsonObject {
+                  { "@type", "deleteMessages" },
+                  { "chat_id",  chatItem->get_id_asJSON () },
+                  { "message_ids",  QJsonArray {
+                        messageItem->get_id_asJSON ()
+                    }
+                  },
+                  { "revoke", !forAll },
               });
     }
 }
@@ -406,7 +420,7 @@ void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & tex
     if (chatItem != Q_NULLPTR && !text.isEmpty ()) {
         send (QJsonObject {
                   { "@type", "sendMessage" },
-                  { "chat_id" , chatItem->get_id () },
+                  { "chat_id" , chatItem->get_id_asJSON () },
                   { "reply_to_message_id", 0 },
                   { "disable_notification", false },
                   { "from_background", false },
@@ -872,7 +886,9 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     }
                 }
             }
-            m_autoPreFetcher->start (0);
+            if (!messagesListJson.isEmpty ()) {
+                m_autoPreFetcher->start (0);
+            }
             break;
         }
         case QtTdLibObjectType::UPDATE_DELETE_MESSAGES: {
@@ -1012,7 +1028,8 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
 void QtTdLibGlobal::onPrefetcherTick (void) {
     if (m_currentChat != Q_NULLPTR) {
         if (m_currentChat->messagesModel.count () < 50 ||
-            m_currentChat->getMessageItemById (m_currentChat->get_lastReadInboxMessageId ()) == Q_NULLPTR) {
+            (m_currentChat->get_unreadCount () > 0 &&
+             m_currentChat->getMessageItemById (m_currentChat->get_lastReadInboxMessageId ()) == Q_NULLPTR)) {
             loadMoreMessages (m_currentChat, 50); // FIXME : maybe a better way...
         }
     }

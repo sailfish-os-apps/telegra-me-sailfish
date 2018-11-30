@@ -109,6 +109,8 @@ public:
 
     Q_INVOKABLE void loadMoreMessages (QtTdLibChat * chatItem, const int count);
 
+    Q_INVOKABLE void removeMessage (QtTdLibChat * chatItem, QtTdLibMessage * messageItem, const bool forAll = false);
+
     Q_INVOKABLE void refreshBasicGroupFullInfo (QtTdLibBasicGroup * basicGroupItem);
     Q_INVOKABLE void refreshSupergroupFullInfo (QtTdLibSupergroup * supergroupItem);
     Q_INVOKABLE void refreshSupergroupMembers  (QtTdLibSupergroup * supergroupItem, const int count, const int offset = 0);
