@@ -26,7 +26,7 @@ void QtTdLibJsonWrapper::run (void) {
         if (!tmp.isEmpty ()) {
             const QJsonObject json { QJsonDocument::fromJson (tmp).object () };
             if (!json.isEmpty ()) {
-                //qWarning () << "RECV" << json;
+                qWarning () << "RECV" << json;
                 emit recv (json);
                 if (QtTdLibEnums::objectTypeEnumFromJson (json) == QtTdLibObjectType::UPDATE_AUTHORIZATION_STATE) {
                     if (QtTdLibEnums::objectTypeEnumFromJson (json ["authorization_state"].toObject ()) == QtTdLibObjectType::AUTHORIZATION_STATE_CLOSED) {
@@ -39,16 +39,16 @@ void QtTdLibJsonWrapper::run (void) {
 }
 
 QJsonObject QtTdLibJsonWrapper::exec (const QJsonObject & json) {
-    //qWarning () << "EXEC" << json;
+    qWarning () << "EXEC" << json;
     const QByteArray  tmp { (QJsonDocument (json).toJson (QJsonDocument::Compact) % '\0') };
     const QByteArray  str { QByteArray (td_json_client_execute (m_tdJsonClientHandle, tmp.constData ())) };
     const QJsonObject ret { QJsonDocument::fromJson (str).object () };
-    //qWarning () << "RESULT" << ret;
+    qWarning () << "RESULT" << ret;
     return ret;
 }
 
 void QtTdLibJsonWrapper::send (const QJsonObject & json) {
-    //qWarning () << "SEND" << json;
+    qWarning () << "SEND" << json;
     const QByteArray tmp { (QJsonDocument (json).toJson (QJsonDocument::Compact) % '\0') };
     td_json_client_send (m_tdJsonClientHandle, tmp.constData ());
 }

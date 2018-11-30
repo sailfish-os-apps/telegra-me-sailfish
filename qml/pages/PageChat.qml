@@ -372,12 +372,12 @@ Page {
             id: pulleyTop;
 
             MenuItem {
-                text: qsTr ("Load 30 older messages...");
+                text: qsTr ("Load 15 older messages...");
                 onDelayedClick: {
                     TD_Global.autoScrollDownRequested (false);
                     viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
                     viewMessages.current = currentChat.messagesModel.firstItem;
-                    TD_Global.loadMoreMessages (currentChat, 30);
+                    TD_Global.loadMoreMessages (currentChat, 15);
                 }
             }
         }

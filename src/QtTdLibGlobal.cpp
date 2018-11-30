@@ -264,6 +264,7 @@ bool QtTdLibGlobal::isPhotoSelected (const QString & path) const {
 
 void QtTdLibGlobal::unselectAllPhotos (void) {
     qDeleteAll (m_selectedPhotosList);
+    m_selectedPhotosList.clear ();
     set_selectedPhotosCount (0);
 }
 
@@ -300,6 +301,7 @@ bool QtTdLibGlobal::isVideoSelected (const QString & path) const {
 
 void QtTdLibGlobal::unselectAllVideos (void) {
     qDeleteAll (m_selectedVideosList);
+    m_selectedVideosList.clear ();
     set_selectedVideosCount (0);
 }
 
@@ -506,7 +508,7 @@ void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupIn
                                      { "width", selection->width },
                                      { "height", selection->height },
                                      { "duration", selection->duration },
-                                     { "photo", QJsonObject {
+                                     { "video", QJsonObject {
                                            { "@type", "inputFileLocal" },
                                            { "path", selection->path },
                                        }
@@ -516,7 +518,7 @@ void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupIn
             if (!contents.isEmpty ()) {
                 send (QJsonObject {
                           { "@type", "sendMessageAlbum" },
-                          { "chat_id", chatItem->get_id () },
+                          { "chat_id", chatItem->get_id_asJSON () },
                           { "reply_to_message_id", 0  },
                           { "disable_notification", false },
                           { "from_background", false },
@@ -528,7 +530,7 @@ void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupIn
             for (SelectionVideo * selection : m_selectedVideosList) {
                 send (QJsonObject {
                           { "@type", "sendMessage" },
-                          { "chat_id", chatItem->get_id () },
+                          { "chat_id", chatItem->get_id_asJSON () },
                           { "reply_to_message_id", 0  },
                           { "disable_notification", false },
                           { "from_background", false },
@@ -1019,7 +1021,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             break;
         }
         default: {
-            qWarning () << "UNHANDLED" << json;
+            qWarning () << "UNHANDLED";
             break;
         }
     }
@@ -1030,7 +1032,7 @@ void QtTdLibGlobal::onPrefetcherTick (void) {
         if (m_currentChat->messagesModel.count () < 50 ||
             (m_currentChat->get_unreadCount () > 0 &&
              m_currentChat->getMessageItemById (m_currentChat->get_lastReadInboxMessageId ()) == Q_NULLPTR)) {
-            loadMoreMessages (m_currentChat, 50); // FIXME : maybe a better way...
+            loadMoreMessages (m_currentChat, 15); // FIXME : maybe a better way...
         }
     }
 }
