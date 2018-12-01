@@ -477,13 +477,14 @@ Page {
                                 }
                             ]
                             onClicked: {
-                                while (pageStack.currentPage !== page) {
-                                    pageStack.navigateBack ();
+                                window.activate ();
+                                while (pageStack.depth > 1) {
+                                    pageStack.navigateBack (PageStackAction.Immediate);
                                 }
                                 pageStack.push (compoPageChat, {
                                                     "currentChat" : delegateChat.chatItem
-                                                });
-                                window.activate ();
+                                                },
+                                                PageStackAction.Immediate);
                             }
                         }
                         RowContainer {
