@@ -7,6 +7,7 @@
 
 #include <qqml.h>
 #include <sailfishapp.h>
+#include <nemonotifications-qt5/notification.h>
 
 #include "QtQmlTricks.h"
 
@@ -134,6 +135,13 @@ int main (int argc, char * argv []) {
     qmlRegisterUncreatableType<QtTdLibObjectType>                 ("harbour.Telegrame", 1, 0, "TD_ObjectType", "Enum class !");
     QGuiApplication * app { SailfishApp::application (argc, argv) };
     app->setApplicationName ("harbour-telegrame");
+    const QList<QObject *> oldNoticationsList { Notification::notifications () };
+    for (QObject * tmp : oldNoticationsList) {
+        if (Notification * notification = { qobject_cast<Notification *> (tmp) }) {
+            notification->close ();
+            notification->deleteLater ();
+        }
+    }
     QQuickView * view { SailfishApp::createView () };
     view->setSource (QUrl { "qrc:///qml/harbour-telegrame.qml" });
     view->show ();

@@ -377,7 +377,7 @@ Page {
                     model: TD_Global.sortedChatsList;
                     delegate: ListItem {
                         id: delegateChat;
-                        visible: (inputFilter.value === "" || chatItem.title.toLowerCase ().indexOf (inputFilter.value) >= 0);
+                        visible: ((chatItem.messagesModel.count > 0 && chatItem.order > 0) && (inputFilter.value === "" || chatItem.title.toLowerCase ().indexOf (inputFilter.value) >= 0));
                         contentHeight: (Theme.iconSizeMedium + Theme.paddingMedium * 2);
                         implicitHeight: (Theme.iconSizeMedium + Theme.paddingMedium * 2);
                         menu: ContextMenu {
@@ -435,16 +435,19 @@ Page {
 
                         function updateNotif () {
                             if (lastMsgItem) {
+                                notification.summary = chatItem.title;
+                                notification.appIcon = avatarChat.url;
+                                notification.icon = avatarChat.url;
                                 notification.body = description;
                                 notification.timestamp = lastMsgItem.date;
                                 notification.itemCount = unreadCount;
                                 if (TD_Global.currentChat !== chatItem && !lastMsgItem.isOutgoing) {
-                                    notification.previewSummary = notification.summary;
-                                    notification.previewBody    = notification.body;
+                                    notification.previewSummary = chatItem.title;
+                                    notification.previewBody = description;
                                 }
                                 else {
                                     notification.previewSummary = "";
-                                    notification.previewBody    = "";
+                                    notification.previewBody = "";
                                 }
                                 if (unreadCount > 0) {
                                     notification.publish ();
@@ -457,17 +460,13 @@ Page {
 
                         Notification {
                             id: notification;
-                            icon: avatarChat.url;
-                            appIcon: avatarChat.url;
                             appName: "Telegra'me";
-                            summary: delegateChat.chatItem.title;
-                            replacesId: delegateChat.chatItem.id;
                             maxContentLines: 3;
                             remoteActions: [
                                 {
                                     "name" : "default",
                                     "displayName ": "Show chat",
-                                    "icon" : avatarChat.url,
+                                    "icon" : "",
                                     "service" : "org.uniqueconception.telegrame",
                                     "path" : "/org/uniqueconception/telegrame",
                                     "iface" : "org.uniqueconception.telegrame",
@@ -578,10 +577,12 @@ Page {
             }
             VerticalScrollDecorator { flickable: parent; }
         }
-        Item {
+        MouseArea {
             id: headerConversations;
-            implicitHeight: layoutHeader.height;
+            implicitHeight: (layoutHeader.height + layoutHeader.anchors.margins * 2);
             ExtraAnchors.topDock: parent;
+            onPressed: { }
+            onReleased: { }
 
             Rectangle {
                 color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
@@ -589,6 +590,8 @@ Page {
             }
             ColumnContainer {
                 id: layoutHeader;
+                spacing: Theme.paddingSmall;
+                anchors.margins: Theme.paddingMedium;
                 ExtraAnchors.topDock: parent;
 
                 RowContainer {
@@ -597,18 +600,27 @@ Page {
                     anchors.rightMargin: Theme.paddingLarge;
                     ExtraAnchors.horizontalFill: parent;
 
-                    GlassItem {
-                        color: {
-                            switch (TD_Global.connectionState ? TD_Global.connectionState.typeOf : -1) {
-                            case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return "red";
-                            case TD_ObjectType.CONNECTION_STATE_CONNECTING:          return "orange";
-                            case TD_ObjectType.CONNECTION_STATE_CONNECTING_TO_PROXY: return "orange";
-                            case TD_ObjectType.CONNECTION_STATE_UPDATING:            return "orange";
-                            case TD_ObjectType.CONNECTION_STATE_READY:               return "lime";
-                            }
-                            return "magenta";
-                        }
+                    Item {
+                        Container.horizontalStretch: 1;
+                    }
+                    Item {
+                        implicitWidth: Theme.iconSizeMedium;
+                        implicitHeight: Theme.iconSizeMedium;
                         anchors.verticalCenter: parent.verticalCenter;
+
+                        GlassItem {
+                            color: {
+                                switch (TD_Global.connectionState ? TD_Global.connectionState.typeOf : -1) {
+                                case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return "red";
+                                case TD_ObjectType.CONNECTION_STATE_CONNECTING:          return "orange";
+                                case TD_ObjectType.CONNECTION_STATE_CONNECTING_TO_PROXY: return "orange";
+                                case TD_ObjectType.CONNECTION_STATE_UPDATING:            return "orange";
+                                case TD_ObjectType.CONNECTION_STATE_READY:               return "lime";
+                                }
+                                return "magenta";
+                            }
+                            anchors.centerIn: parent;
+                        }
                     }
                     LabelFixed {
                         text: qsTr ("Conversations");
@@ -619,15 +631,42 @@ Page {
                             pixelSize: Theme.fontSizeLarge;
                         }
                         anchors.verticalCenter: parent.verticalCenter;
-                        Container.horizontalStretch: 1;
                     }
                 }
-                SearchField {
-                    id: inputFilter;
-                    placeholderText: qsTr ("Filter...");
+                RowContainer {
+                    spacing: Theme.paddingSmall;
+                    anchors.leftMargin: Theme.paddingLarge;
+                    anchors.rightMargin: Theme.paddingLarge;
                     ExtraAnchors.horizontalFill: parent;
 
-                    readonly property string value : text.trim ().toLowerCase ();
+                    Image {
+                        source: "image://theme/icon-m-search";
+                        sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                        anchors.verticalCenter: parent.verticalCenter;
+                    }
+                    TextField {
+                        id: inputFilter;
+                        labelVisible: false;
+                        placeholderText: qsTr ("Filter...");
+                        anchors.verticalCenter: parent.verticalCenter;
+                        Container.horizontalStretch: 1;
+
+                        readonly property string value : text.trim ().toLowerCase ();
+                    }
+                    IconButton {
+                        id: clearButton;
+                        opacity: (inputFilter.text.length > 0 ? 1.0 : 0.0);
+                        implicitWidth: Theme.itemSizeSmall;
+                        implicitHeight: Theme.itemSizeSmall;
+                        icon.source: "image://theme/icon-m-clear";
+                        icon.sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                        anchors.verticalCenter: parent.verticalCenter;
+                        onClicked: {
+                            inputFilter.text = "";
+                        }
+
+                        Behavior on opacity { FadeAnimation { } }
+                    }
                 }
             }
         }

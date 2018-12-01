@@ -889,7 +889,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                 }
             }
             if (!messagesListJson.isEmpty ()) {
-                m_autoPreFetcher->start (0);
+                m_autoPreFetcher->start (850);
             }
             break;
         }
