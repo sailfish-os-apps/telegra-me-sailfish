@@ -357,6 +357,24 @@ void QtTdLibGlobal::markAllMessagesAsRead (QtTdLibChat * chatItem) {
     }
 }
 
+void QtTdLibGlobal::togglePinChat (QtTdLibChat * chatItem) {
+    if (chatItem != Q_NULLPTR) {
+        QJsonArray chatIdsJson { };
+        for (QtTdLibChat * otherChatItem : (* m_chatsList)) {
+            if (otherChatItem != chatItem && otherChatItem->get_isPinned ()) {
+                chatIdsJson.append (otherChatItem->get_id_asJSON ());
+            }
+        }
+        if (!chatItem->get_isPinned ()) {
+            chatIdsJson.append (chatItem->get_id_asJSON ());
+        }
+        send (QJsonObject {
+                  { "@type", "setPinnedChats" },
+                  { "chat_ids", chatIdsJson },
+              });
+    }
+}
+
 void QtTdLibGlobal::loadMoreMessages (QtTdLibChat * chatItem, const int count) {
     if (chatItem != Q_NULLPTR && !chatItem->messagesModel.isEmpty () && count > 0) {
         qWarning () << "LOAD MORE...";
@@ -642,6 +660,10 @@ QString QtTdLibGlobal::stopRecordingAudio (void) {
     else {
         return "";
     }
+}
+
+void QtTdLibGlobal::removeRecording (const QString & path) {
+    QFile::remove (path);
 }
 
 void QtTdLibGlobal::onFrame (const QJsonObject & json) {

@@ -15,7 +15,7 @@ ApplicationWindow {
     id: window;
     cover: compoPageCover;
     initialPage: compoPageMain;
-    allowedOrientations: (Orientation.Portrait | Orientation.PortraitMask);
+    allowedOrientations: Orientation.All;
     onActiveChanged: {
         TD_Global.setUserOnlineState (active);
     }
@@ -37,609 +37,655 @@ ApplicationWindow {
 
     property bool showInputPanel : false;
 
-    readonly property bool active : (Qt.application.state === Qt.ApplicationActive);
+    readonly property bool active      : (Qt.application.state === Qt.ApplicationActive);
+    readonly property bool isPortrait  : (window.orientation === Orientation.Portrait || window.orientation === Orientation.PortraitInverted);
+    readonly property bool isLandscape : (window.orientation === Orientation.Landscape || window.orientation === Orientation.LandscapeInverted);
 
     Item {
-        id: footerChat;
-        implicitHeight: (layoutFooter.height + layoutFooter.anchors.margins * 2);
-        anchors.bottomMargin: (showInputPanel ? 0 : -height);
-        ExtraAnchors.bottomDock: parent;
-
-        Behavior on anchors.bottomMargin { NumberAnimation { duration: 150; } }
-        Rectangle {
-            color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
-            anchors.fill: parent;
+        rotation: {
+            switch (window.orientation) {
+            case Orientation.Portrait:          return 0;
+            case Orientation.Landscape:         return 90;
+            case Orientation.PortraitInverted:  return 180;
+            case Orientation.LandscapeInverted: return 270;
+            }
+            return 0;
         }
-        ColumnContainer {
-            id: layoutFooter;
-            verticalSpacing: 1;
-            anchors.margins: 1;
-            ExtraAnchors.topDock: parent;
+        implicitWidth: (rotation % 180 !== 0 ? parent.height : parent.width);
+        implicitHeight: (rotation % 180 !== 0 ? parent.width : parent.height);
+        anchors.centerIn: parent;
 
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_TEXT);
-                anchors.margins: Theme.paddingSmall;
-                ExtraAnchors.horizontalFill: parent;
-                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
-                onVisibleChanged: {
-                    if (!visible && inputMsg.activeFocus) {
-                        inputMsg.focus = false;
+        MouseArea {
+            id: footerChat;
+            implicitHeight: (layoutFooter.height + layoutFooter.anchors.margins * 2);
+            anchors.bottomMargin: (showInputPanel ? 0 : -height);
+            ExtraAnchors.bottomDock: parent;
+            onPressed: { }
+            onReleased: { }
+
+            Behavior on anchors.bottomMargin { NumberAnimation { duration: 150; } }
+            Rectangle {
+                color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
+                anchors.fill: parent;
+            }
+            ColumnContainer {
+                id: layoutFooter;
+                verticalSpacing: 1;
+                anchors.margins: 1;
+                ExtraAnchors.topDock: parent;
+
+                RowContainer {
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_TEXT);
+                    anchors.margins: Theme.paddingSmall;
+                    ExtraAnchors.horizontalFill: parent;
+                    Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                    onVisibleChanged: {
+                        if (!visible && inputMsg.activeFocus) {
+                            inputMsg.focus = false;
+                        }
+                    }
+
+                    Item {
+                        implicitHeight: Math.min (inputMsg.implicitHeight, Theme.itemSizeLarge * 2);
+                        anchors.bottom: parent.bottom;
+                        anchors.margins: Theme.paddingSmall;
+                        Container.horizontalStretch: 1;
+
+                        TextArea {
+                            id: inputMsg;
+                            labelVisible: false;
+                            placeholderText: qsTr ("Text message");
+                            autoScrollEnabled: true;
+                            anchors.fill: parent;
+                        }
+                    }
+                    RectangleButton {
+                        icon: "icon-m-enter";
+                        enabled: (inputMsg.text.trim () !== "");
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        anchors.bottom: parent.bottom;
+                        anchors.margins: Theme.paddingSmall;
+                        onClicked: {
+                            var tmp = inputMsg.text.trim ();
+                            if (tmp !== "") {
+                                TD_Global.sendMessageText (TD_Global.currentChat, tmp);
+                                TD_Global.autoScrollDownRequested (true);
+                            }
+                            inputMsg.text = "";
+                        }
                     }
                 }
-
-                Item {
-                    implicitHeight: Math.min (inputMsg.implicitHeight, Theme.itemSizeLarge * 2);
-                    anchors.bottom: parent.bottom;
+                RowContainer {
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_PHOTO);
+                    spacing: Theme.paddingMedium;
                     anchors.margins: Theme.paddingSmall;
-                    Container.horizontalStretch: 1;
+                    Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                    ExtraAnchors.horizontalFill: parent;
 
-                    TextArea {
-                        id: inputMsg;
-                        labelVisible: false;
-                        placeholderText: qsTr ("Text message");
-                        autoScrollEnabled: true;
+                    LabelFixed {
+                        text: (TD_Global.selectedPhotosCount > 0
+                               ? (groupImagesInAlbums
+                                  ? qsTr ("Send %1 images as an album").arg (TD_Global.selectedPhotosCount)
+                                  : qsTr ("Send %1 images separately").arg (TD_Global.selectedPhotosCount))
+                               : qsTr ("No image selected"));
+                        color: (TD_Global.selectedPhotosCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
+                        anchors.verticalCenter: parent.verticalCenter;
+                        Container.horizontalStretch: 1;
+                    }
+                    RectangleButton {
+                        icon: "icon-m-levels";
+                        active: groupImagesInAlbums;
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        anchors.verticalCenter: parent.verticalCenter;
+                        onClicked: {
+                            groupImagesInAlbums = !groupImagesInAlbums;
+                        }
+                    }
+                    RectangleButton {
+                        icon: "icon-m-enter";
+                        enabled: (TD_Global.selectedPhotosCount > 0);
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        anchors.verticalCenter: parent.verticalCenter;
+                        onClicked: {
+                            if (TD_Global.selectedPhotosCount > 0) {
+                                TD_Global.sendMessagePhoto (TD_Global.currentChat, groupImagesInAlbums);
+                                TD_Global.unselectAllPhotos ();
+                                TD_Global.autoScrollDownRequested (true);
+                            }
+                        }
+                    }
+                }
+                RowContainer {
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_PHOTO);
+                    anchors.margins: 1;
+                    ExtraAnchors.horizontalFill: parent;
+                    Container.forcedHeight: (isPortrait ? Theme.itemSizeHuge * 2 : Theme.itemSizeHuge * 1.35);
+
+                    SilicaGridView {
+                        clip: true;
+                        cellWidth: (isPortrait ? width / 4 : width / 7);
+                        cellHeight: cellWidth;
+                        quickScroll: true;
                         anchors.fill: parent;
-                    }
-                }
-                RectangleButton {
-                    icon: "icon-m-enter";
-                    size: Theme.iconSizeMedium;
-                    enabled: (inputMsg.text.trim () !== "");
-                    implicitWidth: Theme.itemSizeSmall;
-                    implicitHeight: Theme.itemSizeSmall;
-                    anchors.bottom: parent.bottom;
-                    anchors.margins: Theme.paddingSmall;
-                    onClicked: {
-                        var tmp = inputMsg.text.trim ();
-                        if (tmp !== "") {
-                            TD_Global.sendMessageText (TD_Global.currentChat, tmp);
-                            TD_Global.autoScrollDownRequested (true);
+                        model: DocumentGalleryModel {
+                            id: galleryModel;
+                            rootType: DocumentGallery.Image;
+                            properties: ["url", "filePath", "dateTaken", "mimeType", "width", "height"];
+                            autoUpdate: true;
+                            sortProperties: ["-dateTaken"];
                         }
-                        inputMsg.text = "";
-                    }
-                }
-            }
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_PHOTO);
-                spacing: Theme.paddingMedium;
-                anchors.margins: Theme.paddingSmall;
-                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
-                ExtraAnchors.horizontalFill: parent;
-
-                LabelFixed {
-                    text: (TD_Global.selectedPhotosCount > 0
-                           ? (groupImagesInAlbums
-                              ? qsTr ("Send %1 images as an album").arg (TD_Global.selectedPhotosCount)
-                              : qsTr ("Send %1 images separately").arg (TD_Global.selectedPhotosCount))
-                           : qsTr ("No image selected"));
-                    color: (TD_Global.selectedPhotosCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
-                    anchors.verticalCenter: parent.verticalCenter;
-                    Container.horizontalStretch: 1;
-                }
-                RectangleButton {
-                    icon: "icon-m-levels";
-                    size: Theme.iconSizeMedium;
-                    active: groupImagesInAlbums;
-                    implicitWidth: Theme.itemSizeSmall;
-                    implicitHeight: Theme.itemSizeSmall;
-                    anchors.verticalCenter: parent.verticalCenter;
-                    onClicked: {
-                        groupImagesInAlbums = !groupImagesInAlbums;
-                    }
-                }
-                RectangleButton {
-                    icon: "icon-m-enter";
-                    size: Theme.iconSizeMedium;
-                    enabled: (TD_Global.selectedPhotosCount > 0);
-                    implicitWidth: Theme.itemSizeSmall;
-                    implicitHeight: Theme.itemSizeSmall;
-                    anchors.verticalCenter: parent.verticalCenter;
-                    onClicked: {
-                        if (TD_Global.selectedPhotosCount > 0) {
-                            TD_Global.sendMessagePhoto (TD_Global.currentChat, groupImagesInAlbums);
-                            TD_Global.unselectAllPhotos ();
-                            TD_Global.autoScrollDownRequested (true);
-                        }
-                    }
-                }
-            }
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_PHOTO);
-                anchors.margins: 1;
-                ExtraAnchors.horizontalFill: parent;
-                Container.forcedHeight: (Theme.itemSizeHuge * 2);
-
-                SilicaGridView {
-                    clip: true;
-                    cellWidth: (width / 4);
-                    cellHeight: cellWidth;
-                    quickScroll: true;
-                    anchors.fill: parent;
-                    model: DocumentGalleryModel {
-                        id: galleryModel;
-                        rootType: DocumentGallery.Image;
-                        properties: ["url", "filePath", "dateTaken", "mimeType", "width", "height"];
-                        autoUpdate: true;
-                        sortProperties: ["-dateTaken"];
-                    }
-                    delegate: MouseArea {
-                        id: delegatePhoto;
-                        implicitWidth: GridView.view.cellWidth;
-                        implicitHeight: GridView.view.cellHeight;
-                        onClicked: {
-                            if (selected) {
-                                TD_Global.deselectPhoto (model.filePath);
-                            }
-                            else {
-                                TD_Global.selectPhoto (model.filePath, model.width, model.height);
-                            }
-                        }
-
-                        readonly property bool selected : (TD_Global.selectedPhotosCount > 0 && TD_Global.isPhotoSelected (model.filePath));
-
-                        Image {
-                            cache: false;
-                            source: ("image://nemoThumbnail/" + model.url);
-                            fillMode: Image.PreserveAspectCrop;
-                            sourceSize: Qt.size (width, height);
-                            asynchronous: true;
-                            anchors.fill: parent;
-                            anchors.margins: 1;
-
-                            Rectangle {
-                                color: "transparent";
-                                visible: delegatePhoto.selected;
-                                border {
-                                    width: 3;
-                                    color: Theme.highlightColor;
+                        delegate: MouseArea {
+                            id: delegatePhoto;
+                            implicitWidth: GridView.view.cellWidth;
+                            implicitHeight: GridView.view.cellHeight;
+                            onClicked: {
+                                if (selected) {
+                                    TD_Global.deselectPhoto (model.filePath);
                                 }
-                                anchors.fill: parent;
+                                else {
+                                    TD_Global.selectPhoto (model.filePath, model.width, model.height);
+                                }
                             }
-                        }
-                    }
 
-                    VerticalScrollDecorator { flickable: parent; }
-                }
-            }
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_VIDEO);
-                spacing: Theme.paddingMedium;
-                anchors.margins: Theme.paddingSmall;
-                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
-                ExtraAnchors.horizontalFill: parent;
+                            readonly property bool selected : (TD_Global.selectedPhotosCount > 0 && TD_Global.isPhotoSelected (model.filePath));
 
-                LabelFixed {
-                    text: (TD_Global.selectedVideosCount > 0
-                           ? (groupVideosInAlbums
-                              ? qsTr ("Send %1 videos as an album").arg (TD_Global.selectedVideosCount)
-                              : qsTr ("Send %1 videos separately").arg (TD_Global.selectedVideosCount))
-                           : qsTr ("No video selected"));
-                    color: (TD_Global.selectedVideosCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
-                    anchors.verticalCenter: parent.verticalCenter;
-                    Container.horizontalStretch: 1;
-                }
-                RectangleButton {
-                    icon: "icon-m-levels";
-                    size: Theme.iconSizeMedium;
-                    active: groupVideosInAlbums;
-                    implicitWidth: Theme.itemSizeSmall;
-                    implicitHeight: Theme.itemSizeSmall;
-                    anchors.verticalCenter: parent.verticalCenter;
-                    onClicked: {
-                        groupVideosInAlbums = !groupVideosInAlbums;
-                    }
-                }
-                RectangleButton {
-                    icon: "icon-m-enter";
-                    size: Theme.iconSizeMedium;
-                    enabled: (TD_Global.selectedVideosCount > 0);
-                    implicitWidth: Theme.itemSizeSmall;
-                    implicitHeight: Theme.itemSizeSmall;
-                    anchors.verticalCenter: parent.verticalCenter;
-                    onClicked: {
-                        if (TD_Global.selectedVideosCount > 0) {
-                            TD_Global.sendMessageVideo (TD_Global.currentChat, groupVideosInAlbums);
-                            TD_Global.unselectAllVideos ();
-                            TD_Global.autoScrollDownRequested (true);
-                        }
-                    }
-                }
-            }
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_VIDEO);
-                anchors.margins: 1;
-                ExtraAnchors.horizontalFill: parent;
-                Container.forcedHeight: (Theme.itemSizeHuge * 2);
-
-                SilicaGridView {
-                    clip: true;
-                    cellWidth: (width / 4);
-                    cellHeight: cellWidth;
-                    quickScroll: true;
-                    anchors.fill: parent;
-                    model: DocumentGalleryModel {
-                        id: galleryModelVideo;
-                        rootType: DocumentGallery.Video;
-                        properties: ["url", "filePath", "dateTaken", "mimeType", "width", "height", "duration"];
-                        autoUpdate: true;
-                        sortProperties: ["-dateTaken"];
-                    }
-                    delegate: MouseArea {
-                        id: delegateVideoSelect;
-                        implicitWidth: GridView.view.cellWidth;
-                        implicitHeight: GridView.view.cellHeight;
-                        onClicked: {
-                            if (selected) {
-                                TD_Global.deselectVideo (model.filePath);
-                            }
-                            else {
-                                TD_Global.selectVideo (model.filePath, model.width, model.height, model.duration);
-                            }
-                        }
-
-                        readonly property bool selected : (TD_Global.selectedVideosCount > 0 && TD_Global.isVideoSelected (model.filePath));
-
-                        Rectangle {
-                            color: Theme.secondaryColor;
-                            anchors.fill: parent;
-                            anchors.margins: 1;
-
-                            Thumbnail {
-                                source: model.url;
-                                mimeType: model.mimeType;
-                                fillMode: Thumbnail.PreserveAspectCrop;
+                            Image {
+                                cache: false;
+                                source: ("image://nemoThumbnail/" + model.url);
+                                fillMode: Image.PreserveAspectCrop;
                                 sourceSize: Qt.size (width, height);
+                                asynchronous: true;
                                 anchors.fill: parent;
-                            }
-                            Rectangle {
-                                color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.65);
-                                implicitHeight: (layoutVideoInfo.height + layoutVideoInfo.anchors.margins * 2);
-                                ExtraAnchors.bottomDock: parent;
+                                anchors.margins: 1;
 
-                                RowContainer {
-                                    id: layoutVideoInfo;
-                                    spacing: Theme.paddingMedium;
-                                    anchors.margins: Theme.paddingSmall;
+                                Rectangle {
+                                    color: "transparent";
+                                    visible: delegatePhoto.selected;
+                                    border {
+                                        width: 3;
+                                        color: Theme.highlightColor;
+                                    }
+                                    anchors.fill: parent;
+                                }
+                            }
+                        }
+
+                        VerticalScrollDecorator { flickable: parent; }
+                    }
+                }
+                RowContainer {
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_VIDEO);
+                    spacing: Theme.paddingMedium;
+                    anchors.margins: Theme.paddingSmall;
+                    Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                    ExtraAnchors.horizontalFill: parent;
+
+                    LabelFixed {
+                        text: (TD_Global.selectedVideosCount > 0
+                               ? (groupVideosInAlbums
+                                  ? qsTr ("Send %1 videos as an album").arg (TD_Global.selectedVideosCount)
+                                  : qsTr ("Send %1 videos separately").arg (TD_Global.selectedVideosCount))
+                               : qsTr ("No video selected"));
+                        color: (TD_Global.selectedVideosCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
+                        anchors.verticalCenter: parent.verticalCenter;
+                        Container.horizontalStretch: 1;
+                    }
+                    RectangleButton {
+                        icon: "icon-m-levels";
+                        active: groupVideosInAlbums;
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        anchors.verticalCenter: parent.verticalCenter;
+                        onClicked: {
+                            groupVideosInAlbums = !groupVideosInAlbums;
+                        }
+                    }
+                    RectangleButton {
+                        icon: "icon-m-enter";
+                        enabled: (TD_Global.selectedVideosCount > 0);
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        anchors.verticalCenter: parent.verticalCenter;
+                        onClicked: {
+                            if (TD_Global.selectedVideosCount > 0) {
+                                TD_Global.sendMessageVideo (TD_Global.currentChat, groupVideosInAlbums);
+                                TD_Global.unselectAllVideos ();
+                                TD_Global.autoScrollDownRequested (true);
+                            }
+                        }
+                    }
+                }
+                RowContainer {
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_VIDEO);
+                    anchors.margins: 1;
+                    ExtraAnchors.horizontalFill: parent;
+                    Container.forcedHeight: (isPortrait ? Theme.itemSizeHuge * 2 : Theme.itemSizeHuge * 1.35);
+
+                    SilicaGridView {
+                        clip: true;
+                        cellWidth: (isPortrait ? width / 4 : width / 7);
+                        cellHeight: cellWidth;
+                        quickScroll: true;
+                        anchors.fill: parent;
+                        model: DocumentGalleryModel {
+                            id: galleryModelVideo;
+                            rootType: DocumentGallery.Video;
+                            properties: ["url", "filePath", "dateTaken", "mimeType", "width", "height", "duration"];
+                            autoUpdate: true;
+                            sortProperties: ["-dateTaken"];
+                        }
+                        delegate: MouseArea {
+                            id: delegateVideoSelect;
+                            implicitWidth: GridView.view.cellWidth;
+                            implicitHeight: GridView.view.cellHeight;
+                            onClicked: {
+                                if (selected) {
+                                    TD_Global.deselectVideo (model.filePath);
+                                }
+                                else {
+                                    TD_Global.selectVideo (model.filePath, model.width, model.height, model.duration);
+                                }
+                            }
+
+                            readonly property bool selected : (TD_Global.selectedVideosCount > 0 && TD_Global.isVideoSelected (model.filePath));
+
+                            Rectangle {
+                                color: Theme.secondaryColor;
+                                anchors.fill: parent;
+                                anchors.margins: 1;
+
+                                Thumbnail {
+                                    source: model.url;
+                                    mimeType: model.mimeType;
+                                    fillMode: Thumbnail.PreserveAspectCrop;
+                                    sourceSize: Qt.size (width, height);
+                                    anchors.fill: parent;
+                                }
+                                Rectangle {
+                                    color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.65);
+                                    implicitHeight: (layoutVideoInfo.height + layoutVideoInfo.anchors.margins * 2);
                                     ExtraAnchors.bottomDock: parent;
 
-                                    Image {
-                                        source: "image://theme/icon-m-video?%1".arg (Theme.primaryColor);
-                                        sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
-                                        anchors.verticalCenter: parent.verticalCenter;
-                                    }
-                                    LabelFixed {
-                                        text: TD_Global.formatTime (model.duration * 1000, true);
-                                        color: Theme.primaryColor;
-                                        font.pixelSize: Theme.fontSizeExtraSmall;
-                                        anchors.verticalCenter: parent.verticalCenter;
+                                    RowContainer {
+                                        id: layoutVideoInfo;
+                                        spacing: Theme.paddingMedium;
+                                        anchors.margins: Theme.paddingSmall;
+                                        ExtraAnchors.bottomDock: parent;
+
+                                        Image {
+                                            source: "image://theme/icon-m-video?%1".arg (Theme.primaryColor);
+                                            sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
+                                            anchors.verticalCenter: parent.verticalCenter;
+                                        }
+                                        LabelFixed {
+                                            text: TD_Global.formatTime (model.duration * 1000, true);
+                                            color: Theme.primaryColor;
+                                            font.pixelSize: Theme.fontSizeExtraSmall;
+                                            anchors.verticalCenter: parent.verticalCenter;
+                                        }
                                     }
                                 }
-                            }
-                            Rectangle {
-                                color: "transparent";
-                                visible: delegateVideoSelect.selected;
-                                border {
-                                    width: 3;
-                                    color: Theme.highlightColor;
+                                Rectangle {
+                                    color: "transparent";
+                                    visible: delegateVideoSelect.selected;
+                                    border {
+                                        width: 3;
+                                        color: Theme.highlightColor;
+                                    }
+                                    anchors.fill: parent;
                                 }
-                                anchors.fill: parent;
                             }
                         }
-                    }
 
-                    VerticalScrollDecorator { flickable: parent; }
-                }
-            }
-            SilicaGridView {
-                clip: true;
-                model: (currentStickerSet ? currentStickerSet.stickers : 0);
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_STICKER);
-                cellWidth: (width / Math.floor (width / (Theme.iconSizeLarge + Theme.paddingSmall * 2)));
-                cellHeight: cellWidth;
-                quickScroll: true;
-                delegate: MouseArea {
-                    id: delegateSelectorSticker;
-                    implicitWidth: GridView.view.cellWidth;
-                    implicitHeight: GridView.view.cellHeight;
-                    onClicked: {
-                        TD_Global.sendMessageSticker (TD_Global.currentChat, stickerItem);
-                        TD_Global.autoScrollDownRequested (true);
-                    }
-
-                    readonly property TD_Sticker stickerItem : modelData;
-
-                    HelperFileState {
-                        id: helperSelectorStickerFile;
-                        fileItem: (delegateSelectorSticker.stickerItem ? delegateSelectorSticker.stickerItem.sticker : null);
-                        autoDownload: true;
-                    }
-                    Image {
-                        cache: true;
-                        source: helperSelectorStickerFile.url;
-                        fillMode: Image.PreserveAspectFit;
-                        sourceSize: Qt.size (Theme.iconSizeLarge, Theme.iconSizeLarge);
-                        asynchronous: true;
-                        verticalAlignment: Image.AlignVCenter;
-                        horizontalAlignment: Image.AlignHCenter;
-                        anchors.centerIn: parent;
-                    }
-                    ProgressCircle {
-                        value: helperSelectorStickerFile.progress;
-                        visible: helperSelectorStickerFile.downloading;
-                        implicitWidth: BusyIndicatorSize.Medium;
-                        implicitHeight: BusyIndicatorSize.Medium;
-                        anchors.centerIn: parent;
+                        VerticalScrollDecorator { flickable: parent; }
                     }
                 }
-                ExtraAnchors.horizontalFill: parent;
-                Container.forcedHeight: (Theme.itemSizeHuge * 1.65);
-            }
-            SilicaListView {
-                model: TD_Global.stickerSetsList;
-                spacing: 1;
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_STICKER);
-                orientation: ListView.Horizontal;
-                delegate: MouseArea {
-                    id: delegateSelectorStickerSet;
-                    implicitWidth: height;
-                    ExtraAnchors.verticalFill: parent;
-                    onClicked: {
-                        currentStickerSet = stickerSetItem;
-                    }
-
-                    readonly property TD_StickerSet stickerSetItem : modelData;
-                    readonly property TD_Sticker    coverItem      : (stickerSetItem && stickerSetItem.covers.count >= 1 ? stickerSetItem.covers.getFirst () : null);
-
-                    readonly property bool active : (currentStickerSet === stickerSetItem);
-
-                    HelperFileState {
-                        id: helperSelectorStickerSetFile;
-                        fileItem: (delegateSelectorStickerSet.coverItem ? delegateSelectorStickerSet.coverItem.sticker : null);
-                        autoDownload: true;
-                    }
-                    Rectangle {
-                        color: (delegateSelectorStickerSet.active || pressed ? Theme.highlightColor : Theme.primaryColor);
-                        opacity: (delegateSelectorStickerSet.active ? 0.35 : 0.15);
-                        anchors.fill: parent;
-                    }
-                    Image {
-                        cache: true;
-                        source: helperSelectorStickerSetFile.url;
-                        fillMode: Image.PreserveAspectFit;
-                        sourceSize: Qt.size (Theme.iconSizeMedium * 0.85, Theme.iconSizeMedium * 0.85);
-                        asynchronous: true;
-                        verticalAlignment: Image.AlignVCenter;
-                        horizontalAlignment: Image.AlignHCenter;
-                        anchors.centerIn: parent;
-                    }
-                    ProgressCircle {
-                        value: helperSelectorStickerSetFile.progress;
-                        visible: helperSelectorStickerSetFile.downloading;
-                        implicitWidth: BusyIndicatorSize.Small;
-                        implicitHeight: BusyIndicatorSize.Small;
-                        anchors.centerIn: parent;
-                    }
-                }
-                ExtraAnchors.horizontalFill: parent;
-                Container.forcedHeight: (Theme.iconSizeMedium * 1.15);
-            }
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_DOCUMENT);
-                spacing: Theme.paddingMedium;
-                anchors.margins: Theme.paddingSmall;
-                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
-                ExtraAnchors.horizontalFill: parent;
-
-                RectangleButton {
-                    icon: "icon-m-back";
-                    enabled: (modelDocuments.parentFolder !== "file:///");
-                    anchors.verticalCenter: parent.verticalCenter;
-                    onClicked: {
-                        modelDocuments.folder = modelDocuments.parentFolder;
-                    }
-                }
-                LabelFixed {
-                    text: TD_Global.localPathFromUrl (modelDocuments.folder);
-                    elide: Text.ElideLeft;
-                    color: Theme.highlightColor;
-                    font.pixelSize: Theme.fontSizeSmall;
-                    anchors.verticalCenter: parent.verticalCenter;
-                    Container.horizontalStretch: 1;
-                }
-            }
-            SilicaListView {
-                clip: true;
-                spacing: 1;
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_DOCUMENT);
-                orientation: ListView.Vertical;
-                model: FolderListModel {
-                    id: modelDocuments;
-                    folder: "file:///home/nemo";
-                    rootFolder: "file:///";
-                    showDirs: true;
-                    showDirsFirst: true;
-                    showDotAndDotDot: false;
-                    showFiles: true;
-                    showHidden: false;
-                    sortReversed: false;
-                    sortField: FolderListModel.Name;
-                }
-                delegate: MouseArea {
-                    id: delegateSelectorDocument;
-                    implicitHeight: (layoutDocument.height + Theme.paddingSmall * 2);
-                    ExtraAnchors.horizontalFill: parent;
-                    onClicked: {
-                        if (model.fileIsDir) {
-                            modelDocuments.folder = model.fileURL;
+                SilicaGridView {
+                    clip: true;
+                    model: (currentStickerSet ? currentStickerSet.stickers : 0);
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_STICKER);
+                    cellWidth: (width / Math.floor (width / (Theme.iconSizeLarge + Theme.paddingSmall * 2)));
+                    cellHeight: cellWidth;
+                    quickScroll: true;
+                    delegate: MouseArea {
+                        id: delegateSelectorSticker;
+                        implicitWidth: GridView.view.cellWidth;
+                        implicitHeight: GridView.view.cellHeight;
+                        onClicked: {
+                            TD_Global.sendMessageSticker (TD_Global.currentChat, stickerItem);
+                            TD_Global.autoScrollDownRequested (true);
                         }
-                        else {
-                            TD_Global.sendMessageDocument (TD_Global.currentChat, model.filePath);
-                        }
-                    }
 
-                    Rectangle {
-                        color: Theme.highlightColor;
-                        opacity: 0.15;
-                        visible: parent.pressed;
-                        anchors.fill: parent;
-                    }
-                    RowContainer {
-                        id: layoutDocument;
-                        spacing: Theme.paddingMedium;
-                        anchors {
-                            margins: Theme.paddingMedium;
-                            verticalCenter: parent.verticalCenter;
-                        }
-                        ExtraAnchors.horizontalFill: parent;
+                        readonly property TD_Sticker stickerItem : modelData;
 
+                        HelperFileState {
+                            id: helperSelectorStickerFile;
+                            fileItem: (delegateSelectorSticker.stickerItem ? delegateSelectorSticker.stickerItem.sticker : null);
+                            autoDownload: true;
+                        }
                         Image {
-                            source: "qrc:///symbols/filetypes/%1.svg".arg (model.fileIsDir ? "folder-closed" : TD_Global.getSvgIconForMimeType (mimeType));
-                            sourceSize: Qt.size (Theme.iconSizeMedium * 0.85, Theme.iconSizeMedium * 0.85);
-                            anchors.verticalCenter: parent.verticalCenter;
-
-                            readonly property string mimeType : TD_Global.getMimeTypeForPath (model.filePath);
+                            cache: true;
+                            source: helperSelectorStickerFile.url;
+                            fillMode: Image.PreserveAspectFit;
+                            sourceSize: Qt.size (Theme.iconSizeLarge, Theme.iconSizeLarge);
+                            asynchronous: true;
+                            verticalAlignment: Image.AlignVCenter;
+                            horizontalAlignment: Image.AlignHCenter;
+                            anchors.centerIn: parent;
                         }
-                        ColumnContainer {
-                            Container.horizontalStretch: 1;
+                        ProgressCircle {
+                            value: helperSelectorStickerFile.progress;
+                            visible: helperSelectorStickerFile.downloading;
+                            implicitWidth: BusyIndicatorSize.Medium;
+                            implicitHeight: BusyIndicatorSize.Medium;
+                            anchors.centerIn: parent;
+                        }
+                    }
+                    ExtraAnchors.horizontalFill: parent;
+                    Container.forcedHeight: (isPortrait ? Theme.itemSizeHuge * 1.65 : Theme.itemSizeHuge * 1.15);
+                }
+                SilicaListView {
+                    model: TD_Global.stickerSetsList;
+                    spacing: 1;
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_STICKER);
+                    orientation: ListView.Horizontal;
+                    delegate: MouseArea {
+                        id: delegateSelectorStickerSet;
+                        implicitWidth: height;
+                        ExtraAnchors.verticalFill: parent;
+                        onClicked: {
+                            currentStickerSet = stickerSetItem;
+                        }
 
-                            LabelFixed {
-                                text: model.fileName;
-                                elide: Text.ElideMiddle;
-                                ExtraAnchors.horizontalFill: parent;
+                        readonly property TD_StickerSet stickerSetItem : modelData;
+                        readonly property TD_Sticker    coverItem      : (stickerSetItem && stickerSetItem.covers.count >= 1 ? stickerSetItem.covers.getFirst () : null);
+
+                        readonly property bool active : (currentStickerSet === stickerSetItem);
+
+                        HelperFileState {
+                            id: helperSelectorStickerSetFile;
+                            fileItem: (delegateSelectorStickerSet.coverItem ? delegateSelectorStickerSet.coverItem.sticker : null);
+                            autoDownload: true;
+                        }
+                        Rectangle {
+                            color: (delegateSelectorStickerSet.active || pressed ? Theme.highlightColor : Theme.primaryColor);
+                            opacity: (delegateSelectorStickerSet.active ? 0.35 : 0.15);
+                            anchors.fill: parent;
+                        }
+                        Image {
+                            cache: true;
+                            source: helperSelectorStickerSetFile.url;
+                            fillMode: Image.PreserveAspectFit;
+                            sourceSize: Qt.size (Theme.iconSizeMedium * 0.85, Theme.iconSizeMedium * 0.85);
+                            asynchronous: true;
+                            verticalAlignment: Image.AlignVCenter;
+                            horizontalAlignment: Image.AlignHCenter;
+                            anchors.centerIn: parent;
+                        }
+                        ProgressCircle {
+                            value: helperSelectorStickerSetFile.progress;
+                            visible: helperSelectorStickerSetFile.downloading;
+                            implicitWidth: BusyIndicatorSize.Small;
+                            implicitHeight: BusyIndicatorSize.Small;
+                            anchors.centerIn: parent;
+                        }
+                    }
+                    ExtraAnchors.horizontalFill: parent;
+                    Container.forcedHeight: (Theme.iconSizeMedium * 1.15);
+                }
+                RowContainer {
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_DOCUMENT);
+                    spacing: Theme.paddingMedium;
+                    anchors.margins: Theme.paddingSmall;
+                    Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                    ExtraAnchors.horizontalFill: parent;
+
+                    RectangleButton {
+                        icon: "icon-m-back";
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        enabled: (modelDocuments.parentFolder !== "file:///");
+                        anchors.verticalCenter: parent.verticalCenter;
+                        onClicked: {
+                            modelDocuments.folder = modelDocuments.parentFolder;
+                        }
+                    }
+                    LabelFixed {
+                        text: TD_Global.localPathFromUrl (modelDocuments.folder);
+                        elide: Text.ElideLeft;
+                        color: Theme.highlightColor;
+                        font.pixelSize: Theme.fontSizeSmall;
+                        anchors.verticalCenter: parent.verticalCenter;
+                        Container.horizontalStretch: 1;
+                    }
+                }
+                SilicaListView {
+                    clip: true;
+                    spacing: 1;
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_DOCUMENT);
+                    orientation: ListView.Vertical;
+                    model: FolderListModel {
+                        id: modelDocuments;
+                        folder: "file:///home/nemo";
+                        rootFolder: "file:///";
+                        showDirs: true;
+                        showDirsFirst: true;
+                        showDotAndDotDot: false;
+                        showFiles: true;
+                        showHidden: false;
+                        sortReversed: false;
+                        sortField: FolderListModel.Name;
+                    }
+                    delegate: MouseArea {
+                        id: delegateSelectorDocument;
+                        implicitHeight: (layoutDocument.height + Theme.paddingSmall * 2);
+                        ExtraAnchors.horizontalFill: parent;
+                        onClicked: {
+                            if (model.fileIsDir) {
+                                modelDocuments.folder = model.fileURL;
                             }
-                            LabelFixed {
-                                text: TD_Global.formatSize (model.fileSize);
-                                color: Theme.secondaryColor;
-                                visible: !model.fileIsDir;
-                                font.pixelSize: Theme.fontSizeExtraSmall;
-                                ExtraAnchors.horizontalFill: parent;
+                            else {
+                                TD_Global.sendMessageDocument (TD_Global.currentChat, model.filePath);
+                            }
+                        }
+
+                        Rectangle {
+                            color: Theme.highlightColor;
+                            opacity: 0.15;
+                            visible: parent.pressed;
+                            anchors.fill: parent;
+                        }
+                        RowContainer {
+                            id: layoutDocument;
+                            spacing: Theme.paddingMedium;
+                            anchors {
+                                margins: Theme.paddingMedium;
+                                verticalCenter: parent.verticalCenter;
+                            }
+                            ExtraAnchors.horizontalFill: parent;
+
+                            Image {
+                                source: "qrc:///symbols/filetypes/%1.svg".arg (model.fileIsDir ? "folder-closed" : TD_Global.getSvgIconForMimeType (mimeType));
+                                sourceSize: Qt.size (Theme.iconSizeMedium * 0.85, Theme.iconSizeMedium * 0.85);
+                                anchors.verticalCenter: parent.verticalCenter;
+
+                                readonly property string mimeType : TD_Global.getMimeTypeForPath (model.filePath);
+                            }
+                            ColumnContainer {
+                                Container.horizontalStretch: 1;
+
+                                LabelFixed {
+                                    text: model.fileName;
+                                    elide: Text.ElideMiddle;
+                                    ExtraAnchors.horizontalFill: parent;
+                                }
+                                LabelFixed {
+                                    text: TD_Global.formatSize (model.fileSize);
+                                    color: Theme.secondaryColor;
+                                    visible: !model.fileIsDir;
+                                    font.pixelSize: Theme.fontSizeExtraSmall;
+                                    ExtraAnchors.horizontalFill: parent;
+                                }
                             }
                         }
                     }
+                    ExtraAnchors.horizontalFill: parent;
+                    Container.forcedHeight: (isPortrait ? Theme.iconSizeExtraLarge * 2 : Theme.iconSizeExtraLarge * 1.35);
                 }
-                ExtraAnchors.horizontalFill: parent;
-                Container.forcedHeight: (Theme.iconSizeExtraLarge * 2);
-            }
-            RowContainer {
-                visible: (currentMsgType === TD_ObjectType.MESSAGE_VOICE_NOTE);
-                spacing: Theme.paddingMedium;
-                anchors.margins: Theme.paddingSmall;
-                Container.forcedHeight: (implicitHeight + anchors.margins * 2);
-                ExtraAnchors.horizontalFill: parent;
+                RowContainer {
+                    visible: (currentMsgType === TD_ObjectType.MESSAGE_VOICE_NOTE);
+                    spacing: Theme.paddingMedium;
+                    anchors.margins: Theme.paddingSmall;
+                    Container.forcedHeight: (implicitHeight + anchors.margins * 2);
+                    ExtraAnchors.horizontalFill: parent;
 
-                RectangleButton {
-                    id: btnRecord;
-                    icon: "icon-m-call-recording-on";
-                    enabled: !btnReplay.active;
-                    anchors.verticalCenter: parent.verticalCenter;
-                    onPressed: {
-                        active = TD_Global.startRecordingAudio ();
-                        if (active) {
+                    RectangleButton {
+                        id: btnRecord;
+                        icon: "icon-m-call-recording-on";
+                        enabled: !btnReplay.active;
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        anchors.verticalCenter: parent.verticalCenter;
+                        onPressed: {
+                            active = TD_Global.startRecordingAudio ();
+                            if (active) {
+                                currentRecording = "";
+                            }
+                            console.log ("RECORDING STARTED", active);
+                        }
+                        onReleased: {
+                            if (active) {
+                                active = false;
+                                currentRecording = TD_Global.stopRecordingAudio ();
+                                console.log ("RECORDING STOPPED", currentRecording);
+                            }
+                        }
+                    }
+                    RectangleButton {
+                        id: btnReplay;
+                        icon: "icon-m-play";
+                        active: (playerRecording.playbackState === MediaPlayer.PlayingState);
+                        enabled: (currentRecording !== "");
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        anchors.verticalCenter: parent.verticalCenter;
+                        onClicked: {
+                            if (playerRecording.playbackState !== MediaPlayer.PlayingState) {
+                                playerRecording.source = TD_Global.urlFromLocalPath (currentRecording);
+                                playerRecording.seek (0);
+                                playerRecording.play ();
+                            }
+                            else {
+                                playerRecording.stop ();
+                                playerRecording.source = "";
+                            }
+                        }
+
+                        MediaPlayer {
+                            id: playerRecording;
+                            autoLoad: true;
+                            autoPlay: true;
+                            onPlaybackStateChanged: {
+                                if (playbackState === MediaPlayer.StoppedState) {
+                                    source = "";
+                                }
+                            }
+                        }
+                    }
+                    RectangleButton {
+                        id: btnReset;
+                        icon: "icon-m-delete";
+                        enabled: (currentRecording !== "" && !btnRecord.active && !btnReplay.active);
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        anchors.verticalCenter: parent.verticalCenter;
+                        onClicked: {
+                            TD_Global.removeRecording (currentRecording);
                             currentRecording = "";
                         }
-                        console.log ("RECORDING STARTED", active);
                     }
-                    onReleased: {
-                        if (active) {
-                            active = false;
-                            currentRecording = TD_Global.stopRecordingAudio ();
-                            console.log ("RECORDING STOPPED", currentRecording);
-                        }
+                    LabelFixed {
+                        text: (btnRecord.active
+                               ? qsTr ("Recording (%1)").arg (TD_Global.formatTime (TD_Global.recordingDuration, false))
+                               : (currentRecording !== ""
+                                  ? ((playerRecording.playbackState === MediaPlayer.PlayingState)
+                                     ? qsTr ("Replaying (%1/%2)").arg (TD_Global.formatTime (playerRecording.position, false)).arg (TD_Global.formatTime (playerRecording.duration, false))
+                                     : qsTr ("Send recording (%1)").arg (TD_Global.formatTime (TD_Global.recordingDuration, false)))
+                                  : qsTr ("Idle")));
+                        color: ((btnRecord.active || btnReplay.active)
+                                ? Theme.highlightColor
+                                : (currentRecording !== ""
+                                   ? Theme.primaryColor
+                                   : Theme.secondaryColor));
+                        anchors.verticalCenter: parent.verticalCenter;
+                        Container.horizontalStretch: 1;
                     }
-                }
-                RectangleButton {
-                    id: btnReplay;
-                    icon: "icon-m-play";
-                    active: (playerRecording.playbackState === MediaPlayer.PlayingState);
-                    enabled: (currentRecording !== "");
-                    anchors.verticalCenter: parent.verticalCenter;
-                    onClicked: {
-                        if (playerRecording.playbackState !== MediaPlayer.PlayingState) {
-                            playerRecording.source = TD_Global.urlFromLocalPath (currentRecording);
-                            playerRecording.seek (0);
-                            playerRecording.play ();
-                        }
-                        else {
-                            playerRecording.stop ();
-                            playerRecording.source = "";
-                        }
-                    }
-
-                    MediaPlayer {
-                        id: playerRecording;
-                        autoLoad: true;
-                        autoPlay: true;
-                    }
-                }
-                LabelFixed {
-                    text: (btnRecord.active
-                           ? qsTr ("Recording (%1)").arg (TD_Global.formatTime (TD_Global.recordingDuration, false))
-                           : (currentRecording !== ""
-                              ? ((playerRecording.playbackState === MediaPlayer.PlayingState)
-                                 ? qsTr ("Replaying (%1/%2)").arg (TD_Global.formatTime (playerRecording.position, false)).arg (TD_Global.formatTime (playerRecording.duration, false))
-                                 : qsTr ("Send recording (%1)").arg (TD_Global.formatTime (TD_Global.recordingDuration, false)))
-                              : qsTr ("Idle")));
-                    color: ((btnRecord.active || btnReplay.active)
-                            ? Theme.highlightColor
-                            : (currentRecording !== ""
-                               ? Theme.primaryColor
-                               : Theme.secondaryColor));
-                    anchors.verticalCenter: parent.verticalCenter;
-                    Container.horizontalStretch: 1;
-                }
-                RectangleButton {
-                    icon: "icon-m-enter";
-                    size: Theme.iconSizeMedium;
-                    enabled: (currentRecording !== "" && !btnRecord.active && !btnReplay.active);
-                    implicitWidth: Theme.itemSizeSmall;
-                    implicitHeight: Theme.itemSizeSmall;
-                    anchors.verticalCenter: parent.verticalCenter;
-                    onClicked: {
-                        TD_Global.sendMessageVoiceNote (TD_Global.currentChat, currentRecording);
-                        currentRecording = "";
-                    }
-                }
-            }
-            GridContainer {
-                id: selectorMsgType;
-                cols: capacity;
-                capacity: repeaterModes.count;
-                horizontalSpacing: 1;
-                ExtraAnchors.horizontalFill: parent;
-                Container.forcedHeight: (Theme.itemSizeSmall * 0.85);
-
-                Repeater {
-                    id: repeaterModes;
-                    model: [
-                        TD_ObjectType.MESSAGE_TEXT,
-                        TD_ObjectType.MESSAGE_PHOTO,
-                        TD_ObjectType.MESSAGE_VIDEO,
-                        //TD_ObjectType.MESSAGE_AUDIO,
-                        TD_ObjectType.MESSAGE_STICKER,
-                        //TD_ObjectType.MESSAGE_ANIMATION,
-                        TD_ObjectType.MESSAGE_VOICE_NOTE,
-                        //TD_ObjectType.MESSAGE_VIDEO_NOTE,
-                        TD_ObjectType.MESSAGE_DOCUMENT,
-                    ];
-                    delegate: RectangleButton {
-                        size: Theme.iconSizeMedium;
-                        active: (currentMsgType === modelData);
-                        rounded: false;
-                        icon: {
-                            switch (modelData) {
-                            case TD_ObjectType.MESSAGE_TEXT:       return "icon-m-text-input";
-                            case TD_ObjectType.MESSAGE_PHOTO:      return "icon-m-camera";
-                            case TD_ObjectType.MESSAGE_VIDEO:      return "icon-m-video";
-                            case TD_ObjectType.MESSAGE_AUDIO:      return "icon-m-music";
-                            case TD_ObjectType.MESSAGE_STICKER:    return "icon-m-other";
-                            case TD_ObjectType.MESSAGE_ANIMATION:  return "icon-m-favorite";
-                            case TD_ObjectType.MESSAGE_VOICE_NOTE: return "icon-m-mic";
-                            case TD_ObjectType.MESSAGE_VIDEO_NOTE: return "icon-m-play";
-                            case TD_ObjectType.MESSAGE_DOCUMENT:   return "icon-m-attach";
-                            }
-                        }
+                    RectangleButton {
+                        icon: "icon-m-enter";
+                        enabled: (currentRecording !== "" && !btnRecord.active && !btnReplay.active);
+                        size: (Theme.iconSizeMedium * 0.65);
+                        implicitWidth: Theme.itemSizeExtraSmall;
+                        implicitHeight: Theme.itemSizeExtraSmall;
+                        anchors.verticalCenter: parent.verticalCenter;
                         onClicked: {
-                            currentMsgType = modelData;
+                            TD_Global.sendMessageVoiceNote (TD_Global.currentChat, currentRecording);
+                            currentRecording = "";
+                        }
+                    }
+                }
+                GridContainer {
+                    id: selectorMsgType;
+                    cols: capacity;
+                    capacity: repeaterModes.count;
+                    horizontalSpacing: 1;
+                    ExtraAnchors.horizontalFill: parent;
+                    Container.forcedHeight: (Theme.itemSizeSmall * 0.85);
+
+                    Repeater {
+                        id: repeaterModes;
+                        model: [
+                            TD_ObjectType.MESSAGE_TEXT,
+                            TD_ObjectType.MESSAGE_PHOTO,
+                            TD_ObjectType.MESSAGE_VIDEO,
+                            //TD_ObjectType.MESSAGE_AUDIO,
+                            TD_ObjectType.MESSAGE_STICKER,
+                            //TD_ObjectType.MESSAGE_ANIMATION,
+                            TD_ObjectType.MESSAGE_VOICE_NOTE,
+                            //TD_ObjectType.MESSAGE_VIDEO_NOTE,
+                            TD_ObjectType.MESSAGE_DOCUMENT,
+                        ];
+                        delegate: RectangleButton {
+                            size: Theme.iconSizeMedium;
+                            active: (currentMsgType === modelData);
+                            rounded: false;
+                            icon: {
+                                switch (modelData) {
+                                case TD_ObjectType.MESSAGE_TEXT:       return "icon-m-text-input";
+                                case TD_ObjectType.MESSAGE_PHOTO:      return "icon-m-camera";
+                                case TD_ObjectType.MESSAGE_VIDEO:      return "icon-m-video";
+                                case TD_ObjectType.MESSAGE_AUDIO:      return "icon-m-music";
+                                case TD_ObjectType.MESSAGE_STICKER:    return "icon-m-other";
+                                case TD_ObjectType.MESSAGE_ANIMATION:  return "icon-m-favorite";
+                                case TD_ObjectType.MESSAGE_VOICE_NOTE: return "icon-m-mic";
+                                case TD_ObjectType.MESSAGE_VIDEO_NOTE: return "icon-m-play";
+                                case TD_ObjectType.MESSAGE_DOCUMENT:   return "icon-m-attach";
+                                }
+                            }
+                            onClicked: {
+                                currentMsgType = modelData;
+                            }
                         }
                     }
                 }

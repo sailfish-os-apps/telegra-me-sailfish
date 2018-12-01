@@ -503,6 +503,8 @@ Page {
         opacity: (pulleyTop.active ? 0.0 : 1.0);
         implicitHeight: (layoutHeader.height + layoutHeader.anchors.margins * 2);
         ExtraAnchors.topDock: parent;
+        onPressed: { }
+        onReleased: { }
 
         Behavior on opacity { NumberAnimation { duration: 150; } }
         Rectangle {

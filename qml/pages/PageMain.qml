@@ -382,10 +382,9 @@ Page {
                         implicitHeight: (Theme.iconSizeMedium + Theme.paddingMedium * 2);
                         menu: ContextMenu {
                             MenuItem {
-                                text: (delegateChat.chatItem.isPinned ? qsTr ("Un-pin from favorites [TODO]") : qsTr ("Pin to favorites [TODO]"));
-                                enabled: false;
+                                text: (delegateChat.chatItem.isPinned ? qsTr ("Un-pin from favorites") : qsTr ("Pin to favorites"));
                                 onClicked: {
-                                    // TODO
+                                    TD_Global.togglePinChat (delegateChat.chatItem);
                                 }
                             }
                             MenuItem {
@@ -579,7 +578,9 @@ Page {
         }
         MouseArea {
             id: headerConversations;
-            implicitHeight: (layoutHeader.height + layoutHeader.anchors.margins * 2);
+            implicitHeight: (window.isPortrait
+                             ? (layoutTitle.height + layoutSearch.height + Theme.paddingMedium * 3)
+                             : (Math.max (layoutTitle.height, layoutSearch.height) + Theme.paddingMedium * 2));
             ExtraAnchors.topDock: parent;
             onPressed: { }
             onReleased: { }
@@ -588,85 +589,82 @@ Page {
                 color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
                 anchors.fill: parent;
             }
-            ColumnContainer {
-                id: layoutHeader;
-                spacing: Theme.paddingSmall;
-                anchors.margins: Theme.paddingMedium;
-                ExtraAnchors.topDock: parent;
+            RowContainer {
+                id: layoutTitle;
+                spacing: Theme.paddingMedium;
+                anchors.topMargin: Theme.paddingMedium;
+                anchors.rightMargin: Theme.paddingLarge;
+                ExtraAnchors.topRightCorner: parent;
 
-                RowContainer {
-                    spacing: Theme.paddingMedium;
-                    anchors.leftMargin: Theme.paddingMedium;
-                    anchors.rightMargin: Theme.paddingLarge;
-                    ExtraAnchors.horizontalFill: parent;
+                Item {
+                    implicitWidth: Theme.iconSizeMedium;
+                    implicitHeight: Theme.iconSizeMedium;
+                    anchors.verticalCenter: parent.verticalCenter;
 
-                    Item {
-                        Container.horizontalStretch: 1;
-                    }
-                    Item {
-                        implicitWidth: Theme.iconSizeMedium;
-                        implicitHeight: Theme.iconSizeMedium;
-                        anchors.verticalCenter: parent.verticalCenter;
-
-                        GlassItem {
-                            color: {
-                                switch (TD_Global.connectionState ? TD_Global.connectionState.typeOf : -1) {
-                                case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return "red";
-                                case TD_ObjectType.CONNECTION_STATE_CONNECTING:          return "orange";
-                                case TD_ObjectType.CONNECTION_STATE_CONNECTING_TO_PROXY: return "orange";
-                                case TD_ObjectType.CONNECTION_STATE_UPDATING:            return "orange";
-                                case TD_ObjectType.CONNECTION_STATE_READY:               return "lime";
-                                }
-                                return "magenta";
+                    GlassItem {
+                        color: {
+                            switch (TD_Global.connectionState ? TD_Global.connectionState.typeOf : -1) {
+                            case TD_ObjectType.CONNECTION_STATE_WAITING_FOR_NETWORK: return "red";
+                            case TD_ObjectType.CONNECTION_STATE_CONNECTING:          return "orange";
+                            case TD_ObjectType.CONNECTION_STATE_CONNECTING_TO_PROXY: return "orange";
+                            case TD_ObjectType.CONNECTION_STATE_UPDATING:            return "orange";
+                            case TD_ObjectType.CONNECTION_STATE_READY:               return "lime";
                             }
-                            anchors.centerIn: parent;
+                            return "magenta";
                         }
-                    }
-                    LabelFixed {
-                        text: qsTr ("Conversations");
-                        color: Theme.highlightColor;
-                        horizontalAlignment: Text.AlignRight;
-                        font {
-                            family: Theme.fontFamilyHeading;
-                            pixelSize: Theme.fontSizeLarge;
-                        }
-                        anchors.verticalCenter: parent.verticalCenter;
+                        anchors.centerIn: parent;
                     }
                 }
-                RowContainer {
-                    spacing: Theme.paddingSmall;
-                    anchors.leftMargin: Theme.paddingLarge;
-                    anchors.rightMargin: Theme.paddingLarge;
-                    ExtraAnchors.horizontalFill: parent;
-
-                    Image {
-                        source: "image://theme/icon-m-search";
-                        sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
-                        anchors.verticalCenter: parent.verticalCenter;
+                LabelFixed {
+                    text: qsTr ("Conversations");
+                    color: Theme.highlightColor;
+                    horizontalAlignment: Text.AlignRight;
+                    font {
+                        family: Theme.fontFamilyHeading;
+                        pixelSize: Theme.fontSizeLarge;
                     }
-                    TextField {
-                        id: inputFilter;
-                        labelVisible: false;
-                        placeholderText: qsTr ("Filter...");
-                        anchors.verticalCenter: parent.verticalCenter;
-                        Container.horizontalStretch: 1;
+                    anchors.verticalCenter: parent.verticalCenter;
+                }
+            }
+            RowContainer {
+                id: layoutSearch;
+                spacing: Theme.paddingSmall;
+                anchors {
+                    top: (window.isPortrait ? layoutTitle.bottom : parent.top);
+                    left: parent.left;
+                    right: (window.isPortrait ? parent.right : layoutTitle.left);
+                    topMargin: Theme.paddingMedium;
+                    leftMargin: Theme.paddingLarge;
+                    rightMargin: Theme.paddingLarge;
+                }
 
-                        readonly property string value : text.trim ().toLowerCase ();
-                    }
-                    IconButton {
-                        id: clearButton;
-                        opacity: (inputFilter.text.length > 0 ? 1.0 : 0.0);
-                        implicitWidth: Theme.itemSizeSmall;
-                        implicitHeight: Theme.itemSizeSmall;
-                        icon.source: "image://theme/icon-m-clear";
-                        icon.sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
-                        anchors.verticalCenter: parent.verticalCenter;
-                        onClicked: {
-                            inputFilter.text = "";
-                        }
+                Image {
+                    source: "image://theme/icon-m-search";
+                    sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                    anchors.verticalCenter: parent.verticalCenter;
+                }
+                TextField {
+                    id: inputFilter;
+                    labelVisible: false;
+                    placeholderText: qsTr ("Filter...");
+                    anchors.verticalCenter: parent.verticalCenter;
+                    Container.horizontalStretch: 1;
 
-                        Behavior on opacity { FadeAnimation { } }
+                    readonly property string value : text.trim ().toLowerCase ();
+                }
+                IconButton {
+                    id: clearButton;
+                    opacity: (inputFilter.text.length > 0 ? 1.0 : 0.0);
+                    implicitWidth: Theme.itemSizeSmall;
+                    implicitHeight: Theme.itemSizeSmall;
+                    icon.source: "image://theme/icon-m-clear";
+                    icon.sourceSize: Qt.size (Theme.iconSizeMedium, Theme.iconSizeMedium);
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        inputFilter.text = "";
                     }
+
+                    Behavior on opacity { FadeAnimation { } }
                 }
             }
         }

@@ -106,6 +106,7 @@ public:
     Q_INVOKABLE void openChat              (QtTdLibChat * chatItem);
     Q_INVOKABLE void closeChat             (QtTdLibChat * chatItem);
     Q_INVOKABLE void markAllMessagesAsRead (QtTdLibChat * chatItem);
+    Q_INVOKABLE void togglePinChat         (QtTdLibChat * chatItem);
 
     Q_INVOKABLE void loadMoreMessages (QtTdLibChat * chatItem, const int count);
 
@@ -124,6 +125,7 @@ public:
 
     Q_INVOKABLE bool    startRecordingAudio  (void);
     Q_INVOKABLE QString stopRecordingAudio   (void);
+    Q_INVOKABLE void    removeRecording      (const QString & path);
 
 signals:
     void showChatRequested (const QString & chatId);
