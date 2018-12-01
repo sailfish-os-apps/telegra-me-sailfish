@@ -1095,6 +1095,7 @@ ApplicationWindow {
 
                     DelegateDownloadableImage {
                         fileItem: (delegateMsgVideo.photoSizeItem ? delegateMsgVideo.photoSizeItem.photo : null);
+                        autoDownload: true;
                         anchors.fill: parent;
                     }
                     WrapperVideoPlayer {
