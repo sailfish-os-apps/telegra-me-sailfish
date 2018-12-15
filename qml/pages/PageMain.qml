@@ -406,22 +406,8 @@ Page {
                         onClicked: {
                             pageStack.push (compoPageChat, {
                                                 "currentChat" : chatItem,
-                                            });
-                        }
-                        onUnreadCountChanged: {
-                            updateNotif ();
-                        }
-                        onLastMsgItemChanged: {
-                            updateNotif ();
-                        }
-                        onDescriptionChanged: {
-                            updateNotif ();
-                        }
-                        Component.onCompleted: {
-                            updateNotif ();
-                        }
-                        Component.onDestruction: {
-                            notification.close ();
+                                            },
+                                            PageStackAction.Animated);
                         }
 
                         readonly property TD_Chat           chatItem           : modelData;
@@ -432,57 +418,16 @@ Page {
                         readonly property int               unreadCount        : (chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
                         readonly property string            description        : (lastMsgItem ? lastMsgItem.preview () : "");
 
-                        function updateNotif () {
-                            if (lastMsgItem) {
-                                notification.summary = chatItem.title;
-                                notification.appIcon = avatarChat.url;
-                                notification.icon = avatarChat.url;
-                                notification.body = description;
-                                notification.timestamp = lastMsgItem.date;
-                                notification.itemCount = unreadCount;
-                                if (TD_Global.currentChat !== chatItem && !lastMsgItem.isOutgoing) {
-                                    notification.previewSummary = chatItem.title;
-                                    notification.previewBody = description;
-                                }
-                                else {
-                                    notification.previewSummary = "";
-                                    notification.previewBody = "";
-                                }
-                                if (unreadCount > 0) {
-                                    notification.publish ();
-                                }
-                                else {
-                                    notification.close ();
-                                }
-                            }
-                        }
-
-                        Notification {
-                            id: notification;
-                            appName: "Telegra'me";
-                            maxContentLines: 3;
-                            remoteActions: [
-                                {
-                                    "name" : "default",
-                                    "displayName ": "Show chat",
-                                    "icon" : "",
-                                    "service" : "org.uniqueconception.telegrame",
-                                    "path" : "/org/uniqueconception/telegrame",
-                                    "iface" : "org.uniqueconception.telegrame",
-                                    "method" : "showChat",
-                                    "arguments" : [
-                                        "argument",
-                                        delegateChat.chatItem.id,
-                                    ]
-                                }
-                            ]
-                            onClicked: {
+                        Connections {
+                            target: delegateChat.chatItem;
+                            onDisplayRequested: {
+                                console.log ("DISPLAY REQUESTED", delegateChat.chatItem.id);
                                 window.activate ();
                                 while (pageStack.depth > 1) {
                                     pageStack.navigateBack (PageStackAction.Immediate);
                                 }
                                 pageStack.push (compoPageChat, {
-                                                    "currentChat" : delegateChat.chatItem
+                                                    "currentChat" : delegateChat.chatItem,
                                                 },
                                                 PageStackAction.Immediate);
                             }

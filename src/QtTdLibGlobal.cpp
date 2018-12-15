@@ -320,6 +320,7 @@ void QtTdLibGlobal::setUserOnlineState (const bool online) {
 void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
     closeChat (m_currentChat);
     if (chatItem != Q_NULLPTR) {
+        chatItem->set_isCurrentChat (true);
         set_currentChat (chatItem);
         send (QJsonObject {
                   { "@type", "openChat" },
@@ -331,6 +332,7 @@ void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
 
 void QtTdLibGlobal::closeChat (QtTdLibChat * chatItem) {
     if (chatItem != Q_NULLPTR) {
+        chatItem->set_isCurrentChat (false);
         set_currentChat (Q_NULLPTR);
         send (QJsonObject {
                   { "@type", "closeChat" },
@@ -911,7 +913,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                 }
             }
             if (!messagesListJson.isEmpty ()) {
-                m_autoPreFetcher->start (850);
+                m_autoPreFetcher->start (150);
             }
             break;
         }
@@ -1051,10 +1053,10 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
 
 void QtTdLibGlobal::onPrefetcherTick (void) {
     if (m_currentChat != Q_NULLPTR) {
-        if (m_currentChat->messagesModel.count () < 50 ||
+        if (m_currentChat->messagesModel.count () < 30 ||
             (m_currentChat->get_unreadCount () > 0 &&
              m_currentChat->getMessageItemById (m_currentChat->get_lastReadInboxMessageId ()) == Q_NULLPTR)) {
-            loadMoreMessages (m_currentChat, 15); // FIXME : maybe a better way...
+            loadMoreMessages (m_currentChat, 30); // FIXME : maybe a better way...
         }
     }
 }

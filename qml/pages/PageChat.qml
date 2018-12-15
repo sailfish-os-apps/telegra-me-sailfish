@@ -165,6 +165,62 @@ Page {
                 contentHeight: layoutMessage.height;
                 menu: ContextMenu {
                     MenuItem {
+                        text: qsTr ("Copy text");
+                        visible: (formattedTextItem !== null);
+                        onClicked: {
+                            Clipboard.text = formattedTextItem.text;
+                        }
+
+                        readonly property TD_MessageText messageTextItem : (delegateMsg.messageItem &&
+                                                                            delegateMsg.messageItem.content &&
+                                                                            delegateMsg.messageItem.content.typeOf === TD_ObjectType.MESSAGE_TEXT
+                                                                            ? delegateMsg.messageItem.content
+                                                                            : null);
+
+                        readonly property TD_FormattedText formattedTextItem : (messageTextItem ? messageTextItem.text : null);
+                    }
+                    MenuItem {
+                        text: qsTr ("Open image in viewer");
+                        visible: (photoSizeItem !== null);
+                        enabled: (photoSizeItem && photoSizeItem.photo && photoSizeItem.photo.local && photoSizeItem.photo.local.isDownloadingCompleted);
+                        onClicked: {
+                            Qt.openUrlExternally (TD_Global.urlFromLocalPath (photoSizeItem.photo.local.path));
+                        }
+
+                        readonly property TD_MessagePhoto messagePhotoItem : (delegateMsg.messageItem &&
+                                                                              delegateMsg.messageItem.content &&
+                                                                              delegateMsg.messageItem.content.typeOf === TD_ObjectType.MESSAGE_PHOTO
+                                                                              ? delegateMsg.messageItem.content
+                                                                              : null);
+
+                        readonly property TD_Photo photoItem : (messagePhotoItem ? messagePhotoItem.photo : null);
+
+                        readonly property TD_PhotoSize photoSizeItem : {
+                            var ret = null;
+                            if (photoItem && photoItem.sizes.count > 0) {
+                                var tmp = photoItem.sizes.get ("x");
+                                ret = (tmp ? tmp : photoItem.sizes.getLast ());
+                            }
+                            return ret;
+                        }
+                    }
+                    MenuItem {
+                        text: qsTr ("Open video with player");
+                        visible: (videoItem !== null);
+                        enabled: (videoItem && videoItem.video && videoItem.video.local && videoItem.video.local.isDownloadingCompleted);
+                        onClicked: {
+                            Qt.openUrlExternally (TD_Global.urlFromLocalPath (videoItem.video.local.path));
+                        }
+
+                        readonly property TD_MessageVideo messageVideoItem : (delegateMsg.messageItem &&
+                                                                              delegateMsg.messageItem.content &&
+                                                                              delegateMsg.messageItem.content.typeOf === TD_ObjectType.MESSAGE_VIDEO
+                                                                              ? delegateMsg.messageItem.content
+                                                                              : null);
+
+                        readonly property TD_Video videoItem : (messageVideoItem ? messageVideoItem.video : null);
+                    }
+                    MenuItem {
                         text: qsTr ("Reply [TODO]");
                         enabled: false;
                         onClicked: {

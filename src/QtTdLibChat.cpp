@@ -1,19 +1,62 @@
 
 #include "QtTdLibChat.h"
 
-QtTdLibChatPhoto::QtTdLibChatPhoto (QObject * parent)
-    : QtTdLibAbstractObject { QtTdLibObjectType::CHAT_PHOTO, parent }
-{ }
-
-void QtTdLibChatPhoto::updateFromJson (const QJsonObject & json) {
-    set_big_withJSON   (json ["big"].toObject (),   &QtTdLibFile::create);
-    set_small_withJSON (json ["small"].toObject (), &QtTdLibFile::create);
-}
-
 QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
     : QtTdLibAbstractInt53IdObject { QtTdLibObjectType::CHAT, id, parent }
+    , m_isCurrentChat { false }
 {
     QtTdLibCollection::allChats.insert (id, this);
+    static const QString ICON { "/usr/share/icons/hicolor/128x128/apps/harbour-telegrame.png" };
+    m_notif.setAppName ("Telegra'me");
+    m_notif.setIcon    (ICON);
+    m_notif.setAppIcon (ICON);
+    m_notif.setMaxContentLines (3);
+    m_notif.setRemoteAction (Notification::remoteAction ("default",
+                                                         "Show chat",
+                                                         "org.uniqueconception.telegrame",
+                                                         "/org/uniqueconception/telegrame",
+                                                         "org.uniqueconception.telegrame",
+                                                         "showChat",
+                                                         QVariantList { /*"argument",*/ get_id () }));
+    connect (this, &QtTdLibChat::titleChanged,                          this, &QtTdLibChat::refreshNotification);
+    connect (this, &QtTdLibChat::unreadCountChanged,                    this, &QtTdLibChat::refreshNotification);
+    connect (this, &QtTdLibChat::isCurrentChatChanged,                  this, &QtTdLibChat::refreshNotification);
+    connect (&messagesModel, &QQmlFastObjectListModelBase::lastChanged, this, &QtTdLibChat::refreshNotification);
+    connect (&m_timer, &QTimer::timeout, this, [this] (void) {
+        if (m_unreadCount > 0 && !m_isCurrentChat && m_notificationSettings != Q_NULLPTR && m_notificationSettings->get_muteFor () == 0) {
+            if (QtTdLibMessage * lastMsg = { messagesModel.getLast () }) {
+                m_notif.setItemCount      (m_unreadCount);
+                m_notif.setSummary        (m_title);
+                m_notif.setTimestamp      (lastMsg->get_date ());
+                m_notif.setBody           (lastMsg->preview ());
+                m_notif.setPreviewBody    (lastMsg->preview ());
+                m_notif.setPreviewSummary (m_title);
+                m_notif.publish ();
+            }
+            else {
+                m_notif.close ();
+            }
+        }
+        else {
+            m_notif.close ();
+        }
+    });
+    connect (&m_notif, &Notification::clicked, this, [this] (void) {
+        qWarning () << "CLICKED" << get_id ();
+        emit displayRequested ();
+    });
+    m_timer.setTimerType  (Qt::CoarseTimer);
+    m_timer.setSingleShot (true);
+    m_timer.setInterval   (350);
+}
+
+QtTdLibChat::~QtTdLibChat (void) {
+    m_timer.stop ();
+    m_notif.close ();
+}
+
+void QtTdLibChat::refreshNotification (void) {
+    m_timer.start ();
 }
 
 QtTdLibMessage * QtTdLibChat::getMessageItemById (const QString & id) const {
@@ -64,6 +107,15 @@ void QtTdLibChat::updateFromJson (const QJsonObject & json) {
     set_type_withJSON                    (json ["type"].toObject (),                  &QtTdLibChatType::createAbstract);
     set_photo_withJSON                   (json ["photo"].toObject (),                 &QtTdLibChatPhoto::create);
     set_notificationSettings_withJSON    (json ["notification_settings"].toObject (), &QtTdLibChatNotificationSettings::create);
+}
+
+QtTdLibChatPhoto::QtTdLibChatPhoto (QObject * parent)
+    : QtTdLibAbstractObject { QtTdLibObjectType::CHAT_PHOTO, parent }
+{ }
+
+void QtTdLibChatPhoto::updateFromJson (const QJsonObject & json) {
+    set_big_withJSON   (json ["big"].toObject (),   &QtTdLibFile::create);
+    set_small_withJSON (json ["small"].toObject (), &QtTdLibFile::create);
 }
 
 QtTdLibChatType::QtTdLibChatType (const QtTdLibObjectType::Type typeOf, QObject * parent)

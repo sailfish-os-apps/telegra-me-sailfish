@@ -1,6 +1,10 @@
 #ifndef QTTDCHAT_H
 #define QTTDCHAT_H
 
+#include <nemonotifications-qt5/notification.h>
+
+#include <QTimer>
+
 #include "QQmlFastObjectListModel.h"
 
 #include "QtTdLibCommon.h"
@@ -240,9 +244,11 @@ class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<Q
     QML_FASTOBJMODEL_PROPERTY  (messagesModel, QtTdLibMessage)
     //last_message:message
     //draft_message:draftMessage
+    QML_READONLY_VAR_PROPERTY  (isCurrentChat, bool)
 
 public:
     explicit QtTdLibChat (const qint64 id = 0, QObject * parent = Q_NULLPTR);
+    virtual ~QtTdLibChat (void);
 
     QHash<qint64, QtTdLibMessage *> allMessages;
 
@@ -254,6 +260,16 @@ public:
     void removeMessageItem (QtTdLibMessage * messageItem);
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+signals:
+    void displayRequested (void);
+
+protected slots:
+    void refreshNotification (void);
+
+private:
+    QTimer m_timer;
+    Notification m_notif;
 };
 
 #endif // QTTDCHAT_H
