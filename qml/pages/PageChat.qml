@@ -558,6 +558,7 @@ Page {
         id: headerChat;
         opacity: (pulleyTop.active ? 0.0 : 1.0);
         implicitHeight: (layoutHeader.height + layoutHeader.anchors.margins * 2);
+        anchors.topMargin: Math.max (-flickerMessages.contentY, 0);
         ExtraAnchors.topDock: parent;
         onPressed: { }
         onReleased: { }
@@ -566,6 +567,13 @@ Page {
         Rectangle {
             color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
             anchors.fill: parent;
+
+            Rectangle {
+                color: Theme.secondaryHighlightColor;
+                opacity: 0.65;
+                implicitHeight: Theme.paddingSmall;
+                ExtraAnchors.topDock: parent;
+            }
         }
         RowContainer {
             id: layoutHeader;

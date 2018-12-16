@@ -364,6 +364,51 @@ Page {
             contentHeight: layoutChats.height;
             anchors.fill: parent;
 
+            PullDownMenu {
+                id: pulley;
+
+                MenuItem {
+                    text: qsTr ("About [TODO]");
+                    enabled: false;
+                    onClicked: {
+                        // TODO
+                    }
+                }
+                MenuItem {
+                    text: qsTr ("Settings [TODO]");
+                    enabled: false;
+                    onClicked: {
+                        // TODO
+                    }
+                }
+                MenuItem {
+                    text: qsTr ("New group chat [TODO]");
+                    enabled: false;
+                    onClicked: {
+                        // TODO
+                    }
+                }
+                MenuItem {
+                    text: qsTr ("Contacts list [TODO]");
+                    enabled: false;
+                    onClicked: {
+                        // TODO
+                    }
+                }
+                MenuItem {
+                    text: (layoutSearch.visible ? qsTr ("Hide search bar") : qsTr ("Show search bar"));
+                    onClicked: {
+                        if (layoutSearch.visible) {
+                            inputFilter.focus = false;
+                            layoutSearch.visible = false;
+                        }
+                        else {
+                            layoutSearch.visible = true;
+                            inputFilter.forceActiveFocus ();
+                        }
+                    }
+                }
+            }
             Column {
                 id: layoutChats;
                 ExtraAnchors.topDock: parent;
@@ -491,6 +536,28 @@ Page {
                                 anchors.verticalCenter: parent.verticalCenter;
                             }
                             Item {
+                                visible: (delegateChat.chatItem.unreadMentionCount > 0);
+                                Container.forcedWidth: Theme.paddingMedium;
+                            }
+                            LabelFixed {
+                                text: "@";
+                                color: ((delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0)
+                                        ? Theme.secondaryColor
+                                        : Theme.highlightColor);
+                                visible: (delegateChat.chatItem.unreadMentionCount > 0);
+                                anchors.verticalCenter: parent.verticalCenter;
+
+                                Rectangle {
+                                    z: -1;
+                                    color: Theme.secondaryColor;
+                                    radius: (height * 0.5);
+                                    opacity: 0.35;
+                                    implicitWidth: Math.max (parent.width + Theme.paddingMedium * 2, implicitHeight);
+                                    implicitHeight: (parent.height + Theme.paddingSmall * 2);
+                                    anchors.centerIn: parent;
+                                }
+                            }
+                            Item {
                                 visible: (delegateChat.chatItem.unreadCount > 0);
                                 Container.forcedWidth: Theme.paddingMedium;
                             }
@@ -513,7 +580,7 @@ Page {
                                 }
                             }
                             Item {
-                                visible: (delegateChat.chatItem.unreadCount > 0);
+                                visible: (delegateChat.chatItem.unreadCount > 0 || delegateChat.chatItem.unreadMentionCount > 0);
                                 Container.forcedWidth: Theme.paddingMedium;
                             }
                         }
@@ -524,16 +591,26 @@ Page {
         }
         MouseArea {
             id: headerConversations;
+            opacity: (pulley.active ? 0.65 : 1.0);
             implicitHeight: (window.isPortrait
-                             ? (layoutTitle.height + layoutSearch.height + Theme.paddingMedium * 3)
-                             : (Math.max (layoutTitle.height, layoutSearch.height) + Theme.paddingMedium * 2));
+                             ? (layoutTitle.height + (layoutSearch.visible ? layoutSearch.height + Theme.paddingMedium : 0) + Theme.paddingMedium * 2)
+                             : (Math.max (layoutTitle.height, (layoutSearch.visible ? layoutSearch.height : 0)) + Theme.paddingMedium * 2));
+            anchors.topMargin: Math.max (-flickerChats.contentY, 0);
             ExtraAnchors.topDock: parent;
             onPressed: { }
             onReleased: { }
 
+            Behavior on opacity { NumberAnimation { duration: 150; } }
             Rectangle {
                 color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
                 anchors.fill: parent;
+
+                Rectangle {
+                    color: Theme.secondaryHighlightColor;
+                    opacity: 0.65;
+                    implicitHeight: Theme.paddingSmall;
+                    ExtraAnchors.topDock: parent;
+                }
             }
             RowContainer {
                 id: layoutTitle;
@@ -575,6 +652,7 @@ Page {
             RowContainer {
                 id: layoutSearch;
                 spacing: Theme.paddingSmall;
+                visible: false;
                 anchors {
                     top: (window.isPortrait ? layoutTitle.bottom : parent.top);
                     left: parent.left;

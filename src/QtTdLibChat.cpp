@@ -56,7 +56,9 @@ QtTdLibChat::~QtTdLibChat (void) {
 }
 
 void QtTdLibChat::refreshNotification (void) {
-    m_timer.start ();
+    if (!m_timer.isActive ()) {
+        m_timer.start ();
+    }
 }
 
 QtTdLibMessage * QtTdLibChat::getMessageItemById (const QString & id) const {

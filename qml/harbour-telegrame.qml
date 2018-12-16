@@ -57,13 +57,13 @@ ApplicationWindow {
 
         MouseArea {
             id: footerChat;
+            enabled: showInputPanel;
+            opacity: (enabled ? 1.0 : 0.0);
             implicitHeight: (layoutFooter.height + layoutFooter.anchors.margins * 2);
-            anchors.bottomMargin: (showInputPanel ? 0 : -height);
             ExtraAnchors.bottomDock: parent;
             onPressed: { }
             onReleased: { }
 
-            Behavior on anchors.bottomMargin { NumberAnimation { duration: 150; } }
             Rectangle {
                 color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
                 anchors.fill: parent;
@@ -80,19 +80,30 @@ ApplicationWindow {
                     ExtraAnchors.horizontalFill: parent;
                     Container.forcedHeight: (implicitHeight + anchors.margins * 2);
                     onVisibleChanged: {
-                        if (!visible && inputMsg.activeFocus) {
-                            inputMsg.focus = false;
+                        if (!visible && btnSendMsgText.textBox.activeFocus) {
+                            btnSendMsgText.textBox.focus = false;
                         }
                     }
 
                     Item {
-                        implicitHeight: Math.min (inputMsg.implicitHeight, Theme.itemSizeLarge * 2);
+                        implicitHeight: Math.min (btnSendMsgText.textBox.implicitHeight, Theme.itemSizeLarge * 2);
                         anchors.bottom: parent.bottom;
                         anchors.margins: Theme.paddingSmall;
                         Container.horizontalStretch: 1;
 
+                        TextField {
+                            id: inputMsgSingle;
+                            visible: btnSendMsgText.fastSend;
+                            labelVisible: false;
+                            placeholderText: qsTr ("Text message");
+                            anchors.fill: parent;
+                            Keys.onReturnPressed: {
+                                btnSendMsgText.execute ();
+                            }
+                        }
                         TextArea {
                             id: inputMsg;
+                            visible: !btnSendMsgText.fastSend;
                             labelVisible: false;
                             placeholderText: qsTr ("Text message");
                             autoScrollEnabled: true;
@@ -100,20 +111,29 @@ ApplicationWindow {
                         }
                     }
                     RectangleButton {
+                        id: btnSendMsgText;
                         icon: "icon-m-enter";
-                        enabled: (inputMsg.text.trim () !== "");
                         size: (Theme.iconSizeMedium * 0.65);
+                        enabled: (textBox.text.trim () !== "");
                         implicitWidth: Theme.itemSizeExtraSmall;
                         implicitHeight: Theme.itemSizeExtraSmall;
                         anchors.bottom: parent.bottom;
                         anchors.margins: Theme.paddingSmall;
                         onClicked: {
-                            var tmp = inputMsg.text.trim ();
+                            execute ();
+                        }
+
+                        readonly property bool fastSend : TD_Global.sendTextOnEnterKey;
+                        readonly property Item textBox  : (fastSend ? inputMsgSingle : inputMsg);
+
+                        function execute () {
+                            textBox.focus = false;
+                            var tmp = textBox.text.trim ();
                             if (tmp !== "") {
                                 TD_Global.sendMessageText (TD_Global.currentChat, tmp);
                                 TD_Global.autoScrollDownRequested (true);
                             }
-                            inputMsg.text = "";
+                            textBox.text = "";
                         }
                     }
                 }
@@ -559,9 +579,9 @@ ApplicationWindow {
                         onPressed: {
                             active = TD_Global.startRecordingAudio ();
                             if (active) {
+                                console.log ("RECORDING STARTED", active);
                                 currentRecording = "";
                             }
-                            console.log ("RECORDING STARTED", active);
                         }
                         onReleased: {
                             if (active) {

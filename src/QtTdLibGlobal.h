@@ -15,6 +15,7 @@
 #include <QTimer>
 #include <QtMath>
 #include <QUrl>
+#include <QSettings>
 
 #include "QtTdLibCommon.h"
 #include "QtTdLibJsonWrapper.h"
@@ -62,6 +63,7 @@ class QtTdLibGlobal : public QObject {
     QML_WRITABLE_PTR_PROPERTY  (currentMessageContent,  QtTdLibMessageContent)
     QML_CONSTANT_PTR_PROPERTY  (sortedChatsList,        QSortFilterProxyModel)
     QML_CONSTANT_PTR_PROPERTY  (dbusAdaptor,                      DBusAdaptor)
+    QML_WRITABLE_VAR_PROPERTY  (sendTextOnEnterKey,                      bool)
 
 public:
     explicit QtTdLibGlobal (QObject * parent = Q_NULLPTR);
@@ -136,7 +138,11 @@ protected:
     void onPrefetcherTick (void);
 
 private:
-    const QHash<QString, QString> m_svgIconForMimetype;
+    const QString DBUS_SERVICE_NAME;
+    const QString DBUS_OBJECT_PATH;
+    const QString DBUS_INTERFACE;
+    const QString CONF_KEY_SEND_ON_ENTER;
+    const QHash<QString, QString> SVG_ICON_FOR_MIMETYPE;
 
     struct SelectionPhoto {
         QString path;
@@ -157,6 +163,7 @@ private:
     QAudioRecorder * m_audioRecorder;
     QTimer * m_autoPreFetcher;
     QMimeDatabase m_mimeDb;
+    QSettings m_settings;
 };
 
 #endif // QTTDLIBGLOBAL_H

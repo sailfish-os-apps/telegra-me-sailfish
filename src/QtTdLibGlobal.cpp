@@ -18,7 +18,12 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     , m_currentMessageContent { Q_NULLPTR }
     , m_sortedChatsList { new QSortFilterProxyModel { this } }
     , m_dbusAdaptor { new DBusAdaptor { this } }
-    , m_svgIconForMimetype {
+    , m_sendTextOnEnterKey { false }
+    , DBUS_SERVICE_NAME { "org.uniqueconception.telegrame" }
+    , DBUS_OBJECT_PATH { "/org/uniqueconception/telegrame" }
+    , DBUS_INTERFACE { "org.uniqueconception.telegrame" }
+    , CONF_KEY_SEND_ON_ENTER { "send_text_msg_on_enter" }
+    , SVG_ICON_FOR_MIMETYPE {
 { "image/png", "image" },
 { "image/jpeg", "image" },
 { "image/gif", "image" },
@@ -82,10 +87,19 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     , m_audioRecorder { new QAudioRecorder { this } }
     , m_autoPreFetcher { new QTimer { this } }
 {
+    if (!m_settings.contains (CONF_KEY_SEND_ON_ENTER)) {
+        m_settings.setValue (CONF_KEY_SEND_ON_ENTER, m_sendTextOnEnterKey);
+    }
+    else {
+        m_sendTextOnEnterKey = m_settings.value (CONF_KEY_SEND_ON_ENTER).toBool ();
+    }
+    connect (this, &QtTdLibGlobal::sendTextOnEnterKeyChanged, this, [this] (void) {
+        m_settings.setValue (CONF_KEY_SEND_ON_ENTER, m_sendTextOnEnterKey);
+    });
     QDBusConnection dbus { QDBusConnection::sessionBus () };
-    dbus.registerObject (dbusObjectPath, m_dbusAdaptor);
-    if (!dbus.interface ()->isServiceRegistered (dbusServiceName)) {
-        dbus.registerService (dbusServiceName);
+    dbus.registerObject (DBUS_OBJECT_PATH, m_dbusAdaptor);
+    if (!dbus.interface ()->isServiceRegistered (DBUS_SERVICE_NAME)) {
+        dbus.registerService (DBUS_SERVICE_NAME);
     }
     m_sortedChatsList->setSourceModel (m_chatsList);
     m_sortedChatsList->setSortRole (m_chatsList->roleForName ("order"));
@@ -98,6 +112,7 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     audioEncoderSettings.setSampleRate   (22050);
     m_audioRecorder->setEncodingSettings (audioEncoderSettings);
     m_audioRecorder->setContainerFormat  ("wav"); // "ogg"
+    qWarning () << "VOLUME" << m_audioRecorder->volume () << m_audioRecorder->audioInput () << m_audioRecorder->audioInputDescription (m_audioRecorder->audioInput ());
     connect (m_audioRecorder, &QAudioRecorder::durationChanged, [this] (void) {
         if (m_audioRecorder->status () == QMediaRecorder::RecordingStatus || m_audioRecorder->status () == QMediaRecorder::FinalizingStatus) {
             set_recordingDuration (int (m_audioRecorder->duration ()));
@@ -111,8 +126,8 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
 
 QtTdLibGlobal::~QtTdLibGlobal (void) {
     QDBusConnection dbus { QDBusConnection::sessionBus () };
-    dbus.unregisterObject  (dbusObjectPath);
-    dbus.unregisterService (dbusServiceName);
+    dbus.unregisterObject  (DBUS_OBJECT_PATH);
+    dbus.unregisterService (DBUS_SERVICE_NAME);
     m_tdLibJsonWrapper->send (QJsonObject {
                                   { "@type", "close" }
                               });
@@ -205,7 +220,7 @@ QString QtTdLibGlobal::getMimeTypeForPath (const QString & path) const {
 }
 
 QString QtTdLibGlobal::getSvgIconForMimeType (const QString & type) const {
-    return m_svgIconForMimetype.value (type, "file");
+    return SVG_ICON_FOR_MIMETYPE.value (type, "file");
 }
 
 QtTdLibFile * QtTdLibGlobal::getFileItemById (const qint32 id) const {
@@ -326,11 +341,12 @@ void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
                   { "@type", "openChat" },
                   { "chat_id", chatItem->get_id () },
               });
-        m_autoPreFetcher->start (0);
+        m_autoPreFetcher->start (350);
     }
 }
 
 void QtTdLibGlobal::closeChat (QtTdLibChat * chatItem) {
+    set_currentMessageContent (Q_NULLPTR);
     if (chatItem != Q_NULLPTR) {
         chatItem->set_isCurrentChat (false);
         set_currentChat (Q_NULLPTR);
@@ -354,6 +370,7 @@ void QtTdLibGlobal::markAllMessagesAsRead (QtTdLibChat * chatItem) {
                       { "@type", "viewMessages" },
                       { "chat_id", chatItem->get_id_asJSON () },
                       { "message_ids", messageIdsJson },
+                      { "force_read", true },
                   });
         }
     }
