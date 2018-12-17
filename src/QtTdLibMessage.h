@@ -258,6 +258,18 @@ public:
     QString asString (void) const Q_DECL_FINAL;
 };
 
+class QtTdLibMessagePinMessage : public QtTdLibMessageContent, public FactoryNoId<QtTdLibMessagePinMessage> {
+    Q_OBJECT
+    Q_TDLIB_PROPERTY_ID53 (messageId)
+
+public:
+    explicit QtTdLibMessagePinMessage (QObject * parent = Q_NULLPTR);
+
+    void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
+
+    QString asString (void) const Q_DECL_FINAL;
+};
+
 class QtTdLibCallDiscardReason : public QtTdLibAbstractObject {
     Q_OBJECT
 
@@ -360,7 +372,14 @@ public:
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 
-    Q_INVOKABLE QString preview (const bool multiline = false) const;
+    enum PreviewFlags {
+        MINIMAL    = 0,
+        SHOW_TITLE = (1 << 1),
+        MULTILINE  = (2 << 1),
+    };
+    Q_ENUM (PreviewFlags)
+
+    Q_INVOKABLE QString preview (const int flags) const;
 };
 
 #endif // QtTdLibMessage_H

@@ -56,6 +56,14 @@ Page {
                                                           ? replyingToMessageRefWatcher.messageItem
                                                           : null);
 
+    readonly property TD_MessageRefWatcher pinnedMessageRefWatcher : (currentChatSupergroupItem && currentChatSupergroupItem.pinnedMessageId
+                                                                      ? currentChat.getMessageRefById (currentChatSupergroupItem.pinnedMessageId)
+                                                                      : null);
+
+    readonly property TD_Message pinnedMessageItem : (pinnedMessageRefWatcher
+                                                          ? pinnedMessageRefWatcher.messageItem
+                                                          : null);
+
     readonly property TD_User currentChatUserItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_PRIVATE
                                                      ? TD_Global.getUserItemById (currentChat.type ["userId"])
                                                      : null);
@@ -185,7 +193,7 @@ Page {
             }
 
             model: (currentChat ? currentChat.messagesModel : 0);
-            spaceBefore: headerChat.height;
+            spaceBefore: (headerChat.height + (stripPinned.visible ? stripPinned.height : 0));
             //spaceAfter: footerChat.height;
             delegate: ListItem {
                 id: delegateMsg;
@@ -319,6 +327,12 @@ Page {
                     value: delegateMsg.messageItem;
                     when: (loaderMsgContent.item && delegateMsg.messageItem);
                 }
+                Binding {
+                    target: loaderMsgContent.item;
+                    property: "chatItem";
+                    value: currentChat;
+                    when: (loaderMsgContent.item && currentChat);
+                }
                 ColumnContainer {
                     id: layoutMessage;
                     spacing: Theme.paddingSmall;
@@ -389,7 +403,7 @@ Page {
                                     ExtraAnchors.horizontalFill: parent;
                                 }
                                 LabelFixed {
-                                    text: qsTr ("<b>Reply</b>: %1").arg (originalMessageItem ? originalMessageItem.preview (true).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
+                                    text: qsTr ("<b>Reply</b>: %1").arg (originalMessageItem ? originalMessageItem.preview (TD_Message.SHOW_TITLE | TD_Message.MULTILINE).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
                                     color: Theme.secondaryHighlightColor;
                                     elide: Text.ElideRight;
                                     visible: originalMsgRefWatcher;
@@ -433,6 +447,7 @@ Page {
                                             case TD_ObjectType.MESSAGE_CHAT_UPGRADE_FROM:       return compoMsgChatUpgradeFrom;
                                             case TD_ObjectType.MESSAGE_CHAT_UPGRADE_TO:         return compoMsgChatUpgradeTo;
                                             case TD_ObjectType.MESSAGE_CONTACT_REGISTERED:      return compoMsgChatContactRegistered;
+                                            case TD_ObjectType.MESSAGE_PIN_MESSAGE:             return compoMsgPinMessage;
                                             case TD_ObjectType.MESSAGE_BASIC_GROUP_CHAT_CREATE: return compoMsgBasicGroupChatCreate;
                                             case TD_ObjectType.MESSAGE_SUPERGROUP_CHAT_CREATE:  return compoMsgSupergroupChatCreate;
                                             }
@@ -642,7 +657,7 @@ Page {
             ExtraAnchors.horizontalFill: parent;
 
             LabelFixed {
-                text: qsTr ("<b>Reply</b>: %1").arg (replyingToMessageItem ? replyingToMessageItem.preview (true).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
+                text: qsTr ("<b>Reply</b>: %1").arg (replyingToMessageItem ? replyingToMessageItem.preview (TD_Message.SHOW_TITLE | TD_Message.MULTILINE).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
                 color: Theme.secondaryHighlightColor;
                 elide: Text.ElideRight;
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
@@ -659,6 +674,40 @@ Page {
                     TD_Global.replyingToMessageId = "";
                 }
             }
+        }
+    }
+    MouseArea {
+        id: stripPinned;
+        visible: (pinnedMessageItem !== null);
+        implicitHeight: (lblPinned.height + lblPinned.anchors.margins * 2);
+        anchors.top: headerChat.bottom;
+        ExtraAnchors.horizontalFill: parent;
+        onClicked: {
+            longJumpToMsg (pinnedMessageItem.id);
+        }
+
+        Rectangle {
+            color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
+            anchors.fill: parent;
+
+            Rectangle {
+                color: Theme.secondaryHighlightColor;
+                opacity: 0.15;
+                anchors.fill: parent;
+            }
+        }
+        LabelFixed {
+            id: lblPinned;
+            text: qsTr ("<b>Pinned</b>: %1").arg (pinnedMessageItem ? pinnedMessageItem.preview (TD_Message.MINIMAL) : qsTr ("<i>deleted message</i>"));
+            color: Theme.secondaryHighlightColor;
+            elide: Text.ElideRight;
+            textFormat: Text.StyledText;
+            font.pixelSize: Theme.fontSizeExtraSmall;
+            anchors {
+                margins: Theme.paddingSmall;
+                verticalCenter: parent.verticalCenter;
+            }
+            ExtraAnchors.horizontalFill: parent;
         }
     }
     MouseArea {

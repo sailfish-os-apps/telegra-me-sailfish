@@ -67,6 +67,7 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "messageChatUpgradeFrom", QtTdLibObjectType::MESSAGE_CHAT_UPGRADE_FROM },
         { "messageChatUpgradeTo", QtTdLibObjectType::MESSAGE_CHAT_UPGRADE_TO },
         { "messageContactRegistered", QtTdLibObjectType::MESSAGE_CONTACT_REGISTERED },
+        { "messagePinMessage", QtTdLibObjectType::MESSAGE_PIN_MESSAGE  },
         { "messageDocument", QtTdLibObjectType::MESSAGE_DOCUMENT },
         { "messagePhoto", QtTdLibObjectType::MESSAGE_PHOTO },
         { "messages", QtTdLibObjectType::MESSAGES },

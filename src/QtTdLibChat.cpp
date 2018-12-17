@@ -37,8 +37,8 @@ QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
             m_notif.setItemCount      (m_unreadCount);
             m_notif.setSummary        (m_title);
             m_notif.setTimestamp      (lastMsg->get_date ());
-            m_notif.setBody           (lastMsg->preview ());
-            m_notif.setPreviewBody    (lastMsg->preview ());
+            m_notif.setBody           (lastMsg->preview (QtTdLibMessage::SHOW_TITLE));
+            m_notif.setPreviewBody    (lastMsg->preview (QtTdLibMessage::SHOW_TITLE));
             m_notif.setPreviewSummary (m_title);
             m_notif.publish ();
         }

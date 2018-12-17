@@ -757,6 +757,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgText;
 
+            property TD_Chat        chatItem           : null;
             property TD_Message     messageItem        : null;
             property TD_MessageText messageContentItem : null;
 
@@ -876,6 +877,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgPhoto;
 
+            property TD_Chat         chatItem           : null;
             property TD_Message      messageItem        : null;
             property TD_MessagePhoto messageContentItem : null;
 
@@ -911,6 +913,7 @@ ApplicationWindow {
             id: delegateMsgDocument;
             spacing: Theme.paddingMedium;
 
+            property TD_Chat            chatItem           : null;
             property TD_Message         messageItem        : null;
             property TD_MessageDocument messageContentItem : null;
 
@@ -1044,6 +1047,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgSticker;
 
+            property TD_Chat           chatItem           : null;
             property TD_Message        messageItem        : null;
             property TD_MessageSticker messageContentItem : null;
 
@@ -1099,6 +1103,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgVideo;
 
+            property TD_Chat         chatItem           : null;
             property TD_Message      messageItem        : null;
             property TD_MessageVideo messageContentItem : null;
 
@@ -1205,6 +1210,7 @@ ApplicationWindow {
         ColumnContainer {
             id: delegateMsgAudio;
 
+            property TD_Chat         chatItem           : null;
             property TD_Message      messageItem        : null;
             property TD_MessageAudio messageContentItem : null;
 
@@ -1341,6 +1347,7 @@ ApplicationWindow {
             id: delegateMsgAnimation;
             implicitHeight: placeholderAnim.height;
 
+            property TD_Chat             chatItem           : null;
             property TD_Message          messageItem        : null;
             property TD_MessageAnimation messageContentItem : null;
 
@@ -1439,6 +1446,7 @@ ApplicationWindow {
             id: delegateMsgVoiceNote;
             spacing: Theme.paddingSmall;
 
+            property TD_Chat             chatItem           : null;
             property TD_Message          messageItem        : null;
             property TD_MessageVoiceNote messageContentItem : null;
 
@@ -1589,6 +1597,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Chat                  chatItem           : null;
             property TD_Message               messageItem        : null;
             property TD_MessageChatJoinByLink messageContentItem : null;
         }
@@ -1600,6 +1609,7 @@ ApplicationWindow {
             id: delegateMsgChatAddMembers;
             spacing: Theme.paddingSmall;
 
+            property TD_Chat                  chatItem           : null;
             property TD_Message               messageItem        : null;
             property TD_MessageChatAddMembers messageContentItem : null;
 
@@ -1646,6 +1656,7 @@ ApplicationWindow {
             id: delegateMsgChatDeleteMember;
             spacing: Theme.paddingSmall;
 
+            property TD_Chat                    chatItem           : null;
             property TD_Message                 messageItem        : null;
             property TD_MessageChatDeleteMember messageContentItem : null;
 
@@ -1694,6 +1705,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Chat                   chatItem           : null;
             property TD_Message                messageItem        : null;
             property TD_MessageChatChangeTitle messageContentItem : null;
         }
@@ -1707,6 +1719,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Chat                   chatItem           : null;
             property TD_Message                messageItem        : null;
             property TD_MessageChatUpgradeFrom messageContentItem : null;
         }
@@ -1720,6 +1733,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Chat                 chatItem           : null;
             property TD_Message              messageItem        : null;
             property TD_MessageChatUpgradeTo messageContentItem : null;
         }
@@ -1733,8 +1747,30 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
-            property TD_Message                  messageItem        : null;
-            property TD_MessageContactRegistered messageContentItem : null;
+            property TD_Chat              chatItem           : null;
+            property TD_Message           messageItem        : null;
+            property TD_MessagePinMessage messageContentItem : null;
+        }
+    }
+    Component {
+        id: compoMsgPinMessage;
+
+        LabelFixed {
+            text: (messageContentItem
+                   ? (messageContentItem.messageId !== "0"
+                      ? qsTr ("Pinned message : %1").arg (pinnedMessageItem ? pinnedMessageItem.preview (TD_Message.MINIMAL) : qsTr ("deleted message"))
+                      : qsTr ("Unpinned message"))
+                   : "")
+            color: Theme.secondaryHighlightColor;
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+            font.italic: true;
+
+            property TD_Chat              chatItem           : null;
+            property TD_Message           messageItem        : null;
+            property TD_MessagePinMessage messageContentItem : null;
+
+            readonly property TD_MessageRefWatcher pinnedMsgRefWatcher : (chatItem ? chatItem.getMessageRefById (messageContentItem.messageId) : null);
+            readonly property TD_Message           pinnedMessageItem   : (pinnedMsgRefWatcher ? pinnedMsgRefWatcher.messageItem : null);
         }
     }
     Component {
@@ -1746,6 +1782,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Chat                        chatItem           : null;
             property TD_Message                     messageItem        : null;
             property TD_MessageBasicGroupChatCreate messageContentItem : null;
         }
@@ -1759,6 +1796,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Chat                        chatItem           : null;
             property TD_Message                     messageItem        : null;
             property TD_MessageSupergroupChatCreate messageContentItem : null;
         }
@@ -1783,6 +1821,7 @@ ApplicationWindow {
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             font.italic: true;
 
+            property TD_Chat        chatItem           : null;
             property TD_Message     messageItem        : null;
             property TD_MessageCall messageContentItem : null;
 
@@ -1796,6 +1835,7 @@ ApplicationWindow {
             id: delegateMsgChatChangePhoto;
             spacing: Theme.paddingSmall;
 
+            property TD_Chat                   chatItem           : null;
             property TD_Message                messageItem        : null;
             property TD_MessageChatChangePhoto messageContentItem : null;
 
@@ -1824,6 +1864,7 @@ ApplicationWindow {
             text: qsTr ("<Unsupported>");
             color: "magenta";
 
+            property TD_Chat           chatItem           : null;
             property TD_Message        messageItem        : null;
             property TD_MessageContent messageContentItem : null;
         }

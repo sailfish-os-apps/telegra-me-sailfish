@@ -458,7 +458,7 @@ Page {
                         readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
                         readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
                         readonly property int               unreadCount        : (chatItem.notificationSettings && chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
-                        readonly property string            description        : (lastMsgItem ? lastMsgItem.preview () : "");
+                        readonly property string            description        : (lastMsgItem ? lastMsgItem.preview (TD_Message.SHOW_TITLE) : "");
 
                         Connections {
                             target: delegateChat.chatItem;

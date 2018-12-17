@@ -29,6 +29,7 @@ QtTdLibMessageContent * QtTdLibMessageContent::createAbstract (const QJsonObject
         case QtTdLibObjectType::MESSAGE_CHAT_UPGRADE_TO:         return QtTdLibMessageChatUpgradeTo::create        (json, parent);
         case QtTdLibObjectType::MESSAGE_CHAT_UPGRADE_FROM:       return QtTdLibMessageChatUpgradeFrom::create      (json, parent);
         case QtTdLibObjectType::MESSAGE_CONTACT_REGISTERED:      return QtTdLibMessageContactRegistered::create    (json, parent);
+        case QtTdLibObjectType::MESSAGE_PIN_MESSAGE:             return QtTdLibMessagePinMessage::create           (json, parent);
         case QtTdLibObjectType::MESSAGE_CALL:                    return QtTdLibMessageCall::create                 (json, parent);
         default: return Q_NULLPTR;
     }
@@ -88,21 +89,23 @@ void QtTdLibMessage::updateFromJson (const QJsonObject & json) {
     set_content_withJSON                 (json ["content"], &QtTdLibMessageContent::createAbstract);
 }
 
-QString QtTdLibMessage::preview (const bool multiline) const {
+QString QtTdLibMessage::preview (const int flags) const {
     QString ret { };
-    if (QtTdLibUser * userItem = { QtTdLibCollection::allUsers.value (m_senderUserId, Q_NULLPTR) }) {
-        ret += userItem->get_firstName ();
-        ret += ' ';
-        ret += userItem->get_lastName ();
-        ret += " : ";
-    }
-    else if (QtTdLibChat * chatItem = { QtTdLibCollection::allChats.value (m_chatId, Q_NULLPTR) }) {
-        ret += chatItem->get_title ();
-        ret += " : ";
-    }
-    else { }
-    if (multiline) {
-        ret += "\n";
+    if (flags & SHOW_TITLE) {
+        if (QtTdLibUser * userItem = { QtTdLibCollection::allUsers.value (m_senderUserId, Q_NULLPTR) }) {
+            ret += userItem->get_firstName ();
+            ret += ' ';
+            ret += userItem->get_lastName ();
+            ret += " : ";
+        }
+        else if (QtTdLibChat * chatItem = { QtTdLibCollection::allChats.value (m_chatId, Q_NULLPTR) }) {
+            ret += chatItem->get_title ();
+            ret += " : ";
+        }
+        else { }
+        if (flags & MULTILINE) {
+            ret += "\n";
+        }
     }
     if (m_content) {
         ret += m_content->asString ();
@@ -406,6 +409,18 @@ QtTdLibMessageContactRegistered::QtTdLibMessageContactRegistered (QObject * pare
 
 QString QtTdLibMessageContactRegistered::asString (void) const {
     return tr ("Registered in Telegram");
+}
+
+QtTdLibMessagePinMessage::QtTdLibMessagePinMessage (QObject * parent)
+    : QtTdLibMessageContent { QtTdLibObjectType::MESSAGE_PIN_MESSAGE, parent }
+{ }
+
+void QtTdLibMessagePinMessage::updateFromJson (const QJsonObject & json) {
+    set_messageId_withJSON (json ["message_id"]);
+}
+
+QString QtTdLibMessagePinMessage::asString (void) const {
+    return tr ("Pinned message");
 }
 
 QtTdLibMessageCall::QtTdLibMessageCall (QObject * parent)

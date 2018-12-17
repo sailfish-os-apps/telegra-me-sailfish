@@ -95,6 +95,7 @@ int main (int argc, char * argv []) {
     qmlRegisterType<QtTdLibMessageChatUpgradeFrom>                ("harbour.Telegrame", 1, 0, "TD_MessageChatUpgradeFrom");
     qmlRegisterType<QtTdLibMessageChatUpgradeTo>                  ("harbour.Telegrame", 1, 0, "TD_MessageChatUpgradeTo");
     qmlRegisterType<QtTdLibMessageContactRegistered>              ("harbour.Telegrame", 1, 0, "TD_MessageContactRegistered");
+    qmlRegisterType<QtTdLibMessagePinMessage>                     ("harbour.Telegrame", 1, 0, "TD_MessagePinMessage");
     qmlRegisterType<QtTdLibMessageContent>                        ("harbour.Telegrame", 1, 0, "TD_MessageContent");
     qmlRegisterType<QtTdLibMessageDocument>                       ("harbour.Telegrame", 1, 0, "TD_MessageDocument");
     qmlRegisterType<QtTdLibMessagePhoto>                          ("harbour.Telegrame", 1, 0, "TD_MessagePhoto");
