@@ -1993,34 +1993,63 @@ ApplicationWindow {
                     Item {
                         Container.forcedHeight: Theme.paddingLarge;
                     }
-                    MouseArea {
-                        id: btn;
-                        opacity: (enabled ? 1.0 : 0.35);
-                        implicitWidth: Math.max (Theme.itemSizeSmall, lbl.width + Theme.paddingMedium * 2);
-                        implicitHeight: Math.max (Theme.itemSizeSmall, lbl.height + Theme.paddingMedium * 2);
+                    ColumnContainer {
+                        spacing: Theme.paddingLarge;
                         anchors.horizontalCenter: parent.horizontalCenter;
-                        onClicked: {
-                            console.log ("PRIVATE CHAT REQUESTED", pageUserInfo.userItem.id);
-                            var chatItem = TD_Global.getChatItemById (userItem.id);
-                            if (chatItem) {
-                                TD_Global.showChat (chatItem);
-                            }
-                            else {
-                                TD_Global.createPrivateChat (pageUserInfo.userItem);
-                            }
-                        }
 
-                        Rectangle {
-                            color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
-                            radius: Theme.paddingSmall;
-                            opacity: 0.15;
-                            antialiasing: true;
-                            anchors.fill: parent;
+                        MouseArea {
+                            id: btn;
+                            opacity: (enabled ? 1.0 : 0.35);
+                            implicitWidth: Math.max (Theme.itemSizeSmall, lbl.width + Theme.paddingMedium * 2);
+                            implicitHeight: Math.max (Theme.itemSizeSmall, lbl.height + Theme.paddingMedium * 2);
+                            ExtraAnchors.horizontalFill: parent;
+                            onClicked: {
+                                console.log ("PRIVATE CHAT REQUESTED", pageUserInfo.userItem.id);
+                                var chatItem = TD_Global.getChatItemById (userItem.id);
+                                if (chatItem) {
+                                    TD_Global.showChat (chatItem);
+                                }
+                                else {
+                                    TD_Global.createPrivateChat (pageUserInfo.userItem);
+                                }
+                            }
+
+                            Rectangle {
+                                color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                                radius: Theme.paddingSmall;
+                                opacity: 0.15;
+                                antialiasing: true;
+                                anchors.fill: parent;
+                            }
+                            LabelFixed {
+                                id: lbl;
+                                text: qsTr ("Open private chat");
+                                anchors.centerIn: parent;
+                            }
                         }
-                        LabelFixed {
-                            id: lbl;
-                            text: qsTr ("Open private chat");
-                            anchors.centerIn: parent;
+                        MouseArea {
+                            id: btnSecret;
+                            enabled: false; // FIXED
+                            opacity: (enabled ? 1.0 : 0.35);
+                            implicitWidth: Math.max (Theme.itemSizeSmall, lblSecret.width + Theme.paddingMedium * 2);
+                            implicitHeight: Math.max (Theme.itemSizeSmall, lblSecret.height + Theme.paddingMedium * 2);
+                            ExtraAnchors.horizontalFill: parent;
+                            onClicked: {
+                                // TODO
+                            }
+
+                            Rectangle {
+                                color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                                radius: Theme.paddingSmall;
+                                opacity: 0.15;
+                                antialiasing: true;
+                                anchors.fill: parent;
+                            }
+                            LabelFixed {
+                                id: lblSecret;
+                                text: qsTr ("Open secret chat [TODO]");
+                                anchors.centerIn: parent;
+                            }
                         }
                     }
                 }

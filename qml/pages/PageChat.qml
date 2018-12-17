@@ -391,6 +391,15 @@ Page {
                                            ? (delegateMsg.userItem && delegateMsg.userItem.profilePhoto ? delegateMsg.userItem.profilePhoto.big : null)
                                            : (currentChat && currentChat.photo ? currentChat.photo.big : null));
                                 autoDownload: true;
+
+                                MouseArea {
+                                    anchors.fill: parent;
+                                    onClicked: {
+                                        pageStack.push (compoPageUserInfo, {
+                                                            "userItem" : delegateMsg.userItem,
+                                                        });
+                                    }
+                                }
                             }
                             ColumnContainer {
                                 spacing: 1;
