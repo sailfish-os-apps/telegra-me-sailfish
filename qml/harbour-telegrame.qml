@@ -1983,7 +1983,7 @@ ApplicationWindow {
                         Container.forcedHeight: headerUserInfo.height;
                     }
                     DelegateAvatar {
-                        size: Theme.iconSizeExtraLarge;
+                        size: (Theme.iconSizeExtraLarge * 1.65);
                         fileItem: (pageUserInfo.userItem && pageUserInfo.userItem.profilePhoto ? pageUserInfo.userItem.profilePhoto.big : null);
                         anchors.horizontalCenter: parent.horizontalCenter;
                     }
@@ -2297,35 +2297,27 @@ ApplicationWindow {
                         font.pixelSize: Theme.fontSizeExtraLarge;
                         anchors.right: parent.right;
                     }
-                    RowContainer {
-                        spacing: Theme.paddingLarge;
-                        anchors.margins: Theme.paddingLarge;
+                    DelegateAvatar {
+                        size: (Theme.iconSizeExtraLarge * 1.65);
+                        fileItem: (pageChatInfoBasicGroup.chatItem && pageChatInfoBasicGroup.chatItem.photo ? pageChatInfoBasicGroup.chatItem.photo.big : null);
+                        anchors.horizontalCenter: parent.horizontalCenter;
+                    }
+                    LabelFixed {
+                        text: (pageChatInfoBasicGroup.chatItem ? pageChatInfoBasicGroup.chatItem.title : "");
+                        color: Theme.primaryColor;
+                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                        horizontalAlignment: Text.AlignHCenter;
+                        font.family: Theme.fontFamilyHeading;
+                        font.pixelSize: Theme.fontSizeLarge;
                         ExtraAnchors.horizontalFill: parent;
-
-                        DelegateAvatar {
-                            size: Theme.iconSizeExtraLarge;
-                            fileItem: (pageChatInfoBasicGroup.chatItem && pageChatInfoBasicGroup.chatItem.photo ? pageChatInfoBasicGroup.chatItem.photo.big : null);
-                            anchors.verticalCenter: parent.verticalCenter;
-                        }
-                        LabelFixed {
-                            text: (pageChatInfoBasicGroup.chatItem ? pageChatInfoBasicGroup.chatItem.title : "");
-                            color: Theme.primaryColor;
-                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
-                            font.family: Theme.fontFamilyHeading;
-                            font.pixelSize: Theme.fontSizeLarge;
-                            anchors.verticalCenter: parent.verticalCenter;
-                            Container.horizontalStretch: 1;
-                        }
                     }
                     RowContainer {
                         spacing: Theme.paddingLarge;
                         visible: pageChatInfoBasicGroup.creatorUserItem;
-                        anchors.margins: Theme.paddingLarge;
-                        ExtraAnchors.horizontalFill: parent;
+                        anchors.horizontalCenter: parent.horizontalCenter;
 
                         ColumnContainer {
                             anchors.verticalCenter: parent.verticalCenter;
-                            Container.horizontalStretch: 1;
 
                             LabelFixed {
                                 text: qsTr ("Created by");
@@ -2339,7 +2331,7 @@ ApplicationWindow {
                                        : "<undefined>");
                                 color: Theme.highlightColor;
                                 font.underline: true;
-                                font.pixelSize: Theme.fontSizeMedium;
+                                font.pixelSize: Theme.fontSizeSmall;
                                 anchors.right: parent.right;
                             }
                         }
@@ -2379,7 +2371,7 @@ ApplicationWindow {
                             color: Theme.secondaryHighlightColor;
                             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                             font.underline: true;
-                            font.pixelSize: Theme.fontSizeLarge;
+                            font.pixelSize: Theme.fontSizeSmall;
                             anchors.verticalCenter: parent.verticalCenter;
                             Container.horizontalStretch: 1;
                         }
@@ -2539,25 +2531,19 @@ ApplicationWindow {
                         font.pixelSize: Theme.fontSizeExtraLarge;
                         anchors.right: parent.right;
                     }
-                    RowContainer {
-                        spacing: Theme.paddingLarge;
-                        anchors.margins: Theme.paddingLarge;
+                    DelegateAvatar {
+                        size: (Theme.iconSizeExtraLarge * 1.65);
+                        fileItem: (pageChatInfoSupergroup.chatItem && pageChatInfoSupergroup.chatItem.photo ? pageChatInfoSupergroup.chatItem.photo.big : null);
+                        anchors.horizontalCenter: parent.horizontalCenter;
+                    }
+                    LabelFixed {
+                        text: (pageChatInfoSupergroup.chatItem ? pageChatInfoSupergroup.chatItem.title : "");
+                        color: Theme.primaryColor;
+                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                        horizontalAlignment: Text.AlignHCenter;
+                        font.family: Theme.fontFamilyHeading;
+                        font.pixelSize: Theme.fontSizeLarge;
                         ExtraAnchors.horizontalFill: parent;
-
-                        DelegateAvatar {
-                            size: Theme.iconSizeExtraLarge;
-                            fileItem: (pageChatInfoSupergroup.chatItem && pageChatInfoSupergroup.chatItem.photo ? pageChatInfoSupergroup.chatItem.photo.big : null);
-                            anchors.verticalCenter: parent.verticalCenter;
-                        }
-                        LabelFixed {
-                            text: (pageChatInfoSupergroup.chatItem ? pageChatInfoSupergroup.chatItem.title : "");
-                            color: Theme.primaryColor;
-                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
-                            font.family: Theme.fontFamilyHeading;
-                            font.pixelSize: Theme.fontSizeLarge;
-                            anchors.verticalCenter: parent.verticalCenter;
-                            Container.horizontalStretch: 1;
-                        }
                     }
                     LabelFixed {
                         text: (pageChatInfoSupergroup.supergroupItem ? pageChatInfoSupergroup.supergroupItem.description : "");
@@ -2596,8 +2582,9 @@ ApplicationWindow {
                         LabelFixed {
                             text: (pageChatInfoSupergroup.supergroupItem ? "@" + pageChatInfoSupergroup.supergroupItem.username : "");
                             color: Theme.secondaryHighlightColor;
+                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                             font.underline: true;
-                            font.pixelSize: Theme.fontSizeLarge;
+                            font.pixelSize: Theme.fontSizeSmall;
                             anchors.verticalCenter: parent.verticalCenter;
                         }
                     }
@@ -2620,7 +2607,7 @@ ApplicationWindow {
                             color: Theme.secondaryHighlightColor;
                             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                             font.underline: true;
-                            font.pixelSize: Theme.fontSizeLarge;
+                            font.pixelSize: Theme.fontSizeSmall;
                             anchors.verticalCenter: parent.verticalCenter;
                             Container.horizontalStretch: 1;
                         }
