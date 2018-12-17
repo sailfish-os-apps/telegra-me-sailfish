@@ -2343,12 +2343,11 @@ ApplicationWindow {
                                 anchors.right: parent.right;
                             }
                         }
-                        DelegateDownloadableImage {
+                        DelegateAvatar {
                             size: Theme.iconSizeMedium;
                             fileItem: (pageChatInfoBasicGroup.creatorUserItem && pageChatInfoBasicGroup.creatorUserItem.profilePhoto
                                        ? pageChatInfoBasicGroup.creatorUserItem.profilePhoto.big
                                        : null);
-                            autoDownload: true;
                             anchors.verticalCenter: parent.verticalCenter;
                         }
                     }
@@ -2429,12 +2428,20 @@ ApplicationWindow {
 
                                 readonly property TD_User memberUserItem : (chatMemberItem ? TD_Global.getUserItemById (chatMemberItem.userId) : null);
 
-                                DelegateDownloadableImage {
+                                MouseArea {
+                                    anchors.fill: parent;
+                                    Container.ignored: true;
+                                    onClicked: {
+                                        pageStack.push (compoPageUserInfo, {
+                                                            "userItem" : delegateBasicGroupMember.memberUserItem,
+                                                        });
+                                    }
+                                }
+                                DelegateAvatar {
                                     size: Theme.iconSizeMedium;
                                     fileItem: (delegateBasicGroupMember.memberUserItem && delegateBasicGroupMember.memberUserItem.profilePhoto
                                                ? delegateBasicGroupMember.memberUserItem.profilePhoto.big
                                                : null);
-                                    autoDownload: true;
                                     anchors.verticalCenter: parent.verticalCenter;
                                 }
                                 ColumnContainer {
@@ -2663,13 +2670,22 @@ ApplicationWindow {
 
                                 readonly property TD_User memberUserItem : (chatMemberItem ? TD_Global.getUserItemById (chatMemberItem.userId) : null);
 
-                                DelegateDownloadableImage {
+                                DelegateAvatar {
                                     size: Theme.iconSizeMedium;
                                     fileItem: (delegateSupergroupMember.memberUserItem && delegateSupergroupMember.memberUserItem.profilePhoto
                                                ? delegateSupergroupMember.memberUserItem.profilePhoto.big
                                                : null);
-                                    autoDownload: true;
                                     anchors.verticalCenter: parent.verticalCenter;
+
+                                    MouseArea {
+                                        anchors.fill: parent;
+                                        Container.ignored: true;
+                                        onClicked: {
+                                            pageStack.push (compoPageUserInfo, {
+                                                                "userItem" : delegateSupergroupMember.memberUserItem,
+                                                            });
+                                        }
+                                    }
                                 }
                                 ColumnContainer {
                                     Container.horizontalStretch: 1;
