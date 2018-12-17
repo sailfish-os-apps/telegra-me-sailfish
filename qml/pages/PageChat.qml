@@ -10,45 +10,26 @@ Page {
     allowedOrientations: Orientation.All;
     Component.onCompleted: {
         TD_Global.openChat (currentChat);
-        if (currentChat.unreadCount === 0 || currentChat.lastReadInboxMessageId === currentChat.messagesModel.lastItem ["id"]) {
-            TD_Global.autoScrollDownRequested (true);
+        if (currentChat.unreadCount > 0) {
+            // should wait for first unread msg to become valid and center on it
+        }
+        else {
+            initialized = true;
+            scrollToBottom ();
         }
     }
     Component.onDestruction: {
         TD_Global.closeChat (currentChat);
     }
-    onLastMessageItemChanged: {
-        if (currentlyOnApp) {
-            if (autoScrollDown) {
-                viewMessages.current = lastMessageItem;
-                viewMessages.behavior = FastObjectListView.KEEP_AT_BOTTOM;
-                TD_Global.markAllMessagesAsRead (currentChat);
-            }
+    onContainsFirstUnreadMsgChanged: {
+        if (!initialized && containsFirstUnreadMsg) {
+            centerOnMsg (currentChat.firstUnreadMessageItem.id);
+            initialized = true;
         }
     }
-    onLastReadMessageItemChanged: {
-        if (initialized) {
-            if (currentlyOnApp) {
-                if (autoScrollDown) {
-                    if (lastReadMessageItem && currentChat.messagesModel.lastItem) {
-                        TD_Global.markAllMessagesAsRead (currentChat);
-                    }
-                }
-            }
-        }
-        else {
-            if (lastReadMessageItem) {
-                viewMessages.current = lastReadMessageItem;
-                viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
-                initialized = true;
-            }
-        }
-    }
-    onCurrentlyOnAppChanged: {
-        if (!currentlyOnApp) {
-            TD_Global.autoScrollDownRequested (false);
-            viewMessages.current = lastMessageItem;
-            viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
+    onShouldMarkAllAsReadChanged: {
+        if (shouldMarkAllAsRead) {
+             TD_Global.markAllMessagesAsRead (currentChat);
         }
     }
 
@@ -57,13 +38,23 @@ Page {
 
     property TD_Chat currentChat : null;
 
-    readonly property TD_Message lastMessageItem : (currentChat
-                                                    ? currentChat.messagesModel.lastItem
-                                                    : null);
+    property string currentMessageId : "";
 
-    readonly property TD_Message lastReadMessageItem : (currentChat && currentChat.messagesModel.count > 0
-                                                        ? currentChat.getMessageItemById (currentChat.lastReadInboxMessageId)
-                                                        : null);
+    readonly property TD_MessageRefWatcher currentMessageRefWatcher : (currentChat && currentMessageId !== ""
+                                                                       ? currentChat.getMessageRefById (currentMessageId)
+                                                                       : null);
+
+    readonly property TD_Message currentMessageItem : (currentMessageRefWatcher
+                                                       ? currentMessageRefWatcher.messageItem
+                                                       : null);
+
+    readonly property TD_MessageRefWatcher replyingToMessageRefWatcher : (currentChat && TD_Global.replyingToMessageId !== ""
+                                                                          ? currentChat.getMessageRefById (TD_Global.replyingToMessageId)
+                                                                          : null);
+
+    readonly property TD_Message replyingToMessageItem : (replyingToMessageRefWatcher
+                                                          ? replyingToMessageRefWatcher.messageItem
+                                                          : null);
 
     readonly property TD_User currentChatUserItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_PRIVATE
                                                      ? TD_Global.getUserItemById (currentChat.type ["userId"])
@@ -77,23 +68,41 @@ Page {
                                                                  ? TD_Global.getSupergroupItemById (currentChat.type ["supergroupId"])
                                                                  : null);
 
-    readonly property bool currentlyOnApp : (Qt.application.state === Qt.ApplicationActive);
+    readonly property bool currentlyOnApp         : (Qt.application.state === Qt.ApplicationActive);
+    readonly property bool viewPositionedAtEnd    : (flickerMessages.atYEnd);
+    readonly property bool containsFirstUnreadMsg : (currentChat &&
+                                                     currentChat.firstUnreadMessageItem);
+    readonly property bool containsLastReadMsg    : (currentChat &&
+                                                     currentChat.oldestFetchedMessageId <= currentChat.lastReadInboxMessageId &&
+                                                     currentChat.newestFetchedMessageId >= currentChat.lastReadInboxMessageId);
+    readonly property bool shouldMarkAllAsRead    : (currentlyOnApp &&
+                                                     initialized &&
+                                                     viewPositionedAtEnd &&
+                                                     autoScrollDown &&
+                                                     currentChat.hasReachedLast); // FIXME : remove hasReachedLast test when TDLIB >= 1.3
 
-    Connections {
-        target: TD_Global;
-        onAutoScrollDownRequested: {
-            autoScrollDown = active;
-            if (active) {
-                viewMessages.current = currentChat.messagesModel.lastItem;
-                viewMessages.behavior = FastObjectListView.KEEP_AT_BOTTOM;
-                TD_Global.markAllMessagesAsRead (currentChat);
-            }
-            else {
-                viewMessages.behavior = FastObjectListView.FREE_MOVE;
-                viewMessages.current = null;
-            }
-        }
+    function scrollToTop () {
+        autoScrollDown   = false;
+        currentMessageId = "";
+        flickerMessages.contentY = 0;
     }
+
+    function scrollToBottom () {
+        currentMessageId = "";
+        autoScrollDown   = true;
+    }
+
+    function longJumpToMsg (messageId) {
+        autoScrollDown   = false;
+        currentMessageId = messageId;
+        TD_Global.loadInitialMessage (currentChat, messageId);
+    }
+
+    function centerOnMsg (messageId) {
+        autoScrollDown   = false;
+        currentMessageId = messageId;
+    }
+
     Binding {
         target: window;
         property: "showInputPanel";
@@ -142,24 +151,42 @@ Page {
     }
     SilicaFlickable {
         id: flickerMessages;
+        clip: true;
         quickScroll: false;
         anchors.fill: parent;
+        anchors.bottomMargin: (footerChat.height + (stripReplyTo.visible ? stripReplyTo.height : 0));
         onDraggingVerticallyChanged: {
-            if (atYEnd !== autoScrollDown) {
-                TD_Global.autoScrollDownRequested (atYEnd);
-            }
+            currentMessageId = "";
+            autoScrollDown   = atYEnd;
         }
         onFlickingVerticallyChanged: {
-            if (atYEnd !== autoScrollDown) {
-                TD_Global.autoScrollDownRequested (atYEnd);
-            }
+            currentMessageId = "";
+            autoScrollDown   = atYEnd;
         }
 
         FastObjectListView {
             id: viewMessages;
+
+            Binding on current {
+                value: (currentlyOnApp
+                        ? (autoScrollDown
+                           ? currentChat.messagesModel.lastItem
+                           : currentMessageItem)
+                          : null);
+            }
+            Binding on behavior {
+                value: (currentlyOnApp
+                        ? (autoScrollDown
+                           ? FastObjectListView.KEEP_AT_BOTTOM
+                           : (currentMessageItem
+                              ? FastObjectListView.KEEP_CENTERED
+                              : FastObjectListView.FREE_MOVE))
+                        : FastObjectListView.FREE_MOVE);
+            }
+
             model: (currentChat ? currentChat.messagesModel : 0);
-            spaceAfter: footerChat.height;
             spaceBefore: headerChat.height;
+            //spaceAfter: footerChat.height;
             delegate: ListItem {
                 id: delegateMsg;
                 contentHeight: layoutMessage.height;
@@ -221,10 +248,9 @@ Page {
                         readonly property TD_Video videoItem : (messageVideoItem ? messageVideoItem.video : null);
                     }
                     MenuItem {
-                        text: qsTr ("Reply [TODO]");
-                        enabled: false;
+                        text: qsTr ("Reply...");
                         onClicked: {
-                            // TODO
+                            TD_Global.replyingToMessageId = delegateMsg.messageItem.id;
                         }
                     }
                     MenuItem {
@@ -261,12 +287,7 @@ Page {
                 ExtraAnchors.horizontalFill: parent;
                 onMenuOpenChanged: {
                     if (menuOpen) {
-                        viewMessages.current = messageItem;
-                        viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
-                    }
-                    else {
-                        viewMessages.current = null;
-                        viewMessages.behavior = FastObjectListView.FREE_MOVE;
+                        centerOnMsg (messageItem.id);
                     }
                 }
 
@@ -282,8 +303,8 @@ Page {
                 RemorseItem { id: remorse; }
                 Rectangle {
                     color: Theme.secondaryHighlightColor;
-                    opacity: 0.05;
-                    visible: (delegateMsg.messageItem === viewMessages.current);
+                    opacity: 0.10;
+                    visible: (delegateMsg.messageItem.id === currentMessageId);
                     anchors.fill: parent;
                 }
                 Binding {
@@ -303,6 +324,31 @@ Page {
                     spacing: Theme.paddingSmall;
                     ExtraAnchors.topDock: parent;
 
+                    LabelFixed {
+                        id: lblNewMessages;
+                        text: qsTr ("New messages");
+                        color: Theme.highlightColor;
+                        visible: (delegateMsg.messageItem && currentChat && currentChat.firstUnreadMessageItem && currentChat.firstUnreadMessageItem.id === delegateMsg.messageItem.id);
+                        verticalAlignment: Text.AlignBottom;
+                        horizontalAlignment: Text.AlignHCenter;
+                        font.bold: true;
+                        font.pixelSize: Theme.fontSizeSmall;
+                        ExtraAnchors.horizontalFill: parent;
+
+                        Rectangle {
+                            opacity: 0.15;
+                            gradient: Gradient {
+                                GradientStop { position: 0; color: Theme.highlightColor; }
+                                GradientStop { position: 1; color: "transparent"; }
+                            }
+                            anchors.fill: parent;
+                        }
+                        Rectangle {
+                            color: Theme.highlightColor;
+                            implicitHeight: 1;
+                            ExtraAnchors.topDock: parent;
+                        }
+                    }
                     Item {
                         implicitHeight: (layoutMsgContent.height + layoutMsgContent.anchors.margins * 1.5);
                         anchors {
@@ -341,6 +387,29 @@ Page {
                                     color: Theme.highlightColor;
                                     visible: !delegateMsg.messageItem.isChannelPost;
                                     ExtraAnchors.horizontalFill: parent;
+                                }
+                                LabelFixed {
+                                    text: qsTr ("<b>Reply</b>: %1").arg (originalMessageItem ? originalMessageItem.preview (true).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
+                                    color: Theme.secondaryHighlightColor;
+                                    elide: Text.ElideRight;
+                                    visible: originalMsgRefWatcher;
+                                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                                    textFormat: Text.StyledText;
+                                    maximumLineCount: 3;
+                                    font.pixelSize: Theme.fontSizeSmall;
+                                    ExtraAnchors.horizontalFill: parent;
+
+                                    readonly property TD_MessageRefWatcher originalMsgRefWatcher : currentChat.getMessageRefById (delegateMsg.messageItem.replyToMessageId);
+                                    readonly property TD_Message           originalMessageItem   : (originalMsgRefWatcher ? originalMsgRefWatcher.messageItem : null);
+
+                                    MouseArea {
+                                        enabled: parent.originalMessageItem;
+                                        anchors.fill: parent;
+                                        anchors.margins: -Theme.paddingSmall;
+                                        onClicked: {
+                                            longJumpToMsg (delegateMsg.messageItem.replyToMessageId);
+                                        }
+                                    }
                                 }
                                 Loader {
                                     id: loaderMsgContent;
@@ -394,53 +463,47 @@ Page {
                             }
                         }
                     }
-                    LabelFixed {
-                        id: lblNewMessages;
-                        text: qsTr ("New messages");
-                        color: Theme.highlightColor;
-                        visible: (delegateMsg.messageItem &&
-                                  delegateMsg.messageItem.id === currentChat.lastReadInboxMessageId &&
-                                  delegateMsg.messageItem !== currentChat.messagesModel.lastItem);
-                        verticalAlignment: Text.AlignBottom;
-                        horizontalAlignment: Text.AlignHCenter;
-                        font.bold: true;
-                        font.pixelSize: Theme.fontSizeSmall;
-                        ExtraAnchors.horizontalFill: parent;
-
-                        Rectangle {
-                            opacity: 0.15;
-                            gradient: Gradient {
-                                GradientStop { position: 0; color: Theme.highlightColor; }
-                                GradientStop { position: 1; color: "transparent"; }
-                            }
-                            anchors.fill: parent;
-                        }
-                        Rectangle {
-                            implicitHeight: 1;
-                            color: Theme.highlightColor;
-                            ExtraAnchors.topDock: parent;
-                        }
-                    }
                 }
             }
         }
         PullDownMenu {
             id: pulleyTop;
+            visible: enabled;
+            enabled: (currentChat && !currentChat.hasReachedFirst);
 
             MenuItem {
-                text: qsTr ("Load 15 older messages...");
+                text: qsTr ("Load older messages...");
                 onDelayedClick: {
-                    TD_Global.autoScrollDownRequested (false);
-                    viewMessages.behavior = FastObjectListView.KEEP_CENTERED;
-                    viewMessages.current = currentChat.messagesModel.firstItem;
-                    TD_Global.loadMoreMessages (currentChat, 15);
+                    centerOnMsg (currentChat.messagesModel.firstItem.id);
+                    TD_Global.loadOlderMessages (currentChat);
+                }
+            }
+        }
+        PushUpMenu {
+            id: pulleyBottom;
+            visible: enabled;
+            enabled: (currentChat && !currentChat.hasReachedLast);
+
+            MenuItem {
+                text: qsTr ("Load newer messages...");
+                onDelayedClick: {
+                    centerOnMsg (currentChat.messagesModel.lastItem.id);
+                    TD_Global.loadNewerMessages (currentChat);
+                }
+            }
+            MenuItem {
+                text: qsTr ("Mark all read in chat");
+                onDelayedClick: {
+                    longJumpToMsg (currentChat.lastReceivedMessageId);
+                    TD_Global.loadNewerMessages (currentChat);
+                    scrollToBottom ();
                 }
             }
         }
     }
     Item {
         id: scrollBar;
-        state: (flickerMessages.flickingVertically || flickerMessages.draggingVertically ? "shown" : "hidden");
+        state: (!pulleyTop.active && !pulleyBottom.active && (flickerMessages.flickingVertically || flickerMessages.draggingVertically) ? "shown" : "hidden");
         opacity: 0.0;
         enabled: false;
         implicitWidth: Theme.itemSizeLarge;
@@ -501,8 +564,8 @@ Page {
             }
         ]
         anchors {
-            topMargin: viewMessages.spaceBefore;
-            bottomMargin: viewMessages.spaceAfter;
+            topMargin: (viewMessages.spaceBefore + flickerMessages.anchors.topMargin + headerChat.anchors.topMargin);
+            bottomMargin: (viewMessages.spaceAfter + flickerMessages.anchors.bottomMargin);
         }
         ExtraAnchors.rightDock: parent;
 
@@ -527,9 +590,7 @@ Page {
                 implicitWidth: Theme.itemSizeLarge;
                 implicitHeight: Theme.itemSizeLarge;
                 onClicked: {
-                    TD_Global.autoScrollDownRequested (false);
-                    viewMessages.behavior = FastObjectListView.KEEP_AT_TOP;
-                    viewMessages.current = currentChat.messagesModel.firstItem;
+                    scrollToTop ();
                 }
 
                 Image {
@@ -543,7 +604,7 @@ Page {
                 implicitWidth: Theme.itemSizeLarge;
                 implicitHeight: Theme.itemSizeLarge;
                 onClicked: {
-                    TD_Global.autoScrollDownRequested (true);
+                    scrollToBottom ();
                 }
 
                 Image {
@@ -554,9 +615,55 @@ Page {
             }
         }
     }
+    Item {
+        id: stripReplyTo;
+        visible: (replyingToMessageItem !== null);
+        implicitHeight: (layoutReplyTo.height + layoutReplyTo.anchors.margins * 2);
+        anchors.bottomMargin: footerChat.height;
+        ExtraAnchors.bottomDock: parent;
+
+        Rectangle {
+            color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
+            anchors.fill: parent;
+
+            Rectangle {
+                color: Theme.secondaryHighlightColor;
+                opacity: 0.15;
+                anchors.fill: parent;
+            }
+        }
+        RowContainer {
+            id: layoutReplyTo;
+            spacing: Theme.paddingMedium;
+            anchors {
+                margins: Theme.paddingMedium;
+                verticalCenter: parent.verticalCenter;
+            }
+            ExtraAnchors.horizontalFill: parent;
+
+            LabelFixed {
+                text: qsTr ("<b>Reply</b>: %1").arg (replyingToMessageItem ? replyingToMessageItem.preview (true).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
+                color: Theme.secondaryHighlightColor;
+                elide: Text.ElideRight;
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                textFormat: Text.StyledText;
+                maximumLineCount: 3;
+                font.pixelSize: Theme.fontSizeSmall;
+                anchors.verticalCenter: parent.verticalCenter;
+                Container.horizontalStretch: 1;
+            }
+            RectangleButton {
+                icon: "icon-m-clear";
+                anchors.verticalCenter: parent.verticalCenter;
+                onClicked: {
+                    TD_Global.replyingToMessageId = "";
+                }
+            }
+        }
+    }
     MouseArea {
         id: headerChat;
-        opacity: (pulleyTop.active ? 0.0 : 1.0);
+        opacity: (pulleyTop.active ? 0.65 : 1.0);
         implicitHeight: (layoutHeader.height + layoutHeader.anchors.margins * 2);
         anchors.topMargin: Math.max (-flickerMessages.contentY, 0);
         ExtraAnchors.topDock: parent;
@@ -571,6 +678,7 @@ Page {
             Rectangle {
                 color: Theme.secondaryHighlightColor;
                 opacity: 0.65;
+                visible: flickerMessages.atYBeginning;
                 implicitHeight: Theme.paddingSmall;
                 ExtraAnchors.topDock: parent;
             }

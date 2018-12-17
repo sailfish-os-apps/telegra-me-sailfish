@@ -1,4 +1,6 @@
 
+include ($$PWD/libQtQmlTricks/libQtQmlTricks-3.0.pri)
+
 TARGET = harbour-telegrame
 
 TEMPLATE = app
@@ -21,25 +23,12 @@ PKGCONFIG += mlite5
 INCLUDEPATH += \
     /usr/include \
     /usr/include/sailfishapp \
-    $$PWD/libQtQmlTricks \
-    $$PWD/libQtQmlTricks/core/macros \
-    $$PWD/libQtQmlTricks/core/models \
-    $$PWD/libQtQmlTricks/gui/containers \
-    $$PWD/libQtQmlTricks/gui/helpers \
     $$PWD/src
 
 SOURCES += \
     $$PWD/src/harbour-telegrame.cpp \
     $$PWD/src/QtTdLibJsonWrapper.cpp \
     $$PWD/src/QtTdLibEnums.cpp \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickAbstractContainerBase.cpp \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickColumnContainer.cpp \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickContainerAttachedObject.cpp \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickGridContainer.cpp \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickRowContainer.cpp \
-    $$PWD/libQtQmlTricks/gui/helpers/QQuickExtraAnchors.cpp \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickFastObjectListView.cpp \
-    $$PWD/libQtQmlTricks/QtQmlTricks.cpp \
     $$PWD/src/QtTdLibCommon.cpp \
     $$PWD/src/QtTdLibConnection.cpp \
     $$PWD/src/QtTdLibGlobal.cpp \
@@ -54,19 +43,6 @@ SOURCES += \
 HEADERS += \
     $$PWD/src/QtTdLibJsonWrapper.h \
     $$PWD/src/QtTdLibEnums.h \
-    $$PWD/libQtQmlTricks/core/macros/QmlEnumHelpers.h \
-    $$PWD/libQtQmlTricks/core/macros/QmlPropertyHelpers.h \
-    $$PWD/libQtQmlTricks/core/models/QQmlObjectListModel.h \
-    $$PWD/libQtQmlTricks/core/models/QQmlFastObjectListModel.h \
-    $$PWD/libQtQmlTricks/gui/containers/QQmlContainerEnums.h \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickAbstractContainerBase.h \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickColumnContainer.h \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickContainerAttachedObject.h \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickGridContainer.h \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickRowContainer.h \
-    $$PWD/libQtQmlTricks/gui/containers/QQuickFastObjectListView.h \
-    $$PWD/libQtQmlTricks/gui/helpers/QQuickExtraAnchors.h \
-    $$PWD/libQtQmlTricks/QtQmlTricks.h \
     $$PWD/src/QtTdLibCommon.h \
     $$PWD/src/QtTdLibConnection.h \
     $$PWD/src/QtTdLibGlobal.h \
@@ -86,23 +62,50 @@ RESOURCES += \
     $$PWD/images.qrc
 
 OTHER_FILES += \
+    $$PWD/rpm/$${TARGET}.yaml
+
+DISTFILES += \
     $$PWD/$${TARGET}.desktop \
     $$PWD/icons/86x86/$${TARGET}.png \
     $$PWD/icons/108x108/$${TARGET}.png \
     $$PWD/icons/128x128/$${TARGET}.png \
     $$PWD/icons/172x172/$${TARGET}.png \
-    $$PWD/rpm/$${TARGET}.yaml
+    $$PWD/dist/telegrame.json \
+    $$PWD/dist/x-telegrame.im.conf \
+    $$PWD/dist/x-telegrame.im.fg.conf \
+    $$PWD/dist/TelegrameSettings.qml \
+    $$PWD/dist/telegrame_im.ini \
+    $$PWD/dist/telegrame_im_exists.ini \
+    $$PWD/dist/telegrame_im_fg.ini
 
 target.files  = $${TARGET}
 target.path   = /usr/bin
+
 desktop.files = $$PWD/$${TARGET}.desktop
 desktop.path  = /usr/share/applications
+
 icon86.files  = $$PWD/icons/86x86/$${TARGET}.png
 icon86.path   = /usr/share/icons/hicolor/86x86/apps
+
 icon108.files = $$PWD/icons/108x108/$${TARGET}.png
 icon108.path  = /usr/share/icons/hicolor/108x108/apps
+
 icon128.files = $$PWD/icons/128x128/$${TARGET}.png
 icon128.path  = /usr/share/icons/hicolor/128x128/apps
+
 icon256.files = $$PWD/icons/256x256/$${TARGET}.png
 icon256.path  = /usr/share/icons/hicolor/256x256/apps
-INSTALLS     += target desktop icon86 icon108 icon128 icon256
+
+notificationcategories.files = $$PWD/dist/x-telegrame.im.conf $$PWD/dist/x-telegrame.im.fg.conf
+notificationcategories.path  = /usr/share/lipstick/notificationcategories
+
+events.files = $$PWD/dist/telegrame_im.ini $$PWD/dist/telegrame_im_exists.ini $$PWD/dist/telegrame_im_fg.ini
+events.path  = /usr/share/ngfd/events.d
+
+settings_json.files = $$PWD/dist/telegrame.json
+settings_json.path  = /usr/share/jolla-settings/entries
+
+settings_qml.files = $$PWD/dist/TelegrameSettings.qml
+settings_qml.path  = /usr/share/$${TARGET}/settings
+
+INSTALLS += target desktop icon86 icon108 icon128 icon256 notificationcategories events settings_json settings_qml

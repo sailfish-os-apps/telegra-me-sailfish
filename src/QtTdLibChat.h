@@ -121,9 +121,9 @@ class QtTdLibSupergroup : public QtTdLibAbstractInt32IdObject, public FactoryInt
     Q_TDLIB_PROPERTY_BOOL      (isAllHistoryAvailable)
     Q_TDLIB_PROPERTY_ID64      (stickerSetId)
     Q_TDLIB_PROPERTY_STRING    (inviteLink)
-    Q_TDLIB_PROPERTY_ID64      (pinnedMessageId)
+    Q_TDLIB_PROPERTY_ID53      (pinnedMessageId)
     Q_TDLIB_PROPERTY_ID32      (upgradedFromBasicGroupId)
-    Q_TDLIB_PROPERTY_ID64      (upgradedFromMaxMessageId)
+    Q_TDLIB_PROPERTY_ID53      (upgradedFromMaxMessageId)
     Q_TDLIB_PROPERTY_SUBOBJECT (status, QtTdLibChatMemberStatus)
     QML_OBJMODEL_PROPERTY      (members, QtTdLibChatMember)
 
@@ -227,6 +227,8 @@ public:
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 };
 
+class QtTdLibMessageRefWatcher;
+
 class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<QtTdLibChat> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_INT32     (unreadCount)
@@ -241,10 +243,24 @@ class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<Q
     Q_TDLIB_PROPERTY_SUBOBJECT (type, QtTdLibChatType)
     Q_TDLIB_PROPERTY_SUBOBJECT (photo, QtTdLibChatPhoto)
     Q_TDLIB_PROPERTY_SUBOBJECT (notificationSettings, QtTdLibChatNotificationSettings)
-    QML_FASTOBJMODEL_PROPERTY  (messagesModel, QtTdLibMessage)
+
     //last_message:message
     //draft_message:draftMessage
-    QML_READONLY_VAR_PROPERTY  (isCurrentChat, bool)
+
+    /// CUSTOM CONVENIENCE PROPERTIES
+
+    QML_FASTOBJMODEL_PROPERTY  (messagesModel, QtTdLibMessage)
+
+    QML_READONLY_VAR_PROPERTY  (isCurrentChat,   bool)
+    QML_READONLY_VAR_PROPERTY  (hasReachedFirst, bool)
+    QML_READONLY_VAR_PROPERTY  (hasReachedLast,  bool)
+
+    Q_TDLIB_PROPERTY_ID53      (lastNotifiedMessageId)
+    Q_TDLIB_PROPERTY_ID53      (lastReceivedMessageId)
+    Q_TDLIB_PROPERTY_ID53      (oldestFetchedMessageId)
+    Q_TDLIB_PROPERTY_ID53      (newestFetchedMessageId)
+
+    QML_READONLY_PTR_PROPERTY  (firstUnreadMessageItem, QtTdLibMessage)
 
 public:
     explicit QtTdLibChat (const qint64 id = 0, QObject * parent = Q_NULLPTR);
@@ -252,7 +268,8 @@ public:
 
     QHash<qint64, QtTdLibMessage *> allMessages;
 
-    Q_INVOKABLE QtTdLibMessage * getMessageItemById (const QString & id) const;
+    Q_INVOKABLE QtTdLibMessage           * getMessageItemById (const QString & id) const;
+    Q_INVOKABLE QtTdLibMessageRefWatcher * getMessageRefById  (const QString & id);
 
     QtTdLibMessage * getMessageItemById (const qint64 id) const;
 
@@ -263,13 +280,29 @@ public:
 
 signals:
     void displayRequested (void);
+    void messageItemAdded (QtTdLibMessage * messageItem);
 
 protected slots:
     void refreshNotification (void);
+    void findFirstNewMessage (void);
 
 private:
     QTimer m_timer;
     Notification m_notif;
+};
+
+class QtTdLibMessageRefWatcher : public QObject {
+    Q_OBJECT
+    QML_READONLY_PTR_PROPERTY (messageItem, QtTdLibMessage)
+
+public:
+    explicit QtTdLibMessageRefWatcher (const qint64 messageId = 0, QtTdLibChat * parent = Q_NULLPTR);
+
+protected slots:
+    void onMessageItemAdded (QtTdLibMessage * messageItem);
+
+private:
+    const qint64 m_messageId;
 };
 
 #endif // QTTDCHAT_H

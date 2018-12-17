@@ -360,7 +360,7 @@ public:
 
     void updateFromJson (const QJsonObject & json) Q_DECL_FINAL;
 
-    Q_INVOKABLE QString preview (void) const;
+    Q_INVOKABLE QString preview (const bool multiline = false) const;
 };
 
 #endif // QtTdLibMessage_H

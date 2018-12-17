@@ -1,13 +1,16 @@
 
 #include "QtTdLibChat.h"
+#include "QtTdLibGlobal.h"
 
 QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
     : QtTdLibAbstractInt53IdObject { QtTdLibObjectType::CHAT, id, parent }
     , m_isCurrentChat { false }
+    , m_firstUnreadMessageItem { Q_NULLPTR }
 {
     QtTdLibCollection::allChats.insert (id, this);
     static const QString ICON { "/usr/share/icons/hicolor/128x128/apps/harbour-telegrame.png" };
     m_notif.setAppName ("Telegra'me");
+    m_notif.setCategory ("x-telegrame.im");
     m_notif.setIcon    (ICON);
     m_notif.setAppIcon (ICON);
     m_notif.setMaxContentLines (3);
@@ -17,25 +20,27 @@ QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
                                                          "/org/uniqueconception/telegrame",
                                                          "org.uniqueconception.telegrame",
                                                          "showChat",
-                                                         QVariantList { /*"argument",*/ get_id () }));
-    connect (this, &QtTdLibChat::titleChanged,                          this, &QtTdLibChat::refreshNotification);
-    connect (this, &QtTdLibChat::unreadCountChanged,                    this, &QtTdLibChat::refreshNotification);
-    connect (this, &QtTdLibChat::isCurrentChatChanged,                  this, &QtTdLibChat::refreshNotification);
-    connect (&messagesModel, &QQmlFastObjectListModelBase::lastChanged, this, &QtTdLibChat::refreshNotification);
+                                                         QVariantList { get_id () }));
+    connect (this, &QtTdLibChat::titleChanged,                 this, &QtTdLibChat::refreshNotification);
+    connect (this, &QtTdLibChat::unreadCountChanged,           this, &QtTdLibChat::refreshNotification);
+    connect (this, &QtTdLibChat::isCurrentChatChanged,         this, &QtTdLibChat::refreshNotification);
+    connect (this, &QtTdLibChat::lastReceivedMessageIdChanged, this, &QtTdLibChat::refreshNotification);
     connect (&m_timer, &QTimer::timeout, this, [this] (void) {
-        if (m_unreadCount > 0 && !m_isCurrentChat && m_notificationSettings != Q_NULLPTR && m_notificationSettings->get_muteFor () == 0) {
-            if (QtTdLibMessage * lastMsg = { messagesModel.getLast () }) {
-                m_notif.setItemCount      (m_unreadCount);
-                m_notif.setSummary        (m_title);
-                m_notif.setTimestamp      (lastMsg->get_date ());
-                m_notif.setBody           (lastMsg->preview ());
-                m_notif.setPreviewBody    (lastMsg->preview ());
-                m_notif.setPreviewSummary (m_title);
-                m_notif.publish ();
-            }
-            else {
-                m_notif.close ();
-            }
+        QtTdLibMessage * lastMsg = { getMessageItemById (m_lastReceivedMessageId) };
+        if (!m_isCurrentChat &&
+            (m_unreadCount > 0) &&
+            (m_notificationSettings != Q_NULLPTR) &&
+            (m_notificationSettings->get_muteFor () == 0) &&
+            (lastMsg != Q_NULLPTR) &&
+            (lastMsg->get_id () > m_lastNotifiedMessageId)) {
+            m_lastNotifiedMessageId = lastMsg->get_id ();
+            m_notif.setItemCount      (m_unreadCount);
+            m_notif.setSummary        (m_title);
+            m_notif.setTimestamp      (lastMsg->get_date ());
+            m_notif.setBody           (lastMsg->preview ());
+            m_notif.setPreviewBody    (lastMsg->preview ());
+            m_notif.setPreviewSummary (m_title);
+            m_notif.publish ();
         }
         else {
             m_notif.close ();
@@ -45,6 +50,11 @@ QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
         qWarning () << "CLICKED" << get_id ();
         emit displayRequested ();
     });
+    connect (this,           &QtTdLibChat::lastReadInboxMessageIdChanged,  this, &QtTdLibChat::findFirstNewMessage);
+    connect (this,           &QtTdLibChat::lastReadOutboxMessageIdChanged, this, &QtTdLibChat::findFirstNewMessage);
+    connect (&messagesModel, &QQmlFastObjectListModelBase::itemInserted,   this, &QtTdLibChat::findFirstNewMessage);
+    connect (&messagesModel, &QQmlFastObjectListModelBase::itemRemoved,    this, &QtTdLibChat::findFirstNewMessage);
+    connect (&messagesModel, &QQmlFastObjectListModelBase::itemsCleared,   this, &QtTdLibChat::findFirstNewMessage);
     m_timer.setTimerType  (Qt::CoarseTimer);
     m_timer.setSingleShot (true);
     m_timer.setInterval   (350);
@@ -59,6 +69,19 @@ void QtTdLibChat::refreshNotification (void) {
     if (!m_timer.isActive ()) {
         m_timer.start ();
     }
+}
+
+void QtTdLibChat::findFirstNewMessage (void) {
+    QtTdLibMessage * firstUnreadMessageItem { Q_NULLPTR };
+    for (int idx { 0 }; idx < messagesModel.count (); ++idx) {
+        if (QtTdLibMessage * messageItem = { messagesModel.getAt (idx) }) {
+            if (messageItem->get_id () > m_lastReadInboxMessageId && (idx == 0 || messagesModel.getAt (idx -1)->get_id () <= m_lastReadInboxMessageId)) {
+                firstUnreadMessageItem = messageItem;
+                break;
+            }
+        }
+    }
+    set_firstUnreadMessageItem (firstUnreadMessageItem);
 }
 
 QtTdLibMessage * QtTdLibChat::getMessageItemById (const QString & id) const {
@@ -109,6 +132,11 @@ void QtTdLibChat::updateFromJson (const QJsonObject & json) {
     set_type_withJSON                    (json ["type"].toObject (),                  &QtTdLibChatType::createAbstract);
     set_photo_withJSON                   (json ["photo"].toObject (),                 &QtTdLibChatPhoto::create);
     set_notificationSettings_withJSON    (json ["notification_settings"].toObject (), &QtTdLibChatNotificationSettings::create);
+    set_lastReceivedMessageId_withJSON   (json ["last_message"].toObject () ["id"]);
+}
+
+QtTdLibMessageRefWatcher * QtTdLibChat::getMessageRefById (const QString & id) {
+    return (id != "0" ? new QtTdLibMessageRefWatcher { id.toLongLong (), this } : Q_NULLPTR);
 }
 
 QtTdLibChatPhoto::QtTdLibChatPhoto (QObject * parent)
@@ -312,4 +340,26 @@ void QtTdLibChatMember::updateFromJson (const QJsonObject & json) {
     set_inviterUserId_withJSON  (json ["inviter_user_id"]);
     set_joinedChatDate_withJSON (json ["joined_chat_date"]);
     set_status_withJSON         (json ["status"], &QtTdLibChatMemberStatus::createAbstract);
+}
+
+QtTdLibMessageRefWatcher::QtTdLibMessageRefWatcher (const qint64 messageId, QtTdLibChat * parent)
+    : QObject       { parent }
+    , m_messageItem { (parent ? parent->getMessageItemById (messageId) : Q_NULLPTR) }
+    , m_messageId   { messageId }
+{
+    if (m_messageItem == Q_NULLPTR) {
+        if (parent != Q_NULLPTR) {
+            connect (parent, &QtTdLibChat::messageItemAdded, this, &QtTdLibMessageRefWatcher::onMessageItemAdded);
+            if (QtTdLibGlobal * global = { qobject_cast<QtTdLibGlobal *> (parent->parent ()) }) {
+                global->loadSingleMessageRef (parent, m_messageId);
+            }
+        }
+    }
+}
+
+void QtTdLibMessageRefWatcher::onMessageItemAdded(QtTdLibMessage * messageItem) {
+    if (messageItem->get_id () == m_messageId) {
+        set_messageItem (messageItem);
+        disconnect (qobject_cast<QtTdLibChat *> (parent ()), &QtTdLibChat::messageItemAdded, this, &QtTdLibMessageRefWatcher::onMessageItemAdded);
+    }
 }

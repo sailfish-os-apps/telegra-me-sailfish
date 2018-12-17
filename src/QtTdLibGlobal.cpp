@@ -22,7 +22,6 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     , DBUS_SERVICE_NAME { "org.uniqueconception.telegrame" }
     , DBUS_OBJECT_PATH { "/org/uniqueconception/telegrame" }
     , DBUS_INTERFACE { "org.uniqueconception.telegrame" }
-    , CONF_KEY_SEND_ON_ENTER { "send_text_msg_on_enter" }
     , SVG_ICON_FOR_MIMETYPE {
 { "image/png", "image" },
 { "image/jpeg", "image" },
@@ -85,17 +84,8 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
           }
     , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { this } }
     , m_audioRecorder { new QAudioRecorder { this } }
-    , m_autoPreFetcher { new QTimer { this } }
+    //, m_autoPreFetcher { new QTimer { this } }
 {
-    if (!m_settings.contains (CONF_KEY_SEND_ON_ENTER)) {
-        m_settings.setValue (CONF_KEY_SEND_ON_ENTER, m_sendTextOnEnterKey);
-    }
-    else {
-        m_sendTextOnEnterKey = m_settings.value (CONF_KEY_SEND_ON_ENTER).toBool ();
-    }
-    connect (this, &QtTdLibGlobal::sendTextOnEnterKeyChanged, this, [this] (void) {
-        m_settings.setValue (CONF_KEY_SEND_ON_ENTER, m_sendTextOnEnterKey);
-    });
     QDBusConnection dbus { QDBusConnection::sessionBus () };
     dbus.registerObject (DBUS_OBJECT_PATH, m_dbusAdaptor);
     if (!dbus.interface ()->isServiceRegistered (DBUS_SERVICE_NAME)) {
@@ -118,8 +108,8 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
             set_recordingDuration (int (m_audioRecorder->duration ()));
         }
     });
-    m_autoPreFetcher->setSingleShot (true);
-    connect (m_autoPreFetcher, &QTimer::timeout, this, &QtTdLibGlobal::onPrefetcherTick);
+    //m_autoPreFetcher->setSingleShot (true);
+    //connect (m_autoPreFetcher, &QTimer::timeout, this, &QtTdLibGlobal::onPrefetcherTick);
     connect (m_tdLibJsonWrapper, &QtTdLibJsonWrapper::recv, this, &QtTdLibGlobal::onFrame);
     m_tdLibJsonWrapper->start ();
 }
@@ -341,14 +331,20 @@ void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
                   { "@type", "openChat" },
                   { "chat_id", chatItem->get_id () },
               });
-        m_autoPreFetcher->start (350);
+        loadInitialMessage (chatItem, qMin (chatItem->get_lastReadInboxMessageId (), chatItem->get_lastReceivedMessageId ()));
     }
 }
 
 void QtTdLibGlobal::closeChat (QtTdLibChat * chatItem) {
+    set_replyingToMessageId ("");
     set_currentMessageContent (Q_NULLPTR);
     if (chatItem != Q_NULLPTR) {
-        chatItem->set_isCurrentChat (false);
+        chatItem->messagesModel.clear ();
+        chatItem->set_oldestFetchedMessageId (0); // NOTE : reset lower boundary
+        chatItem->set_newestFetchedMessageId (0); // NOTE : reset upper boundary
+        chatItem->set_hasReachedFirst (false); // NOTE : reset start flag
+        chatItem->set_hasReachedLast  (false); // NOTE : reset end flag
+        chatItem->set_isCurrentChat   (false);
         set_currentChat (Q_NULLPTR);
         send (QJsonObject {
                   { "@type", "closeChat" },
@@ -394,16 +390,90 @@ void QtTdLibGlobal::togglePinChat (QtTdLibChat * chatItem) {
     }
 }
 
-void QtTdLibGlobal::loadMoreMessages (QtTdLibChat * chatItem, const int count) {
-    if (chatItem != Q_NULLPTR && !chatItem->messagesModel.isEmpty () && count > 0) {
-        qWarning () << "LOAD MORE...";
+void QtTdLibGlobal::loadSingleMessageRef (QtTdLibChat * chatItem, const qint64 messageId) {
+    if (chatItem != Q_NULLPTR) {
+        if (messageId != 0) {
+            qWarning () << "LOAD SINGLE MESSAGE..." << messageId;
+            send (QJsonObject {
+                      { "@type", "getMessage" },
+                      { "chat_id", chatItem->get_id_asJSON () },
+                      { "message_id", QtTdLibId53Helper::fromCppToJson (messageId) },
+                  });
+        }
+    }
+}
+
+void QtTdLibGlobal::loadInitialMessage (QtTdLibChat * chatItem, const qint64 messageId) {
+    if (chatItem != Q_NULLPTR) {
+        if (messageId != 0) {
+            qWarning () << "LOAD INITIAL MESSAGE..." << messageId;
+            if (messageId < chatItem->get_oldestFetchedMessageId () || messageId > chatItem->get_newestFetchedMessageId ()) {
+                chatItem->messagesModel.clear (); // NOTE : need to clean current model
+                chatItem->set_oldestFetchedMessageId (0); // NOTE : reset lower boundary
+                chatItem->set_newestFetchedMessageId (0); // NOTE : reset upper boundary
+                chatItem->set_hasReachedFirst (false); // NOTE : reset start flag
+                chatItem->set_hasReachedLast  (false); // NOTE : reset end flag
+                if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
+                    chatItem->addMessageItem (messageItem); // NOTE : add message from collection
+                    chatItem->set_oldestFetchedMessageId (messageItem->get_id ()); // NOTE : set lower boundary
+                    chatItem->set_newestFetchedMessageId (messageItem->get_id ()); // NOTE : set upper boundary
+                    loadOlderMessages (chatItem); // NOTE : load older messages
+                    loadNewerMessages (chatItem); // NOTE : load newer messages
+                }
+                else {
+                    send (QJsonObject { // NOTE : need to get message from TDLIB call
+                                        { "@type", "getChatHistory" },
+                                        { "chat_id",  chatItem->get_id_asJSON () },
+                                        { "from_message_id", QtTdLibId53Helper::fromCppToJson (messageId) },
+                                        { "offset", -1 }, // must be negative to fetch newer messages
+                                        { "limit", 2 }, //  must be higher than -offset
+                                        { "only_local", false }, // allow to request on network not only database
+                                        { "@extra", QJsonObject {
+                                              { "chat_id",  chatItem->get_id_asJSON () },
+                                              { "load_mode", LOAD_INIT },
+                                          }
+                                        }
+                          });
+                }
+            }
+        }
+    }
+}
+
+void QtTdLibGlobal::loadOlderMessages (QtTdLibChat * chatItem, const int count) {
+    if (chatItem != Q_NULLPTR && chatItem->get_oldestFetchedMessageId () != 0 && count > 0) {
+        qWarning () << "LOAD" << count << "OLDER MESSAGES...";
         send (QJsonObject {
                   { "@type", "getChatHistory" },
                   { "chat_id",  chatItem->get_id_asJSON () },
-                  { "from_message_id", chatItem->messagesModel.getFirst ()->get_id () }, // Identifier of the message starting from which history must be fetched; use 0 to get results from the begining
-                  { "offset", 0 }, // Specify 0 to get results from exactly the from_message_id or a negative offset to get the specified message and some newer messages
-                  { "limit", count }, // The maximum number of messages to be returned; must be positive and can't be greater than 100. If the offset is negative, the limit must be greater than -offset. Fewer messages may be returned than specified by the limit, even if the end of the message history has not been reached
-                  { "only_local", false }, // If true, returns only messages that are available locally without sending network requests
+                  { "from_message_id", chatItem->get_oldestFetchedMessageId_asJSON () }, // starting from the oldest fetched message
+                  { "offset", 0 }, // must equal 0 to start exactly at position
+                  { "limit", count }, // must be equal to offset+count
+                  { "only_local", false }, // allow to request on network not only database
+                  { "@extra", QJsonObject {
+                        { "chat_id",  chatItem->get_id_asJSON () },
+                        { "load_mode", LOAD_OLDER },
+                    }
+                  }
+              });
+    }
+}
+
+void QtTdLibGlobal::loadNewerMessages (QtTdLibChat * chatItem, const int count) {
+    if (chatItem != Q_NULLPTR && chatItem->get_newestFetchedMessageId () != 0 && count > 0) {
+        qWarning () << "LOAD" << count << "NEWER MESSAGES...";
+        send (QJsonObject {
+                  { "@type", "getChatHistory" },
+                  { "chat_id",  chatItem->get_id_asJSON () },
+                  { "from_message_id", chatItem->get_newestFetchedMessageId_asJSON () }, // starting from the newest fetched message
+                  { "offset", -count }, // must be negative to fetch newer messages
+                  { "limit", count +1 }, //  must be higher than -offset
+                  { "only_local", false }, // allow to request on network not only database
+                  { "@extra", QJsonObject {
+                        { "chat_id",  chatItem->get_id_asJSON () },
+                        { "load_mode", LOAD_NEWER },
+                    }
+                  }
               });
     }
 }
@@ -460,7 +530,7 @@ void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & tex
         send (QJsonObject {
                   { "@type", "sendMessage" },
                   { "chat_id" , chatItem->get_id_asJSON () },
-                  { "reply_to_message_id", 0 },
+                  { "reply_to_message_id", QtTdLibId53Helper::fromQmlToJson (m_replyingToMessageId) },
                   { "disable_notification", false },
                   { "from_background", false },
                   { "reply_markup", QJsonValue::Null },
@@ -481,6 +551,7 @@ void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & tex
                   }
               });
     }
+    set_replyingToMessageId ("");
 }
 
 void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupInAlbum) {
@@ -503,7 +574,7 @@ void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupIn
                 send (QJsonObject {
                           { "@type", "sendMessageAlbum" },
                           { "chat_id", chatItem->get_id () },
-                          { "reply_to_message_id", 0  },
+                          { "reply_to_message_id", QtTdLibId53Helper::fromQmlToJson (m_replyingToMessageId) },
                           { "disable_notification", false },
                           { "from_background", false },
                           { "input_message_contents", contents }
@@ -515,7 +586,7 @@ void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupIn
                 send (QJsonObject {
                           { "@type", "sendMessage" },
                           { "chat_id", chatItem->get_id () },
-                          { "reply_to_message_id", 0  },
+                          { "reply_to_message_id", QtTdLibId53Helper::fromQmlToJson (m_replyingToMessageId) },
                           { "disable_notification", false },
                           { "from_background", false },
                           { "input_message_content", QJsonObject {
@@ -533,6 +604,7 @@ void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupIn
             }
         }
     }
+    set_replyingToMessageId ("");
 }
 
 void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupInAlbum) {
@@ -556,7 +628,7 @@ void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupIn
                 send (QJsonObject {
                           { "@type", "sendMessageAlbum" },
                           { "chat_id", chatItem->get_id_asJSON () },
-                          { "reply_to_message_id", 0  },
+                          { "reply_to_message_id", QtTdLibId53Helper::fromQmlToJson (m_replyingToMessageId) },
                           { "disable_notification", false },
                           { "from_background", false },
                           { "input_message_contents", contents }
@@ -568,7 +640,7 @@ void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupIn
                 send (QJsonObject {
                           { "@type", "sendMessage" },
                           { "chat_id", chatItem->get_id_asJSON () },
-                          { "reply_to_message_id", 0  },
+                          { "reply_to_message_id", QtTdLibId53Helper::fromQmlToJson (m_replyingToMessageId) },
                           { "disable_notification", false },
                           { "from_background", false },
                           { "input_message_content", QJsonObject {
@@ -587,6 +659,7 @@ void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupIn
             }
         }
     }
+    set_replyingToMessageId ("");
 }
 
 void QtTdLibGlobal::sendMessageVoiceNote (QtTdLibChat * chatItem, const QString & recording) {
@@ -599,7 +672,7 @@ void QtTdLibGlobal::sendMessageVoiceNote (QtTdLibChat * chatItem, const QString 
         send (QJsonObject {
                   { "@type", "sendMessage" },
                   { "chat_id", chatItem->get_id () },
-                  { "reply_to_message_id", 0  },
+                  { "reply_to_message_id", QtTdLibId53Helper::fromQmlToJson (m_replyingToMessageId) },
                   { "disable_notification", false },
                   { "from_background", false },
                   { "input_message_content", QJsonObject {
@@ -615,48 +688,55 @@ void QtTdLibGlobal::sendMessageVoiceNote (QtTdLibChat * chatItem, const QString 
                   }
               });
     }
+    set_replyingToMessageId ("");
 }
 
 void QtTdLibGlobal::sendMessageSticker (QtTdLibChat * chatItem, QtTdLibSticker * stickerItem) {
-    send (QJsonObject {
-              { "@type", "sendMessage" },
-              { "chat_id", chatItem->get_id () },
-              { "reply_to_message_id", 0  },
-              { "disable_notification", false },
-              { "from_background", false },
-              { "reply_markup", QJsonValue::Null },
-              { "input_message_content", QJsonObject {
-                    { "@type", "inputMessageSticker" },
-                    { "width", stickerItem->get_width () },
-                    { "height", stickerItem->get_height () },
-                    { "sticker", QJsonObject {
-                          { "@type", "inputFileRemote" },
-                          { "id", stickerItem->get_sticker ()->get_remote ()->get_id () },
-                      }
+    if (chatItem != Q_NULLPTR) {
+        send (QJsonObject {
+                  { "@type", "sendMessage" },
+                  { "chat_id", chatItem->get_id () },
+                  { "reply_to_message_id", QtTdLibId53Helper::fromQmlToJson (m_replyingToMessageId) },
+                  { "disable_notification", false },
+                  { "from_background", false },
+                  { "reply_markup", QJsonValue::Null },
+                  { "input_message_content", QJsonObject {
+                        { "@type", "inputMessageSticker" },
+                        { "width", stickerItem->get_width () },
+                        { "height", stickerItem->get_height () },
+                        { "sticker", QJsonObject {
+                              { "@type", "inputFileRemote" },
+                              { "id", stickerItem->get_sticker ()->get_remote ()->get_id () },
+                          }
+                        }
                     }
-                }
-              }
-          });
+                  }
+              });
+    }
+    set_replyingToMessageId ("");
 }
 
 void QtTdLibGlobal::sendMessageDocument (QtTdLibChat * chatItem, const QString & path) {
-    send (QJsonObject {
-              { "@type", "sendMessage" },
-              { "chat_id", chatItem->get_id () },
-              { "reply_to_message_id", 0 },
-              { "disable_notification", false },
-              { "from_background", false },
-              { "reply_markup", QJsonValue::Null },
-              { "input_message_content", QJsonObject {
-                    { "@type", "inputMessageDocument" },
-                    { "document", QJsonObject {
-                          { "@type", "inputFileLocal" },
-                          { "path", path },
-                      }
+    if (chatItem != Q_NULLPTR && QFile::exists (path)) {
+        send (QJsonObject {
+                  { "@type", "sendMessage" },
+                  { "chat_id", chatItem->get_id () },
+                  { "reply_to_message_id", QtTdLibId53Helper::fromQmlToJson (m_replyingToMessageId) },
+                  { "disable_notification", false },
+                  { "from_background", false },
+                  { "reply_markup", QJsonValue::Null },
+                  { "input_message_content", QJsonObject {
+                        { "@type", "inputMessageDocument" },
+                        { "document", QJsonObject {
+                              { "@type", "inputFileLocal" },
+                              { "path", path },
+                          }
+                        }
                     }
-                }
-              }
-          });
+                  }
+              });
+    }
+    set_replyingToMessageId ("");
 }
 
 bool QtTdLibGlobal::startRecordingAudio (void) {
@@ -893,7 +973,10 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     messageItem->updateFromJson (messageJson);
                 }
                 else {
-                    chatItem->addMessageItem (QtTdLibMessage::create (messageJson, chatItem));
+                    messageItem = QtTdLibMessage::create (messageJson, chatItem);
+                    if (chatItem->get_hasReachedLast ()) {
+                        chatItem->addMessageItem (messageItem);
+                    }
                 }
             }
             break;
@@ -908,29 +991,97 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     messageItem->updateFromJson (messageJson);
                 }
                 else {
-                    chatItem->addMessageItem (QtTdLibMessage::create (messageJson, chatItem));
+                    messageItem = QtTdLibMessage::create (messageJson, chatItem);
+                    if (chatItem->get_hasReachedLast ()) {
+                        chatItem->addMessageItem (messageItem);
+                    }
+                }
+                chatItem->set_lastReceivedMessageId (messageId);
+            }
+            break;
+        }
+        case QtTdLibObjectType::MESSAGE: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (json ["id"]) };
+                if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
+                    messageItem->updateFromJson (json);
+                }
+                else {
+                    QtTdLibMessage::create (json, chatItem);
                 }
             }
             break;
         }
         case QtTdLibObjectType::MESSAGES: {
-            const QJsonArray messagesListJson = json ["messages"].toArray ();
-            qWarning () << "GOT" << messagesListJson.count () << "MESSAGES";
-            for (const QJsonValue & tmp : messagesListJson) {
-                const QJsonObject messageJson { tmp.toObject () };
-                const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["chat_id"]) };
-                if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+            const LoadMode mode { LoadMode (json ["@extra"].toObject () ["load_mode"].toInt (LOAD_NONE)) };
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["@extra"].toObject () ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                const QJsonArray messagesListJson = json ["messages"].toArray ();
+                QMap<qint64, QtTdLibMessage *> messageItemsList  { };
+                for (const QJsonValue & tmp : messagesListJson) {
+                    const QJsonObject messageJson { tmp.toObject () };
                     const qint64 messageId { QtTdLibId53Helper::fromJsonToCpp (messageJson ["id"]) };
                     if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (messageId) }) {
                         messageItem->updateFromJson (messageJson);
+                        messageItemsList.insert (messageId, messageItem);
                     }
                     else {
-                        chatItem->addMessageItem (QtTdLibMessage::create (messageJson, chatItem));
+                        messageItemsList.insert (messageId, QtTdLibMessage::create (messageJson, chatItem));
                     }
                 }
-            }
-            if (!messagesListJson.isEmpty ()) {
-                m_autoPreFetcher->start (150);
+                switch (mode) {
+                    case LOAD_INIT:
+                    case LOAD_NEWER:
+                    case LOAD_OLDER: {
+                        qint64 oldestMsgId { 0 };
+                        qint64 newestMsgId { 0 };
+                        int newMessagesCounter { 0 };
+                        for (QMap<qint64, QtTdLibMessage *>::const_iterator it { messageItemsList.constBegin () }, end { messageItemsList.constEnd () }; it != end; ++it) {
+                            if (!chatItem->messagesModel.contains (it.value ())) {
+                                chatItem->addMessageItem (it.value ());
+                                if ((oldestMsgId == 0) || (it.key () < oldestMsgId)) {
+                                    oldestMsgId = it.key ();
+                                }
+                                if ((newestMsgId == 0) || (it.key () > newestMsgId)) {
+                                    newestMsgId = it.key ();
+                                }
+                                ++newMessagesCounter;
+                            }
+                        }
+                        if (newMessagesCounter > 0) {
+                            if ((chatItem->get_oldestFetchedMessageId () > oldestMsgId) ||
+                                (chatItem->get_oldestFetchedMessageId () == 0)) {
+                                chatItem->set_oldestFetchedMessageId (oldestMsgId);
+                            }
+                            if ((chatItem->get_newestFetchedMessageId () < newestMsgId) ||
+                                (chatItem->get_newestFetchedMessageId () == 0)) {
+                                chatItem->set_newestFetchedMessageId (newestMsgId);
+                            }
+                            qWarning () << "GOT" << newMessagesCounter << "MESSAGES" << mode << chatItem->get_oldestFetchedMessageId () << chatItem->get_newestFetchedMessageId ();
+                        }
+                        else {
+                            if (mode == LOAD_OLDER) {
+                                chatItem->set_hasReachedFirst (true);
+                            }
+                            else if (mode == LOAD_NEWER) {
+                                chatItem->set_hasReachedLast (true);
+                            }
+                            else { }
+                            qWarning () << "GOT NO MESSAGES" << mode << chatItem->get_hasReachedFirst () << chatItem->get_hasReachedLast ();
+                        }
+                        if ((chatItem->get_oldestFetchedMessageId () <= chatItem->get_lastReceivedMessageId ()) &&
+                            (chatItem->get_newestFetchedMessageId () >= chatItem->get_lastReceivedMessageId ())) {
+                            chatItem->set_hasReachedLast (true); // NOTE : special case
+                        }
+                        if (mode == LOAD_INIT) {
+                            loadNewerMessages (chatItem);
+                            loadOlderMessages (chatItem);
+                        }
+                        break;
+                    }
+                    default: break;
+                }
             }
             break;
         }
@@ -959,7 +1110,9 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     messageItem->updateFromJson (messageJson);
                 }
                 else {
-                    chatItem->addMessageItem (QtTdLibMessage::create (messageJson, chatItem));
+                    if (chatItem->get_hasReachedLast ()) {
+                        chatItem->addMessageItem (QtTdLibMessage::create (messageJson, chatItem)); // FIXME : what if !hasReachedLast ???
+                    }
                 }
                 const qint64 oldMessageId { QtTdLibId53Helper::fromJsonToCpp (json ["old_message_id"]) };
                 if (QtTdLibMessage * oldMessageItem = { chatItem->getMessageItemById (oldMessageId) }) {
@@ -1019,8 +1172,8 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             break;
         }
         case QtTdLibObjectType::STICKER_SETS: {
-            const QJsonArray sets = json ["sets"].toArray ();
-            for (const QJsonValue & tmp : sets) {
+            const QJsonArray setsJson = json ["sets"].toArray ();
+            for (const QJsonValue & tmp : setsJson) {
                 const QJsonObject stickerSetJson { tmp.toObject () };
                 const qint64 stickerSetId { QtTdLibId64Helper::fromJsonToCpp (stickerSetJson ["id"]) };
                 if (QtTdLibStickerSetInfo * stickerSetItem = { QtTdLibCollection::allStickersSets.value (stickerSetId, Q_NULLPTR) }) {
@@ -1051,10 +1204,10 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             break;
         }
         case QtTdLibObjectType::ANIMATIONS: {
-            const QJsonArray animations = json ["animations"].toArray ();
+            const QJsonArray animationsJson = json ["animations"].toArray ();
             QList<QtTdLibAnimation *> animationsList { };
-            animationsList.reserve (animations.count ());
-            for (const QJsonValue & tmp : animations) {
+            animationsList.reserve (animationsJson.count ());
+            for (const QJsonValue & tmp : animationsJson) {
                 animationsList.append (QtTdLibAnimation::create (tmp.toObject ()));
             }
             m_savedAnimationsList->clear ();
@@ -1064,16 +1217,6 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
         default: {
             qWarning () << "UNHANDLED";
             break;
-        }
-    }
-}
-
-void QtTdLibGlobal::onPrefetcherTick (void) {
-    if (m_currentChat != Q_NULLPTR) {
-        if (m_currentChat->messagesModel.count () < 30 ||
-            (m_currentChat->get_unreadCount () > 0 &&
-             m_currentChat->getMessageItemById (m_currentChat->get_lastReadInboxMessageId ()) == Q_NULLPTR)) {
-            loadMoreMessages (m_currentChat, 30); // FIXME : maybe a better way...
         }
     }
 }

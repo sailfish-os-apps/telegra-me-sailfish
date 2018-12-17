@@ -33,7 +33,7 @@ class DBusAdaptor: public QDBusAbstractAdaptor {
     Q_OBJECT
     Q_CLASSINFO ("D-Bus Interface", "org.uniqueconception.telegrame")
     Q_CLASSINFO ("D-Bus Introspection", ""
-                "  <interface name=\"org.blacksailer.depecher\">\n"
+                "  <interface name=\"org.uniqueconception.telegrame\">\n"
                 "    <method name=\"showChat\">\n"
                 "      <arg direction=\"in\" type=\"x\" name=\"chatId\"/>\n"
                 "      <annotation value=\"true\" name=\"org.freedesktop.DBus.Method.NoReply\"/>\n"
@@ -50,26 +50,35 @@ public slots:
 
 class QtTdLibGlobal : public QObject {
     Q_OBJECT
-    Q_TDLIB_PROPERTY_SUBOBJECT (connectionState,       QtTdLibConnectionState)
-    Q_TDLIB_PROPERTY_SUBOBJECT (authorizationState, QtTdLibAuthorizationState)
-    QML_OBJMODEL_PROPERTY      (chatsList,                        QtTdLibChat)
-    QML_OBJMODEL_PROPERTY      (stickerSetsList,        QtTdLibStickerSetInfo)
-    QML_OBJMODEL_PROPERTY      (savedAnimationsList,         QtTdLibAnimation)
-    QML_READONLY_VAR_PROPERTY  (recordingDuration,                        int)
-    QML_READONLY_VAR_PROPERTY  (unreadMessagesCount,                      int)
-    QML_READONLY_VAR_PROPERTY  (selectedPhotosCount,                      int)
-    QML_READONLY_VAR_PROPERTY  (selectedVideosCount,                      int)
-    QML_READONLY_PTR_PROPERTY  (currentChat,                      QtTdLibChat)
-    QML_WRITABLE_PTR_PROPERTY  (currentMessageContent,  QtTdLibMessageContent)
-    QML_CONSTANT_PTR_PROPERTY  (sortedChatsList,        QSortFilterProxyModel)
-    QML_CONSTANT_PTR_PROPERTY  (dbusAdaptor,                      DBusAdaptor)
-    QML_WRITABLE_VAR_PROPERTY  (sendTextOnEnterKey,                      bool)
+    Q_TDLIB_PROPERTY_SUBOBJECT   (connectionState,       QtTdLibConnectionState)
+    Q_TDLIB_PROPERTY_SUBOBJECT   (authorizationState, QtTdLibAuthorizationState)
+    QML_OBJMODEL_PROPERTY        (chatsList,                        QtTdLibChat)
+    QML_OBJMODEL_PROPERTY        (stickerSetsList,        QtTdLibStickerSetInfo)
+    QML_OBJMODEL_PROPERTY        (savedAnimationsList,         QtTdLibAnimation)
+    QML_READONLY_VAR_PROPERTY    (recordingDuration,                        int)
+    QML_READONLY_VAR_PROPERTY    (unreadMessagesCount,                      int)
+    QML_READONLY_VAR_PROPERTY    (selectedPhotosCount,                      int)
+    QML_READONLY_VAR_PROPERTY    (selectedVideosCount,                      int)
+    QML_READONLY_PTR_PROPERTY    (currentChat,                      QtTdLibChat)
+    QML_WRITABLE_PTR_PROPERTY    (currentMessageContent,  QtTdLibMessageContent)
+    QML_CONSTANT_PTR_PROPERTY    (sortedChatsList,        QSortFilterProxyModel)
+    QML_CONSTANT_PTR_PROPERTY    (dbusAdaptor,                      DBusAdaptor)
+    QML_WRITABLE_VAR_PROPERTY    (sendTextOnEnterKey,                      bool)
+    QML_WRITABLE_CSTREF_PROPERTY (replyingToMessageId,                  QString)
 
 public:
     explicit QtTdLibGlobal (QObject * parent = Q_NULLPTR);
     virtual ~QtTdLibGlobal (void);
 
     static QObject * qmlSingletonFactory (QQmlEngine * qmlEngine, QJSEngine * scriptEngine);
+
+    enum LoadMode {
+        LOAD_NONE = 0,
+        LOAD_INIT,
+        LOAD_NEWER,
+        LOAD_OLDER,
+    };
+    Q_ENUM (LoadMode)
 
     Q_INVOKABLE void        send (const QJsonObject & json) const;
     Q_INVOKABLE QJsonObject exec (const QJsonObject & json) const;
@@ -110,7 +119,10 @@ public:
     Q_INVOKABLE void markAllMessagesAsRead (QtTdLibChat * chatItem);
     Q_INVOKABLE void togglePinChat         (QtTdLibChat * chatItem);
 
-    Q_INVOKABLE void loadMoreMessages (QtTdLibChat * chatItem, const int count);
+    Q_INVOKABLE void loadSingleMessageRef (QtTdLibChat * chatItem, const qint64 messageId);
+    Q_INVOKABLE void loadInitialMessage   (QtTdLibChat * chatItem, const qint64 messageId);
+    Q_INVOKABLE void loadOlderMessages    (QtTdLibChat * chatItem, const int count = 15);
+    Q_INVOKABLE void loadNewerMessages    (QtTdLibChat * chatItem, const int count = 15);
 
     Q_INVOKABLE void removeMessage (QtTdLibChat * chatItem, QtTdLibMessage * messageItem, const bool forAll = false);
 
@@ -131,17 +143,14 @@ public:
 
 signals:
     void showChatRequested (const QString & chatId);
-    void autoScrollDownRequested (const bool active);
 
 protected:
     void onFrame (const QJsonObject & json);
-    void onPrefetcherTick (void);
 
 private:
     const QString DBUS_SERVICE_NAME;
     const QString DBUS_OBJECT_PATH;
     const QString DBUS_INTERFACE;
-    const QString CONF_KEY_SEND_ON_ENTER;
     const QHash<QString, QString> SVG_ICON_FOR_MIMETYPE;
 
     struct SelectionPhoto {
@@ -161,9 +170,7 @@ private:
 
     QtTdLibJsonWrapper * m_tdLibJsonWrapper;
     QAudioRecorder * m_audioRecorder;
-    QTimer * m_autoPreFetcher;
     QMimeDatabase m_mimeDb;
-    QSettings m_settings;
 };
 
 #endif // QTTDLIBGLOBAL_H

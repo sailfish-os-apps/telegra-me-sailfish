@@ -60,6 +60,7 @@ QtTdLibMessage::QtTdLibMessage (const qint64 id, QObject * parent)
 {
     if (QtTdLibChat * chatItem = { qobject_cast<QtTdLibChat *> (parent) }) {
         chatItem->allMessages.insert (id, this);
+        QMetaObject::invokeMethod (chatItem, "messageItemAdded", Qt::QueuedConnection, Q_ARG (QtTdLibMessage *, this));
     }
 }
 
@@ -87,7 +88,7 @@ void QtTdLibMessage::updateFromJson (const QJsonObject & json) {
     set_content_withJSON                 (json ["content"], &QtTdLibMessageContent::createAbstract);
 }
 
-QString QtTdLibMessage::preview (void) const {
+QString QtTdLibMessage::preview (const bool multiline) const {
     QString ret { };
     if (QtTdLibUser * userItem = { QtTdLibCollection::allUsers.value (m_senderUserId, Q_NULLPTR) }) {
         ret += userItem->get_firstName ();
@@ -100,6 +101,9 @@ QString QtTdLibMessage::preview (void) const {
         ret += " : ";
     }
     else { }
+    if (multiline) {
+        ret += "\n";
+    }
     if (m_content) {
         ret += m_content->asString ();
     }

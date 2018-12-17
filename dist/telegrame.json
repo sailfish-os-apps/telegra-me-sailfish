@@ -1,0 +1,14 @@
+{
+    "translation_catalog" : "harbour-telegrame",
+    "entries": [
+        {
+            "path": "applications/harbour-telegrame.desktop",
+            "title": "Telegra'me",
+            "type": "page",
+            "icon": "harbour-telegrame",
+            "params": {
+                "source": "/usr/share/harbour-telegrame/settings/TelegrameSettings.qml"
+            }
+        }
+    ]
+}

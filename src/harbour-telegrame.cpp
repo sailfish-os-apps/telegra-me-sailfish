@@ -27,6 +27,7 @@ int main (int argc, char * argv []) {
     QtQmlTricks::registerComponents ();
     qmlRegisterType<TextFormatter>                                ("harbour.Telegrame", 1, 0, "TextFormatter");
     qmlRegisterType<QSortFilterProxyModel>                        ("harbour.Telegrame", 1, 0, "SortFilterProxyModel");
+    qmlRegisterType<QtTdLibMessageRefWatcher>                     ("harbour.Telegrame", 1, 0, "TD_MessageRefWatcher");
     qmlRegisterType<QtTdLibAbstractObject>                        ("harbour.Telegrame", 1, 0, "TD_AbstractObject");
     qmlRegisterType<QtTdLibAnimation>                             ("harbour.Telegrame", 1, 0, "TD_Animation");
     qmlRegisterType<QtTdLibAudio>                                 ("harbour.Telegrame", 1, 0, "TD_Audio");

@@ -14,7 +14,7 @@ Name:       harbour-telegrame
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    A native Telegram client for Sailfish OS
 Version:    0.9
-Release:    6
+Release:    7
 Group:      Qt/Qt
 License:    LICENSE
 URL:        http://example.org/
@@ -70,5 +70,9 @@ desktop-file-install --delete-original       \
 %{_bindir}
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
+%{_datadir}/%{name}/settings/*.qml
+%{_datadir}/lipstick/notificationcategories/*.conf
+%{_datadir}/ngfd/events.d/*.ini
+%{_datadir}/jolla-settings/entries/*.json
 # >> files
 # << files

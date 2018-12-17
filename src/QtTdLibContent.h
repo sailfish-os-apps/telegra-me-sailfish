@@ -145,7 +145,7 @@ public:
 class QtTdLibPhoto : public QtTdLibAbstractInt64IdObject, public FactoryInt64Id<QtTdLibPhoto> {
     Q_OBJECT
     Q_TDLIB_PROPERTY_BOOL (hasStickers)
-    QML_OBJMODEL_PROPERTY (sizes,  QtTdLibPhotoSize)
+    QML_OBJMODEL_PROPERTY (sizes, QtTdLibPhotoSize)
 
 public:
     explicit QtTdLibPhoto (const qint64 id = 0, QObject * parent = Q_NULLPTR);

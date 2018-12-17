@@ -6,6 +6,7 @@ import Qt.labs.folderlistmodel 2.1;
 import QtDocGallery 5.0;
 import Nemo.Thumbnailer 1.0;
 import Nemo.Notifications 1.0;
+import Nemo.Configuration 1.0;
 import harbour.Telegrame 1.0;
 import "cover";
 import "pages";
@@ -28,19 +29,35 @@ ApplicationWindow {
 
     property int currentMsgType : TD_ObjectType.MESSAGE_TEXT;
 
+    property bool showInputPanel : false;
+
     property string currentRecording : "";
 
     property TD_StickerSet currentStickerSet : (TD_Global.stickerSetsList.count > 0 ? TD_Global.stickerSetsList.getFirst () : null);
 
-    property bool groupImagesInAlbums : true;
-    property bool groupVideosInAlbums : true;
-
-    property bool showInputPanel : false;
+    property alias groupImagesInAlbums   : configGroupImagesInAlbum.value;
+    property alias groupVideosInAlbums   : configGroupVideosInAlbum.value;
+    property alias sendTextMsgOnEnterKey : configSendTextMsgOnEnterKey.value;
 
     readonly property bool active      : (Qt.application.state === Qt.ApplicationActive);
     readonly property bool isPortrait  : (window.orientation === Orientation.Portrait || window.orientation === Orientation.PortraitInverted);
     readonly property bool isLandscape : (window.orientation === Orientation.Landscape || window.orientation === Orientation.LandscapeInverted);
 
+    ConfigurationValue {
+        id: configGroupImagesInAlbum;
+        key: "/apps/telegrame/group_images_in_album";
+        defaultValue: true;
+    }
+    ConfigurationValue {
+        id: configGroupVideosInAlbum;
+        key: "/apps/telegrame/group_videos_in_album";
+        defaultValue: true;
+    }
+    ConfigurationValue {
+        id: configSendTextMsgOnEnterKey;
+        key: "/apps/telegrame/send_text_msg_on_enter_key";
+        defaultValue: false;
+    }
     Item {
         rotation: {
             switch (window.orientation) {
@@ -93,7 +110,7 @@ ApplicationWindow {
 
                         TextField {
                             id: inputMsgSingle;
-                            visible: btnSendMsgText.fastSend;
+                            visible: sendTextMsgOnEnterKey;
                             labelVisible: false;
                             placeholderText: qsTr ("Text message");
                             anchors.fill: parent;
@@ -103,7 +120,7 @@ ApplicationWindow {
                         }
                         TextArea {
                             id: inputMsg;
-                            visible: !btnSendMsgText.fastSend;
+                            visible: !sendTextMsgOnEnterKey;
                             labelVisible: false;
                             placeholderText: qsTr ("Text message");
                             autoScrollEnabled: true;
@@ -123,15 +140,14 @@ ApplicationWindow {
                             execute ();
                         }
 
-                        readonly property bool fastSend : TD_Global.sendTextOnEnterKey;
-                        readonly property Item textBox  : (fastSend ? inputMsgSingle : inputMsg);
+                        readonly property Item textBox : (sendTextMsgOnEnterKey ? inputMsgSingle : inputMsg);
 
                         function execute () {
                             textBox.focus = false;
                             var tmp = textBox.text.trim ();
                             if (tmp !== "") {
                                 TD_Global.sendMessageText (TD_Global.currentChat, tmp);
-                                TD_Global.autoScrollDownRequested (true);
+                                //TD_Global.autoScrollDownRequested (true);
                             }
                             textBox.text = "";
                         }
@@ -176,7 +192,7 @@ ApplicationWindow {
                             if (TD_Global.selectedPhotosCount > 0) {
                                 TD_Global.sendMessagePhoto (TD_Global.currentChat, groupImagesInAlbums);
                                 TD_Global.unselectAllPhotos ();
-                                TD_Global.autoScrollDownRequested (true);
+                                //TD_Global.autoScrollDownRequested (true);
                             }
                         }
                     }
@@ -278,7 +294,7 @@ ApplicationWindow {
                             if (TD_Global.selectedVideosCount > 0) {
                                 TD_Global.sendMessageVideo (TD_Global.currentChat, groupVideosInAlbums);
                                 TD_Global.unselectAllVideos ();
-                                TD_Global.autoScrollDownRequested (true);
+                                //TD_Global.autoScrollDownRequested (true);
                             }
                         }
                     }
@@ -381,7 +397,7 @@ ApplicationWindow {
                         implicitHeight: GridView.view.cellHeight;
                         onClicked: {
                             TD_Global.sendMessageSticker (TD_Global.currentChat, stickerItem);
-                            TD_Global.autoScrollDownRequested (true);
+                            //TD_Global.autoScrollDownRequested (true);
                         }
 
                         readonly property TD_Sticker stickerItem : modelData;

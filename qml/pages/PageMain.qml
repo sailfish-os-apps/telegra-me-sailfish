@@ -422,7 +422,7 @@ Page {
                     model: TD_Global.sortedChatsList;
                     delegate: ListItem {
                         id: delegateChat;
-                        visible: ((chatItem.messagesModel.count > 0 && chatItem.order > 0) && (inputFilter.value === "" || chatItem.title.toLowerCase ().indexOf (inputFilter.value) >= 0));
+                        visible: ((chatItem.order > 0) && (inputFilter.value === "" || chatItem.title.toLowerCase ().indexOf (inputFilter.value) >= 0));
                         contentHeight: (Theme.iconSizeMedium + Theme.paddingMedium * 2);
                         implicitHeight: (Theme.iconSizeMedium + Theme.paddingMedium * 2);
                         menu: ContextMenu {
@@ -457,7 +457,7 @@ Page {
 
                         readonly property TD_Chat           chatItem           : modelData;
                         readonly property TD_ChatPhoto      chatPhotoItem      : (chatItem ? chatItem.photo : null);
-                        readonly property TD_Message        lastMsgItem        : (chatItem ? chatItem.messagesModel.lastItem : null);
+                        readonly property TD_Message        lastMsgItem        : (chatItem ? chatItem.getMessageItemById (chatItem.lastReceivedMessageId) : null);
                         readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
                         readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
                         readonly property int               unreadCount        : (chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
@@ -608,6 +608,7 @@ Page {
                 Rectangle {
                     color: Theme.secondaryHighlightColor;
                     opacity: 0.65;
+                    visible: flickerChats.atYBeginning;
                     implicitHeight: Theme.paddingSmall;
                     ExtraAnchors.topDock: parent;
                 }
