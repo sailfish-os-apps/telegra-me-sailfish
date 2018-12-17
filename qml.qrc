@@ -11,5 +11,8 @@
         <file>qml/components/WrapperVideoPlayer.qml</file>
         <file>qml/components/WrapperAudioPlayer.qml</file>
         <file>qml/components/LabelFixed.qml</file>
+        <file>qml/pages/PageSettings.qml</file>
+        <file>qml/pages/PageAbout.qml</file>
+        <file>qml/pages/PageContacts.qml</file>
     </qresource>
 </RCC>

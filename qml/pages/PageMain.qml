@@ -368,17 +368,15 @@ Page {
                 id: pulley;
 
                 MenuItem {
-                    text: qsTr ("About [TODO]");
-                    enabled: false;
+                    text: qsTr ("About");
                     onClicked: {
-                        // TODO
+                        pageStack.push (compoPageAbout);
                     }
                 }
                 MenuItem {
-                    text: qsTr ("Settings [TODO]");
-                    enabled: false;
+                    text: qsTr ("Settings");
                     onClicked: {
-                        // TODO
+                        pageStack.push (compoPageSettings);
                     }
                 }
                 MenuItem {
@@ -389,10 +387,9 @@ Page {
                     }
                 }
                 MenuItem {
-                    text: qsTr ("Contacts list [TODO]");
-                    enabled: false;
+                    text: qsTr ("Contacts list");
                     onClicked: {
-                        // TODO
+                        pageStack.push (compoPageContacts);
                     }
                 }
                 MenuItem {
@@ -433,7 +430,7 @@ Page {
                                 }
                             }
                             MenuItem {
-                                text: (delegateChat.chatItem.notificationSettings.muteFor > 0 ? qsTr ("Un-mute notifications [TODO]") : qsTr ("Mute notifications [TODO]"));
+                                text: (delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0 ? qsTr ("Un-mute notifications [TODO]") : qsTr ("Mute notifications [TODO]"));
                                 enabled: false;
                                 onClicked: {
                                     // TODO
@@ -460,21 +457,13 @@ Page {
                         readonly property TD_Message        lastMsgItem        : (chatItem ? chatItem.getMessageItemById (chatItem.lastReceivedMessageId) : null);
                         readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
                         readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
-                        readonly property int               unreadCount        : (chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
+                        readonly property int               unreadCount        : (chatItem.notificationSettings && chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
                         readonly property string            description        : (lastMsgItem ? lastMsgItem.preview () : "");
 
                         Connections {
                             target: delegateChat.chatItem;
                             onDisplayRequested: {
-                                console.log ("DISPLAY REQUESTED", delegateChat.chatItem.id);
-                                window.activate ();
-                                while (pageStack.depth > 1) {
-                                    pageStack.navigateBack (PageStackAction.Immediate);
-                                }
-                                pageStack.push (compoPageChat, {
-                                                    "currentChat" : delegateChat.chatItem,
-                                                },
-                                                PageStackAction.Immediate);
+                                TD_Global.showChat (delegateChat.chatItem);
                             }
                         }
                         RowContainer {

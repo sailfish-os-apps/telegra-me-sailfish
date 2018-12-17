@@ -303,8 +303,8 @@ Page {
                 RemorseItem { id: remorse; }
                 Rectangle {
                     color: Theme.secondaryHighlightColor;
-                    opacity: 0.10;
-                    visible: (delegateMsg.messageItem.id === currentMessageId);
+                    opacity: (delegateMsg.messageItem.containsUnreadMention ? 0.35 : 0.10);
+                    visible: (delegateMsg.messageItem.id === currentMessageId || delegateMsg.messageItem.containsUnreadMention);
                     anchors.fill: parent;
                 }
                 Binding {

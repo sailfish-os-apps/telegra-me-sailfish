@@ -1,27 +1,22 @@
 
 #include "QtTdLibGlobal.h"
 
-const QString dbusServiceName { "org.uniqueconception.telegrame" };
-const QString dbusObjectPath  { "/org/uniqueconception/telegrame" };
-const QString dbusInterface   { "org.uniqueconception.telegrame" };
-
 QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     : QObject { parent }
     , m_chatsList { new QQmlObjectListModel<QtTdLibChat> { this } }
+    , m_contactsList { new QQmlObjectListModel<QtTdLibUser> { this } }
     , m_stickerSetsList { new QQmlObjectListModel<QtTdLibStickerSetInfo> { this } }
     , m_savedAnimationsList { new QQmlObjectListModel<QtTdLibAnimation> { this } }
     , m_recordingDuration { 0 }
     , m_unreadMessagesCount { 0 }
+    , m_unreadMessagesCountWithMuted { 0 }
     , m_selectedPhotosCount { 0 }
     , m_selectedVideosCount { 0 }
     , m_currentChat { Q_NULLPTR }
     , m_currentMessageContent { Q_NULLPTR }
     , m_sortedChatsList { new QSortFilterProxyModel { this } }
-    , m_dbusAdaptor { new DBusAdaptor { this } }
+    , m_sortedContactsList { new QSortFilterProxyModel { this } }
     , m_sendTextOnEnterKey { false }
-    , DBUS_SERVICE_NAME { "org.uniqueconception.telegrame" }
-    , DBUS_OBJECT_PATH { "/org/uniqueconception/telegrame" }
-    , DBUS_INTERFACE { "org.uniqueconception.telegrame" }
     , SVG_ICON_FOR_MIMETYPE {
 { "image/png", "image" },
 { "image/jpeg", "image" },
@@ -84,17 +79,15 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
           }
     , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { this } }
     , m_audioRecorder { new QAudioRecorder { this } }
-    //, m_autoPreFetcher { new QTimer { this } }
 {
-    QDBusConnection dbus { QDBusConnection::sessionBus () };
-    dbus.registerObject (DBUS_OBJECT_PATH, m_dbusAdaptor);
-    if (!dbus.interface ()->isServiceRegistered (DBUS_SERVICE_NAME)) {
-        dbus.registerService (DBUS_SERVICE_NAME);
-    }
     m_sortedChatsList->setSourceModel (m_chatsList);
     m_sortedChatsList->setSortRole (m_chatsList->roleForName ("order"));
     m_sortedChatsList->setDynamicSortFilter (true);
     m_sortedChatsList->sort (0, Qt::DescendingOrder);
+    m_sortedContactsList->setSourceModel (m_contactsList);
+    m_sortedContactsList->setSortRole (m_contactsList->roleForName ("firstName"));
+    m_sortedContactsList->setDynamicSortFilter (true);
+    m_sortedContactsList->sort (0, Qt::AscendingOrder);
     QAudioEncoderSettings audioEncoderSettings { };
     audioEncoderSettings.setCodec        ("audio/PCM"); // "audio/speex"
     audioEncoderSettings.setEncodingMode (QMultimedia::TwoPassEncoding);
@@ -115,9 +108,6 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
 }
 
 QtTdLibGlobal::~QtTdLibGlobal (void) {
-    QDBusConnection dbus { QDBusConnection::sessionBus () };
-    dbus.unregisterObject  (DBUS_OBJECT_PATH);
-    dbus.unregisterService (DBUS_SERVICE_NAME);
     m_tdLibJsonWrapper->send (QJsonObject {
                                   { "@type", "close" }
                               });
@@ -320,6 +310,26 @@ void QtTdLibGlobal::setUserOnlineState (const bool online) {
                 }
               },
           });
+}
+
+void QtTdLibGlobal::createPrivateChat (QtTdLibUser * userItem) {
+    if (userItem != Q_NULLPTR) {
+        send (QJsonObject {
+                  { "@type", "createPrivateChat" },
+                  { "user_id", userItem->get_id_asJSON () },
+                  { "@extra", QJsonObject {
+                        { "show_chat", true },
+                    }
+                  }
+              });
+    }
+}
+
+void QtTdLibGlobal::showChat (QtTdLibChat * chatItem) {
+    if (chatItem != Q_NULLPTR) {
+        qWarning () << "SHOW CHAT" << chatItem->get_id () << chatItem->get_title ();
+        emit showChatRequested (chatItem);
+    }
 }
 
 void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
@@ -816,6 +826,11 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                         send (QJsonObject {
                                   { "@type", "getSavedAnimations" },
                               });
+                        send (QJsonObject {
+                                  { "@type", "searchContacts" },
+                                  { "query", "" },
+                                  { "limit", 1000 },
+                              });
                         break;
                     }
                     default: break;
@@ -828,7 +843,8 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             break;
         }
         case QtTdLibObjectType::UPDATE_UNREAD_MESSAGE_COUNT: {
-            set_unreadMessagesCount (json ["unread_unmuted_count"].toInt ());
+            set_unreadMessagesCount          (json ["unread_unmuted_count"].toInt ());
+            set_unreadMessagesCountWithMuted (json ["unread_count"].toInt ());
             break;
         }
         case QtTdLibObjectType::UPDATE_FILE: {
@@ -1000,6 +1016,34 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             }
             break;
         }
+        case QtTdLibObjectType::USERS: {
+            m_contactsList->clear ();
+            const QJsonArray usersIdsJson = json ["user_ids"].toArray ();
+            for (const QJsonValue & tmpJson : usersIdsJson) {
+                const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (tmpJson) };
+                if (QtTdLibUser * userItem = { getUserItemById (userId) }) {
+                    m_contactsList->append (userItem);
+                    qWarning () << "CONTACT" << userItem->get_firstName () << userItem->get_lastName ();
+                }
+            }
+            break;
+        }
+        case QtTdLibObjectType::CHAT: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->updateFromJson (json);
+                if (json ["@extra"].toObject () ["show_chat"].toBool ()) {
+                    showChat (chatItem);
+                }
+            }
+            else {
+                m_chatsList->append (QtTdLibChat::create (json, this));
+                if (json ["@extra"].toObject () ["show_chat"].toBool ()) {
+                    showChat (m_chatsList->last ());
+                }
+            }
+            break;
+        }
         case QtTdLibObjectType::MESSAGE: {
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
             if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
@@ -1163,6 +1207,20 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             }
             break;
         }
+        case QtTdLibObjectType::UPDATE_CHAT_UNREAD_MENTION_COUNT: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_unreadMentionCount_withJSON (json ["unread_mention_count"]);
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_MESSAGE_MENTION_READ: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_unreadMentionCount_withJSON (json ["unread_mention_count"]);
+            }
+            break;
+        }
         case QtTdLibObjectType::UPDATE_INSTALLED_STICKER_SETS: {
             const QJsonArray stickerSetIds = json ["sticker_set_ids"].toArray ();
             for (const QJsonValue & tmp : stickerSetIds) {
@@ -1218,19 +1276,5 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             qWarning () << "UNHANDLED";
             break;
         }
-    }
-}
-
-DBusAdaptor::DBusAdaptor (QObject * parent)
-    : QDBusAbstractAdaptor { parent }
-{
-    setAutoRelaySignals (true);
-}
-
-DBusAdaptor::~DBusAdaptor (void) { }
-
-void DBusAdaptor::showChat (qlonglong chatId) {
-    if (QtTdLibGlobal * global = { qobject_cast<QtTdLibGlobal *> (parent ()) }) {
-        emit global->showChatRequested (QString::number (chatId));
     }
 }

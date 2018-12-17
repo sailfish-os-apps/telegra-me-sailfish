@@ -70,10 +70,8 @@ DISTFILES += \
     $$PWD/icons/108x108/$${TARGET}.png \
     $$PWD/icons/128x128/$${TARGET}.png \
     $$PWD/icons/172x172/$${TARGET}.png \
-    $$PWD/dist/telegrame.json \
     $$PWD/dist/x-telegrame.im.conf \
     $$PWD/dist/x-telegrame.im.fg.conf \
-    $$PWD/dist/TelegrameSettings.qml \
     $$PWD/dist/telegrame_im.ini \
     $$PWD/dist/telegrame_im_exists.ini \
     $$PWD/dist/telegrame_im_fg.ini
@@ -102,10 +100,4 @@ notificationcategories.path  = /usr/share/lipstick/notificationcategories
 events.files = $$PWD/dist/telegrame_im.ini $$PWD/dist/telegrame_im_exists.ini $$PWD/dist/telegrame_im_fg.ini
 events.path  = /usr/share/ngfd/events.d
 
-settings_json.files = $$PWD/dist/telegrame.json
-settings_json.path  = /usr/share/jolla-settings/entries
-
-settings_qml.files = $$PWD/dist/TelegrameSettings.qml
-settings_qml.path  = /usr/share/$${TARGET}/settings
-
-INSTALLS += target desktop icon86 icon108 icon128 icon256 notificationcategories events settings_json settings_qml
+INSTALLS += target desktop icon86 icon108 icon128 icon256 notificationcategories events

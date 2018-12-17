@@ -35,14 +35,31 @@ ApplicationWindow {
 
     property TD_StickerSet currentStickerSet : (TD_Global.stickerSetsList.count > 0 ? TD_Global.stickerSetsList.getFirst () : null);
 
-    property alias groupImagesInAlbums   : configGroupImagesInAlbum.value;
-    property alias groupVideosInAlbums   : configGroupVideosInAlbum.value;
-    property alias sendTextMsgOnEnterKey : configSendTextMsgOnEnterKey.value;
+    property alias groupImagesInAlbums            : configGroupImagesInAlbum.value;
+    property alias groupVideosInAlbums            : configGroupVideosInAlbum.value;
+    property alias sendTextMsgOnEnterKey          : configSendTextMsgOnEnterKey.value;
+    property alias includeMutedChatsInUnreadCount : configIncludeMutedChatsInUnreadCount.value;
 
     readonly property bool active      : (Qt.application.state === Qt.ApplicationActive);
     readonly property bool isPortrait  : (window.orientation === Orientation.Portrait || window.orientation === Orientation.PortraitInverted);
     readonly property bool isLandscape : (window.orientation === Orientation.Landscape || window.orientation === Orientation.LandscapeInverted);
 
+    Connections {
+        target: TD_Global;
+        onShowChatRequested: {
+            if (chatItem) {
+                console.log ("DISPLAY REQUESTED", chatItem.id);
+                window.activate ();
+                while (pageStack.depth > 1) {
+                    pageStack.navigateBack (PageStackAction.Immediate);
+                }
+                pageStack.push (compoPageChat, {
+                                    "currentChat" : chatItem,
+                                },
+                                PageStackAction.Immediate);
+            }
+        }
+    }
     ConfigurationValue {
         id: configGroupImagesInAlbum;
         key: "/apps/telegrame/group_images_in_album";
@@ -56,6 +73,11 @@ ApplicationWindow {
     ConfigurationValue {
         id: configSendTextMsgOnEnterKey;
         key: "/apps/telegrame/send_text_msg_on_enter_key";
+        defaultValue: false;
+    }
+    ConfigurationValue {
+        id: configIncludeMutedChatsInUnreadCount;
+        key: "/apps/telegrame/include_muted_chats_in_unread_count";
         defaultValue: false;
     }
     Item {
@@ -74,6 +96,7 @@ ApplicationWindow {
 
         MouseArea {
             id: footerChat;
+            visible: enabled;
             enabled: showInputPanel;
             opacity: (enabled ? 1.0 : 0.0);
             implicitHeight: (layoutFooter.height + layoutFooter.anchors.margins * 2);
@@ -1816,9 +1839,173 @@ ApplicationWindow {
         PageMain { }
     }
     Component {
+        id: compoPageContacts;
+
+        PageContacts { }
+    }
+    Component {
         id: compoPageChat;
 
         PageChat { }
+    }
+    Component {
+        id: compoPageSettings;
+
+        PageSettings { }
+    }
+    Component {
+        id: compoPageAbout;
+
+        PageAbout { }
+    }
+    Component {
+        id: compoPageUserInfo;
+
+        Page {
+            id: pageUserInfo;
+            allowedOrientations: Orientation.Portrait;
+
+            property TD_User userItem : null;
+
+            SilicaFlickable {
+                contentWidth: width;
+                contentHeight: (layoutUserInfo.height + layoutUserInfo.anchors.margins * 2);
+                anchors.fill: parent;
+
+                ColumnContainer {
+                    id: layoutUserInfo;
+                    spacing: Theme.paddingMedium;
+                    ExtraAnchors.topDock: parent;
+
+                    Item {
+                        Container.forcedHeight: headerUserInfo.height;
+                    }
+                    DelegateDownloadableImage {
+                        size: Theme.iconSizeExtraLarge;
+                        fileItem: (pageUserInfo.userItem && pageUserInfo.userItem.profilePhoto ? pageUserInfo.userItem.profilePhoto.big : null);
+                        autoDownload: true;
+                        anchors.horizontalCenter: parent.horizontalCenter;
+                    }
+                    LabelFixed {
+                        text: (pageUserInfo.userItem ? pageUserInfo.userItem.firstName : "");
+                        color: Theme.primaryColor;
+                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                        font.family: Theme.fontFamilyHeading;
+                        font.pixelSize: Theme.fontSizeLarge;
+                        anchors.horizontalCenter: parent.horizontalCenter;
+                    }
+                    LabelFixed {
+                        text: (pageUserInfo.userItem ? pageUserInfo.userItem.lastName : "");
+                        color: Theme.primaryColor;
+                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                        font.family: Theme.fontFamilyHeading;
+                        font.pixelSize: Theme.fontSizeLarge;
+                        anchors.horizontalCenter: parent.horizontalCenter;
+                    }
+                    Item {
+                        Container.forcedHeight: Theme.paddingLarge;
+                    }
+                    RowContainer {
+                        spacing: Theme.paddingLarge;
+                        visible: (pageUserInfo.userItem && pageUserInfo.userItem.username !== "");
+                        anchors.margins: Theme.paddingLarge;
+                        ExtraAnchors.horizontalFill: parent;
+
+                        RectangleButton {
+                            icon: "icon-m-link";
+                            size: Theme.iconSizeMedium;
+                            anchors.verticalCenter: parent.verticalCenter;
+                            onClicked: {
+                                Clipboard.text = pageUserInfo.userItem.username;
+                            }
+                        }
+                        LabelFixed {
+                            text: (pageUserInfo.userItem ? "@" + pageUserInfo.userItem.username : "");
+                            color: Theme.secondaryHighlightColor;
+                            font.underline: true;
+                            font.pixelSize: Theme.fontSizeLarge;
+                            anchors.verticalCenter: parent.verticalCenter;
+                        }
+                    }
+                    RowContainer {
+                        spacing: Theme.paddingLarge;
+                        visible: (pageUserInfo.userItem && pageUserInfo.userItem.phoneNumber !== "");
+                        anchors.margins: Theme.paddingLarge;
+                        ExtraAnchors.horizontalFill: parent;
+
+                        RectangleButton {
+                            icon: "icon-m-answer";
+                            size: Theme.iconSizeMedium;
+                            anchors.verticalCenter: parent.verticalCenter;
+                            onClicked: {
+                                Qt.openUrlExternally ("tel:+" + pageUserInfo.userItem.phoneNumber);
+                            }
+                        }
+                        LabelFixed {
+                            text: (pageUserInfo.userItem ? "+" + pageUserInfo.userItem.phoneNumber : "");
+                            color: Theme.secondaryHighlightColor;
+                            font.underline: true;
+                            font.pixelSize: Theme.fontSizeLarge;
+                            anchors.verticalCenter: parent.verticalCenter;
+                        }
+                    }
+                    Item {
+                        Container.forcedHeight: Theme.paddingLarge;
+                    }
+                    MouseArea {
+                        id: btn;
+                        opacity: (enabled ? 1.0 : 0.35);
+                        implicitWidth: Math.max (Theme.itemSizeSmall, lbl.width + Theme.paddingMedium * 2);
+                        implicitHeight: Math.max (Theme.itemSizeSmall, lbl.height + Theme.paddingMedium * 2);
+                        anchors.horizontalCenter: parent.horizontalCenter;
+                        onClicked: {
+                            console.log ("PRIVATE CHAT REQUESTED", pageUserInfo.userItem.id);
+                            var chatItem = TD_Global.getChatItemById (userItem.id);
+                            if (chatItem) {
+                                TD_Global.showChat (chatItem);
+                            }
+                            else {
+                                TD_Global.createPrivateChat (pageUserInfo.userItem);
+                            }
+                        }
+
+                        Rectangle {
+                            color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                            radius: Theme.paddingSmall;
+                            opacity: 0.15;
+                            antialiasing: true;
+                            anchors.fill: parent;
+                        }
+                        LabelFixed {
+                            id: lbl;
+                            text: qsTr ("Open private chat");
+                            anchors.centerIn: parent;
+                        }
+                    }
+                }
+            }
+            Rectangle {
+                id: headerUserInfo;
+                color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
+                implicitHeight: (title.height + title.anchors.margins * 2);
+                ExtraAnchors.topDock: parent;
+
+                LabelFixed {
+                    id: title;
+                    text: qsTr ("Contact info");
+                    color: Theme.highlightColor;
+                    font {
+                        family: Theme.fontFamilyHeading;
+                        pixelSize: Theme.fontSizeLarge;
+                    }
+                    anchors {
+                        right: parent.right
+                        margins: Theme.paddingLarge;
+                        verticalCenter: parent.verticalCenter;
+                    }
+                }
+            }
+        }
     }
     Component {
         id: compoPageChatInfoPrivate;

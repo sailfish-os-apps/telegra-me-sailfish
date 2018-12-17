@@ -3,9 +3,6 @@
 
 #include <QAudioEncoderSettings>
 #include <QAudioRecorder>
-#include <QDBusAbstractAdaptor>
-#include <QDBusConnection>
-#include <QDBusConnectionInterface>
 #include <QDir>
 #include <QMimeDatabase>
 #include <QObject>
@@ -29,40 +26,23 @@
 #include "QmlPropertyHelpers.h"
 #include "QQmlObjectListModel.h"
 
-class DBusAdaptor: public QDBusAbstractAdaptor {
-    Q_OBJECT
-    Q_CLASSINFO ("D-Bus Interface", "org.uniqueconception.telegrame")
-    Q_CLASSINFO ("D-Bus Introspection", ""
-                "  <interface name=\"org.uniqueconception.telegrame\">\n"
-                "    <method name=\"showChat\">\n"
-                "      <arg direction=\"in\" type=\"x\" name=\"chatId\"/>\n"
-                "      <annotation value=\"true\" name=\"org.freedesktop.DBus.Method.NoReply\"/>\n"
-                "    </method>\n"
-                "  </interface>\n"
-                "")
-public:
-    explicit DBusAdaptor (QObject * parent);
-    virtual ~DBusAdaptor (void);
-
-public slots:
-    Q_NOREPLY void showChat (qlonglong chatId);
-};
-
 class QtTdLibGlobal : public QObject {
     Q_OBJECT
     Q_TDLIB_PROPERTY_SUBOBJECT   (connectionState,       QtTdLibConnectionState)
     Q_TDLIB_PROPERTY_SUBOBJECT   (authorizationState, QtTdLibAuthorizationState)
     QML_OBJMODEL_PROPERTY        (chatsList,                        QtTdLibChat)
+    QML_OBJMODEL_PROPERTY        (contactsList,                     QtTdLibUser)
     QML_OBJMODEL_PROPERTY        (stickerSetsList,        QtTdLibStickerSetInfo)
     QML_OBJMODEL_PROPERTY        (savedAnimationsList,         QtTdLibAnimation)
     QML_READONLY_VAR_PROPERTY    (recordingDuration,                        int)
     QML_READONLY_VAR_PROPERTY    (unreadMessagesCount,                      int)
+    QML_READONLY_VAR_PROPERTY    (unreadMessagesCountWithMuted,             int)
     QML_READONLY_VAR_PROPERTY    (selectedPhotosCount,                      int)
     QML_READONLY_VAR_PROPERTY    (selectedVideosCount,                      int)
     QML_READONLY_PTR_PROPERTY    (currentChat,                      QtTdLibChat)
     QML_WRITABLE_PTR_PROPERTY    (currentMessageContent,  QtTdLibMessageContent)
     QML_CONSTANT_PTR_PROPERTY    (sortedChatsList,        QSortFilterProxyModel)
-    QML_CONSTANT_PTR_PROPERTY    (dbusAdaptor,                      DBusAdaptor)
+    QML_CONSTANT_PTR_PROPERTY    (sortedContactsList,     QSortFilterProxyModel)
     QML_WRITABLE_VAR_PROPERTY    (sendTextOnEnterKey,                      bool)
     QML_WRITABLE_CSTREF_PROPERTY (replyingToMessageId,                  QString)
 
@@ -114,6 +94,9 @@ public:
 
     Q_INVOKABLE void setUserOnlineState (const bool online);
 
+    Q_INVOKABLE void createPrivateChat     (QtTdLibUser * userItem);
+
+    Q_INVOKABLE void showChat              (QtTdLibChat * chatItem);
     Q_INVOKABLE void openChat              (QtTdLibChat * chatItem);
     Q_INVOKABLE void closeChat             (QtTdLibChat * chatItem);
     Q_INVOKABLE void markAllMessagesAsRead (QtTdLibChat * chatItem);
@@ -142,7 +125,7 @@ public:
     Q_INVOKABLE void    removeRecording      (const QString & path);
 
 signals:
-    void showChatRequested (const QString & chatId);
+    void showChatRequested (QtTdLibChat * chatItem);
 
 protected:
     void onFrame (const QJsonObject & json);

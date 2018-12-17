@@ -2,11 +2,21 @@ import QtQuick 2.6;
 import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
+import Nemo.Configuration 1.0;
 import "../components";
 
 CoverBackground {
     id: cover;
 
+    readonly property int count : (configIncludeMutedChatsInUnreadCount.value
+                                   ? TD_Global.unreadMessagesCountWithMuted
+                                   : TD_Global.unreadMessagesCount);
+
+    ConfigurationValue {
+        id: configIncludeMutedChatsInUnreadCount;
+        key: "/apps/telegrame/include_muted_chats_in_unread_count";
+        defaultValue: false;
+    }
     Image {
         source: "qrc:///images/Telegram_logo.svg";
         height: width;
@@ -33,15 +43,15 @@ CoverBackground {
             anchors.horizontalCenter: parent.horizontalCenter;
         }
         LabelFixed {
-            text: TD_Global.unreadMessagesCount;
-            color: (TD_Global.unreadMessagesCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
+            text: count;
+            color: (count > 0 ? Theme.highlightColor : Theme.secondaryColor);
             font.pixelSize: Theme.fontSizeHuge;
             anchors.horizontalCenter: parent.horizontalCenter;
         }
         LabelFixed {
             text: qsTr ("unread messages");
             color: Theme.primaryColor;
-            opacity: (TD_Global.unreadMessagesCount > 0 ? 1.0 : 0.35);
+            opacity: (count > 0 ? 1.0 : 0.35);
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             horizontalAlignment: Text.AlignHCenter;
             font.pixelSize: Theme.fontSizeLarge;
