@@ -14,5 +14,6 @@
         <file>qml/pages/PageSettings.qml</file>
         <file>qml/pages/PageAbout.qml</file>
         <file>qml/pages/PageContacts.qml</file>
+        <file>qml/components/DelegateAvatar.qml</file>
     </qresource>
 </RCC>

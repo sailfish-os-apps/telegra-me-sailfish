@@ -42,13 +42,12 @@ Page {
                 }
                 ExtraAnchors.horizontalFill: parent;
 
-                DelegateDownloadableImage {
+                DelegateAvatar {
                     id: ico;
                     size: Theme.iconSizeMedium;
                     fileItem: (delegateContact.userItem && delegateContact.userItem.profilePhoto
                                ? delegateContact.userItem.profilePhoto.big
                                : null);
-                    autoDownload: true;
                     anchors.verticalCenter: parent.verticalCenter;
                 }
                 LabelFixed {

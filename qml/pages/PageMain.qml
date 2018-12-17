@@ -3,6 +3,7 @@ import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import Nemo.Notifications 1.0;
 import harbour.Telegrame 1.0;
+import QtGraphicalEffects 1.0;
 import "../InternationalPhoneCodes.js" as InternationalPhoneCodes;
 import "../components";
 
@@ -473,11 +474,10 @@ Page {
                             anchors.verticalCenter: parent.verticalCenter;
                             ExtraAnchors.horizontalFill: parent;
 
-                            DelegateDownloadableImage {
+                            DelegateAvatar {
                                 id: avatarChat;
                                 size: Theme.iconSizeMedium;
                                 fileItem: (delegateChat.chatPhotoItem ? delegateChat.chatPhotoItem.big : null);
-                                autoDownload: true;
                                 anchors.verticalCenter: parent.verticalCenter;
                             }
                             ColumnContainer {

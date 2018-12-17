@@ -385,12 +385,11 @@ Page {
                             anchors.margins: Theme.paddingLarge;
                             ExtraAnchors.topDock: parent;
 
-                            DelegateDownloadableImage {
+                            DelegateAvatar {
                                 size: Theme.iconSizeMedium;
                                 fileItem: (!delegateMsg.messageItem.isChannelPost
                                            ? (delegateMsg.userItem && delegateMsg.userItem.profilePhoto ? delegateMsg.userItem.profilePhoto.big : null)
                                            : (currentChat && currentChat.photo ? currentChat.photo.big : null));
-                                autoDownload: true;
 
                                 MouseArea {
                                     anchors.fill: parent;
@@ -827,10 +826,9 @@ Page {
                     }
                 }
             }
-            DelegateDownloadableImage {
-                size: Theme.iconSizeLarge;
+            DelegateAvatar {
+                size: Theme.iconSizeMedium;
                 fileItem: (currentChat && currentChat.photo ? currentChat.photo.big : null);
-                autoDownload: true;
                 anchors.verticalCenter: parent.verticalCenter;
             }
         }

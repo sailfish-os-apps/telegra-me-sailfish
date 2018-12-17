@@ -2,5 +2,9 @@
     <qresource prefix="/">
         <file>images/cd-box.svg</file>
         <file>images/Telegram_logo.svg</file>
+        <file>images/mask_circle.svg</file>
+        <file>images/mask_rounded.svg</file>
+        <file>images/mask_square.svg</file>
+        <file>images/mask_squircle.svg</file>
     </qresource>
 </RCC>

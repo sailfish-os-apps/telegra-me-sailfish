@@ -4,6 +4,7 @@ import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import Qt.labs.folderlistmodel 2.1;
 import QtDocGallery 5.0;
+import QtFeedback 5.0;
 import Nemo.Thumbnailer 1.0;
 import Nemo.Notifications 1.0;
 import Nemo.Configuration 1.0;
@@ -39,10 +40,21 @@ ApplicationWindow {
     property alias groupVideosInAlbums            : configGroupVideosInAlbum.value;
     property alias sendTextMsgOnEnterKey          : configSendTextMsgOnEnterKey.value;
     property alias includeMutedChatsInUnreadCount : configIncludeMutedChatsInUnreadCount.value;
+    property alias keepKeyboardOpenAfterMsgSend   : configKeepKeyboardOpenAfterMsgSend.value;
 
     readonly property bool active      : (Qt.application.state === Qt.ApplicationActive);
     readonly property bool isPortrait  : (window.orientation === Orientation.Portrait || window.orientation === Orientation.PortraitInverted);
     readonly property bool isLandscape : (window.orientation === Orientation.Landscape || window.orientation === Orientation.LandscapeInverted);
+
+    readonly property ShaderEffectSource maskAvatar : {
+        switch (configAvatarShape.value) {
+        case "square":   return null; // NOTE : optimization
+        case "rounded":  return maskAvatarRounded;
+        case "squircle": return maskAvatarSquircle;
+        case "circle":   return maskAvatarCircle;
+        }
+        return "";
+    }
 
     Connections {
         target: TD_Global;
@@ -79,6 +91,37 @@ ApplicationWindow {
         id: configIncludeMutedChatsInUnreadCount;
         key: "/apps/telegrame/include_muted_chats_in_unread_count";
         defaultValue: false;
+    }
+    ConfigurationValue {
+        id: configKeepKeyboardOpenAfterMsgSend;
+        key: "/apps/telegrame/keep_kdb_open_after_msg_send";
+        defaultValue: true;
+    }
+    ConfigurationValue {
+        id: configAvatarShape;
+        key: "/apps/telegrame/avatar_shape";
+        defaultValue: "square";
+    }
+    ShaderEffectSource {
+        id: maskAvatarCircle;
+        hideSource: true;
+        sourceItem: Image {
+            source: "qrc:///images/mask_circle.svg";
+        }
+    }
+    ShaderEffectSource {
+        id: maskAvatarRounded;
+        hideSource: true;
+        sourceItem: Image {
+            source: "qrc:///images/mask_rounded.svg";
+        }
+    }
+    ShaderEffectSource {
+        id: maskAvatarSquircle;
+        hideSource: true;
+        sourceItem: Image {
+            source: "qrc:///images/mask_squircle.svg";
+        }
     }
     Item {
         rotation: {
@@ -125,6 +168,19 @@ ApplicationWindow {
                         }
                     }
 
+                    Timer {
+                        id: restoreFocusTimer;
+                        repeat: false;
+                        running: false;
+                        interval: 50;
+                        onTriggered: {
+                            btnSendMsgText.textBox.forceActiveFocus ();
+                        }
+                    }
+                    ThemeEffect {
+                        id: buzz;
+                        effect: ThemeEffect.Press;
+                    }
                     Item {
                         implicitHeight: Math.min (btnSendMsgText.textBox.implicitHeight, Theme.itemSizeLarge * 2);
                         anchors.bottom: parent.bottom;
@@ -166,6 +222,7 @@ ApplicationWindow {
                         readonly property Item textBox : (sendTextMsgOnEnterKey ? inputMsgSingle : inputMsg);
 
                         function execute () {
+                            var restore = (textBox.activeFocus && keepKeyboardOpenAfterMsgSend);
                             textBox.focus = false;
                             var tmp = textBox.text.trim ();
                             if (tmp !== "") {
@@ -173,6 +230,10 @@ ApplicationWindow {
                                 //TD_Global.autoScrollDownRequested (true);
                             }
                             textBox.text = "";
+                            buzz.play ();
+                            if (restore) {
+                                restoreFocusTimer.start ();
+                            }
                         }
                     }
                 }
@@ -1921,10 +1982,9 @@ ApplicationWindow {
                     Item {
                         Container.forcedHeight: headerUserInfo.height;
                     }
-                    DelegateDownloadableImage {
+                    DelegateAvatar {
                         size: Theme.iconSizeExtraLarge;
                         fileItem: (pageUserInfo.userItem && pageUserInfo.userItem.profilePhoto ? pageUserInfo.userItem.profilePhoto.big : null);
-                        autoDownload: true;
                         anchors.horizontalCenter: parent.horizontalCenter;
                     }
                     LabelFixed {
@@ -2134,10 +2194,9 @@ ApplicationWindow {
                         anchors.margins: Theme.paddingLarge;
                         ExtraAnchors.horizontalFill: parent;
 
-                        DelegateDownloadableImage {
+                        DelegateAvatar {
                             size: Theme.iconSizeExtraLarge;
                             fileItem: (pageChatInfoPrivate.chatItem && pageChatInfoPrivate.chatItem.photo ? pageChatInfoPrivate.chatItem.photo.big : null);
-                            autoDownload: true;
                             anchors.verticalCenter: parent.verticalCenter;
                         }
                         LabelFixed {
@@ -2243,10 +2302,9 @@ ApplicationWindow {
                         anchors.margins: Theme.paddingLarge;
                         ExtraAnchors.horizontalFill: parent;
 
-                        DelegateDownloadableImage {
+                        DelegateAvatar {
                             size: Theme.iconSizeExtraLarge;
                             fileItem: (pageChatInfoBasicGroup.chatItem && pageChatInfoBasicGroup.chatItem.photo ? pageChatInfoBasicGroup.chatItem.photo.big : null);
-                            autoDownload: true;
                             anchors.verticalCenter: parent.verticalCenter;
                         }
                         LabelFixed {
@@ -2479,10 +2537,9 @@ ApplicationWindow {
                         anchors.margins: Theme.paddingLarge;
                         ExtraAnchors.horizontalFill: parent;
 
-                        DelegateDownloadableImage {
+                        DelegateAvatar {
                             size: Theme.iconSizeExtraLarge;
                             fileItem: (pageChatInfoSupergroup.chatItem && pageChatInfoSupergroup.chatItem.photo ? pageChatInfoSupergroup.chatItem.photo.big : null);
-                            autoDownload: true;
                             anchors.verticalCenter: parent.verticalCenter;
                         }
                         LabelFixed {
