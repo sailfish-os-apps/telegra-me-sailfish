@@ -4,5 +4,6 @@
         <file>icons/108x108/harbour-telegrame.png</file>
         <file>icons/128x128/harbour-telegrame.png</file>
         <file>icons/172x172/harbour-telegrame.png</file>
+        <file>icons/scalable/harbour-telegrame.svg</file>
     </qresource>
 </RCC>

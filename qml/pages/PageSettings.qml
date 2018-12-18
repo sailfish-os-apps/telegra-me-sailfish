@@ -24,6 +24,11 @@ Page {
         defaultValue: true;
     }
     ConfigurationValue {
+        id: configLimitFilePickerToHome;
+        key: "/apps/telegrame/limit_file_picker_to_home";
+        defaultValue: true;
+    }
+    ConfigurationValue {
         id: configAvatarShape;
         key: "/apps/telegrame/avatar_shape";
         defaultValue: "square";
@@ -72,6 +77,16 @@ Page {
                 }
 
                 Binding on checked { value: configKeepKeyboardOpenAfterMsgSend.value; }
+            }
+            TextSwitch {
+                text: qsTr ("Limit file picker to home directory");
+                description: qsTr ("By default one can't navigate outside of home, but can be unlocked for advanced users")
+                automaticCheck: true;
+                onCheckedChanged: {
+                    configLimitFilePickerToHome.value = checked;
+                }
+
+                Binding on checked { value: configLimitFilePickerToHome.value; }
             }
             LabelFixed {
                 text: qsTr ("Avatar shape");

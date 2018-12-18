@@ -23,7 +23,7 @@ Page {
                 Container.forcedHeight: Theme.paddingMedium;
             }
             Image {
-                source: "qrc:///images/Telegram_logo.svg";
+                source: "qrc:///icons/scalable/harbour-telegrame.svg";
                 sourceSize: Qt.size (Theme.iconSizeExtraLarge, Theme.iconSizeExtraLarge);
                 anchors.horizontalCenter: parent.horizontalCenter;
             }

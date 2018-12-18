@@ -41,6 +41,7 @@ ApplicationWindow {
     property alias sendTextMsgOnEnterKey          : configSendTextMsgOnEnterKey.value;
     property alias includeMutedChatsInUnreadCount : configIncludeMutedChatsInUnreadCount.value;
     property alias keepKeyboardOpenAfterMsgSend   : configKeepKeyboardOpenAfterMsgSend.value;
+    property alias limitFilePickerToHome          : configLimitFilePickerToHome.value;
 
     readonly property bool active      : (Qt.application.state === Qt.ApplicationActive);
     readonly property bool isPortrait  : (window.orientation === Orientation.Portrait || window.orientation === Orientation.PortraitInverted);
@@ -95,6 +96,11 @@ ApplicationWindow {
     ConfigurationValue {
         id: configKeepKeyboardOpenAfterMsgSend;
         key: "/apps/telegrame/keep_kdb_open_after_msg_send";
+        defaultValue: true;
+    }
+    ConfigurationValue {
+        id: configLimitFilePickerToHome;
+        key: "/apps/telegrame/limit_file_picker_to_home";
         defaultValue: true;
     }
     ConfigurationValue {
@@ -571,9 +577,9 @@ ApplicationWindow {
                     RectangleButton {
                         icon: "icon-m-back";
                         size: (Theme.iconSizeMedium * 0.65);
+                        enabled: (modelDocuments.folder.toString () !== modelDocuments.limitedTo);
                         implicitWidth: Theme.itemSizeExtraSmall;
                         implicitHeight: Theme.itemSizeExtraSmall;
-                        enabled: (modelDocuments.parentFolder !== "file:///");
                         anchors.verticalCenter: parent.verticalCenter;
                         onClicked: {
                             modelDocuments.folder = modelDocuments.parentFolder;
@@ -595,8 +601,8 @@ ApplicationWindow {
                     orientation: ListView.Vertical;
                     model: FolderListModel {
                         id: modelDocuments;
-                        folder: "file:///home/nemo";
-                        rootFolder: "file:///";
+                        folder: pathHome;
+                        rootFolder: limitedTo;
                         showDirs: true;
                         showDirsFirst: true;
                         showDotAndDotDot: false;
@@ -604,6 +610,15 @@ ApplicationWindow {
                         showHidden: false;
                         sortReversed: false;
                         sortField: FolderListModel.Name;
+                        onLimitedToChanged: {
+                            if (folder.toString ().indexOf (limitedTo) !== 0) {
+                                folder = pathHome;
+                            }
+                        }
+
+                        readonly property string pathRoot  : "file:///";
+                        readonly property string pathHome  : "file:///home/nemo";
+                        readonly property string limitedTo : (limitFilePickerToHome ? pathHome : pathRoot);
                     }
                     delegate: MouseArea {
                         id: delegateSelectorDocument;
@@ -659,7 +674,7 @@ ApplicationWindow {
                         }
                     }
                     ExtraAnchors.horizontalFill: parent;
-                    Container.forcedHeight: (isPortrait ? Theme.iconSizeExtraLarge * 2 : Theme.iconSizeExtraLarge * 1.35);
+                    Container.forcedHeight: (isPortrait ? Theme.iconSizeExtraLarge * 2.35 : Theme.iconSizeExtraLarge * 1.35);
                 }
                 RowContainer {
                     visible: (currentMsgType === TD_ObjectType.MESSAGE_VOICE_NOTE);
@@ -2189,25 +2204,20 @@ ApplicationWindow {
                         font.pixelSize: Theme.fontSizeExtraLarge;
                         anchors.right: parent.right;
                     }
-                    RowContainer {
-                        spacing: Theme.paddingLarge;
+                    DelegateAvatar {
+                        size: (Theme.iconSizeExtraLarge * 1.65);
+                        fileItem: (pageChatInfoPrivate.chatItem && pageChatInfoPrivate.chatItem.photo ? pageChatInfoPrivate.chatItem.photo.big : null);
+                        anchors.horizontalCenter: parent.horizontalCenter;
+                    }
+                    LabelFixed {
+                        text: (pageChatInfoPrivate.chatItem ? pageChatInfoPrivate.chatItem.title : "");
+                        color: Theme.primaryColor;
+                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                        horizontalAlignment: Text.AlignHCenter;
+                        font.family: Theme.fontFamilyHeading;
+                        font.pixelSize: Theme.fontSizeLarge;
                         anchors.margins: Theme.paddingLarge;
                         ExtraAnchors.horizontalFill: parent;
-
-                        DelegateAvatar {
-                            size: Theme.iconSizeExtraLarge;
-                            fileItem: (pageChatInfoPrivate.chatItem && pageChatInfoPrivate.chatItem.photo ? pageChatInfoPrivate.chatItem.photo.big : null);
-                            anchors.verticalCenter: parent.verticalCenter;
-                        }
-                        LabelFixed {
-                            text: (pageChatInfoPrivate.chatItem ? pageChatInfoPrivate.chatItem.title : "");
-                            color: Theme.primaryColor;
-                            wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
-                            font.family: Theme.fontFamilyHeading;
-                            font.pixelSize: Theme.fontSizeLarge;
-                            anchors.verticalCenter: parent.verticalCenter;
-                            Container.horizontalStretch: 1;
-                        }
                     }
                     RowContainer {
                         spacing: Theme.paddingLarge;
