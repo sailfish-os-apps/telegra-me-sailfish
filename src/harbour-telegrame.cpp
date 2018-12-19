@@ -133,8 +133,9 @@ int main (int argc, char * argv []) {
     qmlRegisterType<QtTdLibVideoNote>                             ("harbour.Telegrame", 1, 0, "TD_VideoNote");
     qmlRegisterType<QtTdLibVoiceNote>                             ("harbour.Telegrame", 1, 0, "TD_VoiceNote");
     qmlRegisterType<QtTdLibWebPage>                               ("harbour.Telegrame", 1, 0, "TD_WebPage");
-    qmlRegisterSingletonType<QtTdLibGlobal>                       ("harbour.Telegrame", 1, 0, "TD_Global", &QtTdLibGlobal::qmlSingletonFactory);
     qmlRegisterUncreatableType<QtTdLibObjectType>                 ("harbour.Telegrame", 1, 0, "TD_ObjectType", "Enum class !");
+    qmlRegisterSingletonType<QtTdLibGlobal>                       ("harbour.Telegrame", 1, 0, "TD_Global", &QtTdLibGlobal::qmlSingletonFactory);
+    qmlRegisterSingletonType (QUrl { "qrc:///qml/components/Helpers.qml" }, "harbour.Telegrame", 1, 0, "Helpers");
     QGuiApplication * app { SailfishApp::application (argc, argv) };
     app->setApplicationName ("harbour-telegrame");
     const QList<QObject *> oldNoticationsList { Notification::notifications () };

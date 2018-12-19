@@ -1,6 +1,6 @@
-import QtQuick 2.1;
-import Sailfish.Silica 1.0;
+import QtQuick 2.6;
 import QtQmlTricks 3.0;
+import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
 import "../components";
 
@@ -65,7 +65,7 @@ Page {
     }
     Rectangle {
         id: headerContacts;
-        color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
+        color: Helpers.panelColor;
         implicitHeight: (title.height + title.anchors.margins * 2);
         ExtraAnchors.topDock: parent;
 

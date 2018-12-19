@@ -101,8 +101,6 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
             set_recordingDuration (int (m_audioRecorder->duration ()));
         }
     });
-    //m_autoPreFetcher->setSingleShot (true);
-    //connect (m_autoPreFetcher, &QTimer::timeout, this, &QtTdLibGlobal::onPrefetcherTick);
     connect (m_tdLibJsonWrapper, &QtTdLibJsonWrapper::recv, this, &QtTdLibGlobal::onFrame);
     m_tdLibJsonWrapper->start ();
 }
@@ -239,7 +237,7 @@ void QtTdLibGlobal::selectPhoto (const QString & path, const int width, const in
 }
 
 void QtTdLibGlobal::deselectPhoto (const QString & path) {
-    for (SelectionPhoto * selection : m_selectedPhotosList) {
+    for (SelectionPhoto * selection : qAsConst (m_selectedPhotosList)) {
         if (selection->path == path) {
             m_selectedPhotosList.removeOne (selection);
             set_selectedPhotosCount (m_selectedPhotosCount -1);
@@ -249,7 +247,7 @@ void QtTdLibGlobal::deselectPhoto (const QString & path) {
 }
 
 bool QtTdLibGlobal::isPhotoSelected (const QString & path) const {
-    for (SelectionPhoto * selection : m_selectedPhotosList) {
+    for (SelectionPhoto * selection : qAsConst (m_selectedPhotosList)) {
         if (selection->path == path) {
             return true;
         }
@@ -276,7 +274,7 @@ void QtTdLibGlobal::selectVideo (const QString & path, const int width, const in
 }
 
 void QtTdLibGlobal::deselectVideo (const QString & path) {
-    for (SelectionVideo * selection : m_selectedVideosList) {
+    for (SelectionVideo * selection : qAsConst (m_selectedVideosList)) {
         if (selection->path == path) {
             m_selectedVideosList.removeOne (selection);
             set_selectedVideosCount (m_selectedVideosCount -1);
@@ -286,7 +284,7 @@ void QtTdLibGlobal::deselectVideo (const QString & path) {
 }
 
 bool QtTdLibGlobal::isVideoSelected (const QString & path) const {
-    for (SelectionVideo * selection : m_selectedVideosList) {
+    for (SelectionVideo * selection : qAsConst (m_selectedVideosList)) {
         if (selection->path == path) {
             return true;
         }
@@ -493,7 +491,7 @@ void QtTdLibGlobal::removeMessage (QtTdLibChat * chatItem, QtTdLibMessage * mess
         send (QJsonObject {
                   { "@type", "deleteMessages" },
                   { "chat_id",  chatItem->get_id_asJSON () },
-                  { "message_ids",  QJsonArray {
+                  { "message_ids", QJsonArray {
                         messageItem->get_id_asJSON ()
                     }
                   },
@@ -535,6 +533,23 @@ void QtTdLibGlobal::refreshSupergroupMembers (QtTdLibSupergroup * supergroupItem
     }
 }
 
+QJsonValue QtTdLibGlobal::createFormattedTextJson (const QString & text) {
+    QJsonValue ret { };
+    if (!text.isEmpty ()) {
+        const QJsonObject tmp {
+            { "@type", "formattedText" },
+            { "text", text },
+            { "entities", exec (QJsonObject {
+                                    { "@type", "getTextEntities" },
+                                    { "text", text },
+                                }) ["entities"].toArray ()
+            },
+        };
+        ret = tmp;
+    };
+    return ret;
+}
+
 void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & text) {
     if (chatItem != Q_NULLPTR && !text.isEmpty ()) {
         send (QJsonObject {
@@ -548,15 +563,7 @@ void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & tex
                         { "@type", "inputMessageText" },
                         { "disable_web_page_preview", false },
                         { "clear_draft", false },
-                        { "text", exec ({
-                              { "@type", "parseTextEntities" },
-                              { "text", text },
-                              { "parse_mode", QJsonObject {
-                                    { "@type", "textParseModeMarkdown" },
-                                }
-                              }
-                          })
-                        }
+                        { "text", createFormattedTextJson (text) },
                     }
                   }
               });
@@ -564,11 +571,11 @@ void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & tex
     set_replyingToMessageId ("");
 }
 
-void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupInAlbum) {
+void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupInAlbum, const QString & caption) {
     if (chatItem != Q_NULLPTR && !m_selectedPhotosList.isEmpty ()) {
         if (groupInAlbum) {
             QJsonArray contents { };
-            for (SelectionPhoto * selection : m_selectedPhotosList) {
+            for (SelectionPhoto * selection : qAsConst (m_selectedPhotosList)) {
                 contents.append (QJsonObject {
                                      { "@type", "inputMessagePhoto" },
                                      { "width", selection->width },
@@ -581,6 +588,9 @@ void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupIn
                                  });
             }
             if (!contents.isEmpty ()) {
+                if (!caption.isEmpty ()) {
+                    sendMessageText (chatItem, caption);
+                }
                 send (QJsonObject {
                           { "@type", "sendMessageAlbum" },
                           { "chat_id", chatItem->get_id () },
@@ -592,7 +602,7 @@ void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupIn
             }
         }
         else {
-            for (SelectionPhoto * selection : m_selectedPhotosList) {
+            for (SelectionPhoto * selection : qAsConst (m_selectedPhotosList)) {
                 send (QJsonObject {
                           { "@type", "sendMessage" },
                           { "chat_id", chatItem->get_id () },
@@ -601,6 +611,7 @@ void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupIn
                           { "from_background", false },
                           { "input_message_content", QJsonObject {
                                 { "@type", "inputMessagePhoto" },
+                                { "caption", createFormattedTextJson (caption) },
                                 { "width", selection->width },
                                 { "height", selection->height },
                                 { "photo", QJsonObject {
@@ -617,11 +628,11 @@ void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupIn
     set_replyingToMessageId ("");
 }
 
-void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupInAlbum) {
+void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupInAlbum, const QString & caption) {
     if (chatItem != Q_NULLPTR && !m_selectedVideosList.isEmpty ()) {
         if (groupInAlbum) {
             QJsonArray contents { };
-            for (SelectionVideo * selection : m_selectedVideosList) {
+            for (SelectionVideo * selection : qAsConst (m_selectedVideosList)) {
                 contents.append (QJsonObject {
                                      { "@type", "inputMessageVideo" },
                                      { "width", selection->width },
@@ -635,6 +646,9 @@ void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupIn
                                  });
             }
             if (!contents.isEmpty ()) {
+                if (!caption.isEmpty ()) {
+                    sendMessageText (chatItem, caption);
+                }
                 send (QJsonObject {
                           { "@type", "sendMessageAlbum" },
                           { "chat_id", chatItem->get_id_asJSON () },
@@ -646,7 +660,7 @@ void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupIn
             }
         }
         else {
-            for (SelectionVideo * selection : m_selectedVideosList) {
+            for (SelectionVideo * selection : qAsConst (m_selectedVideosList)) {
                 send (QJsonObject {
                           { "@type", "sendMessage" },
                           { "chat_id", chatItem->get_id_asJSON () },
@@ -655,6 +669,7 @@ void QtTdLibGlobal::sendMessageVideo (QtTdLibChat * chatItem, const bool groupIn
                           { "from_background", false },
                           { "input_message_content", QJsonObject {
                                 { "@type", "inputMessageVideo" },
+                                { "caption", createFormattedTextJson (caption) },
                                 { "width", selection->width },
                                 { "height", selection->height },
                                 { "duration", selection->duration },
@@ -726,7 +741,7 @@ void QtTdLibGlobal::sendMessageSticker (QtTdLibChat * chatItem, QtTdLibSticker *
     set_replyingToMessageId ("");
 }
 
-void QtTdLibGlobal::sendMessageDocument (QtTdLibChat * chatItem, const QString & path) {
+void QtTdLibGlobal::sendMessageDocument (QtTdLibChat * chatItem, const QString & path, const QString & caption) {
     if (chatItem != Q_NULLPTR && QFile::exists (path)) {
         send (QJsonObject {
                   { "@type", "sendMessage" },
@@ -737,6 +752,7 @@ void QtTdLibGlobal::sendMessageDocument (QtTdLibChat * chatItem, const QString &
                   { "reply_markup", QJsonValue::Null },
                   { "input_message_content", QJsonObject {
                         { "@type", "inputMessageDocument" },
+                        { "caption", createFormattedTextJson (caption) },
                         { "document", QJsonObject {
                               { "@type", "inputFileLocal" },
                               { "path", path },

@@ -25,7 +25,12 @@ QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
     connect (this, &QtTdLibChat::unreadCountChanged,           this, &QtTdLibChat::refreshNotification);
     connect (this, &QtTdLibChat::isCurrentChatChanged,         this, &QtTdLibChat::refreshNotification);
     connect (this, &QtTdLibChat::lastReceivedMessageIdChanged, this, &QtTdLibChat::refreshNotification);
-    connect (this, &QtTdLibChat::notificationSettingsChanged,  this, &QtTdLibChat::refreshNotification);
+    connect (this, &QtTdLibChat::notificationSettingsChanged,  this, [this] (void) {
+        if (m_notificationSettings != Q_NULLPTR) {
+            connect (m_notificationSettings, &QtTdLibChatNotificationSettings::muteForChanged, this, &QtTdLibChat::refreshNotification);
+        }
+        refreshNotification ();
+    });
     connect (&m_timer, &QTimer::timeout, this, [this] (void) {
         QtTdLibMessage * lastMsg = { getMessageItemById (m_lastReceivedMessageId) };
         if (!m_isCurrentChat &&

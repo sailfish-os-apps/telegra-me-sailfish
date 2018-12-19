@@ -2,21 +2,15 @@ import QtQuick 2.6;
 import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
-import Nemo.Configuration 1.0;
 import "../components";
 
 CoverBackground {
     id: cover;
 
-    readonly property int count : (configIncludeMutedChatsInUnreadCount.value
+    readonly property int count : (Helpers.includeMutedChatsInUnreadCount
                                    ? TD_Global.unreadMessagesCountWithMuted
                                    : TD_Global.unreadMessagesCount);
 
-    ConfigurationValue {
-        id: configIncludeMutedChatsInUnreadCount;
-        key: "/apps/telegrame/include_muted_chats_in_unread_count";
-        defaultValue: false;
-    }
     Image {
         source: "qrc:///images/Telegram_logo.svg";
         height: width;

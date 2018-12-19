@@ -4,6 +4,7 @@ import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
 
 Item {
+    id: self;
     implicitWidth: Theme.iconSizeMedium;
     implicitHeight: Theme.iconSizeMedium;
 

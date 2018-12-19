@@ -1,5 +1,4 @@
 import QtQuick 2.6;
-import QtMultimedia 5.6;
 import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
@@ -29,7 +28,7 @@ Page {
     }
     onShouldMarkAllAsReadChanged: {
         if (shouldMarkAllAsRead) {
-             TD_Global.markAllMessagesAsRead (currentChat);
+            TD_Global.markAllMessagesAsRead (currentChat);
         }
     }
 
@@ -61,8 +60,8 @@ Page {
                                                                       : null);
 
     readonly property TD_Message pinnedMessageItem : (pinnedMessageRefWatcher
-                                                          ? pinnedMessageRefWatcher.messageItem
-                                                          : null);
+                                                      ? pinnedMessageRefWatcher.messageItem
+                                                      : null);
 
     readonly property TD_User currentChatUserItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_PRIVATE
                                                      ? TD_Global.getUserItemById (currentChat.type ["userId"])
@@ -112,7 +111,7 @@ Page {
     }
 
     Binding {
-        target: window;
+        target: Helpers;
         property: "showInputPanel";
         value: (pageStack.currentPage && page && pageStack.currentPage === page);
     }
@@ -162,7 +161,7 @@ Page {
         clip: true;
         quickScroll: false;
         anchors.fill: parent;
-        anchors.bottomMargin: (footerChat.height + (stripReplyTo.visible ? stripReplyTo.height : 0));
+        anchors.bottomMargin: layoutBottom.height;
         onDraggingVerticallyChanged: {
             currentMessageId = "";
             autoScrollDown   = atYEnd;
@@ -180,7 +179,7 @@ Page {
                         ? (autoScrollDown
                            ? currentChat.messagesModel.lastItem
                            : currentMessageItem)
-                          : null);
+                        : null);
             }
             Binding on behavior {
                 value: (currentlyOnApp
@@ -193,67 +192,14 @@ Page {
             }
 
             model: (currentChat ? currentChat.messagesModel : 0);
-            spaceBefore: (headerChat.height + (stripPinned.visible ? stripPinned.height : 0));
-            //spaceAfter: footerChat.height;
+            spaceBefore: layoutTop.height;
+            //spaceAfter: layoutBottom.height;
             delegate: ListItem {
                 id: delegateMsg;
                 contentHeight: layoutMessage.height;
                 menu: ContextMenu {
-                    MenuItem {
-                        text: qsTr ("Copy text");
-                        visible: (formattedTextItem !== null);
-                        onClicked: {
-                            Clipboard.text = formattedTextItem.text;
-                        }
-
-                        readonly property TD_MessageText messageTextItem : (delegateMsg.messageItem &&
-                                                                            delegateMsg.messageItem.content &&
-                                                                            delegateMsg.messageItem.content.typeOf === TD_ObjectType.MESSAGE_TEXT
-                                                                            ? delegateMsg.messageItem.content
-                                                                            : null);
-
-                        readonly property TD_FormattedText formattedTextItem : (messageTextItem ? messageTextItem.text : null);
-                    }
-                    MenuItem {
-                        text: qsTr ("Open image in viewer");
-                        visible: (photoSizeItem !== null);
-                        enabled: (photoSizeItem && photoSizeItem.photo && photoSizeItem.photo.local && photoSizeItem.photo.local.isDownloadingCompleted);
-                        onClicked: {
-                            Qt.openUrlExternally (TD_Global.urlFromLocalPath (photoSizeItem.photo.local.path));
-                        }
-
-                        readonly property TD_MessagePhoto messagePhotoItem : (delegateMsg.messageItem &&
-                                                                              delegateMsg.messageItem.content &&
-                                                                              delegateMsg.messageItem.content.typeOf === TD_ObjectType.MESSAGE_PHOTO
-                                                                              ? delegateMsg.messageItem.content
-                                                                              : null);
-
-                        readonly property TD_Photo photoItem : (messagePhotoItem ? messagePhotoItem.photo : null);
-
-                        readonly property TD_PhotoSize photoSizeItem : {
-                            var ret = null;
-                            if (photoItem && photoItem.sizes.count > 0) {
-                                var tmp = photoItem.sizes.get ("x");
-                                ret = (tmp ? tmp : photoItem.sizes.getLast ());
-                            }
-                            return ret;
-                        }
-                    }
-                    MenuItem {
-                        text: qsTr ("Open video with player");
-                        visible: (videoItem !== null);
-                        enabled: (videoItem && videoItem.video && videoItem.video.local && videoItem.video.local.isDownloadingCompleted);
-                        onClicked: {
-                            Qt.openUrlExternally (TD_Global.urlFromLocalPath (videoItem.video.local.path));
-                        }
-
-                        readonly property TD_MessageVideo messageVideoItem : (delegateMsg.messageItem &&
-                                                                              delegateMsg.messageItem.content &&
-                                                                              delegateMsg.messageItem.content.typeOf === TD_ObjectType.MESSAGE_VIDEO
-                                                                              ? delegateMsg.messageItem.content
-                                                                              : null);
-
-                        readonly property TD_Video videoItem : (messageVideoItem ? messageVideoItem.video : null);
+                    Repeater {
+                        model: (loaderMsgContent.item ? loaderMsgContent.item ["additionalContextMenuItems"] : 0);
                     }
                     MenuItem {
                         text: qsTr ("Reply...");
@@ -293,11 +239,6 @@ Page {
                     }
                 }
                 ExtraAnchors.horizontalFill: parent;
-                onMenuOpenChanged: {
-                    if (menuOpen) {
-                        centerOnMsg (messageItem.id);
-                    }
-                }
 
                 readonly property TD_Message messageItem : modelItem;
                 readonly property TD_User    userItem    : (messageItem ? TD_Global.getUserItemById (messageItem.senderUserId) : null);
@@ -315,103 +256,111 @@ Page {
                     visible: (delegateMsg.messageItem.id === currentMessageId || delegateMsg.messageItem.containsUnreadMention);
                     anchors.fill: parent;
                 }
-                Binding {
-                    target: loaderMsgContent.item;
-                    property: "messageContentItem";
-                    value: delegateMsg.messageItem.content;
-                    when: (loaderMsgContent.item && delegateMsg.messageItem && delegateMsg.messageItem.content);
-                }
-                Binding {
-                    target: loaderMsgContent.item;
-                    property: "messageItem";
-                    value: delegateMsg.messageItem;
-                    when: (loaderMsgContent.item && delegateMsg.messageItem);
-                }
-                Binding {
-                    target: loaderMsgContent.item;
-                    property: "chatItem";
-                    value: currentChat;
-                    when: (loaderMsgContent.item && currentChat);
-                }
                 ColumnContainer {
                     id: layoutMessage;
-                    spacing: Theme.paddingSmall;
                     ExtraAnchors.topDock: parent;
 
-                    LabelFixed {
-                        id: lblNewMessages;
-                        text: qsTr ("New messages");
-                        color: Theme.highlightColor;
-                        visible: (delegateMsg.messageItem && currentChat && currentChat.firstUnreadMessageItem && currentChat.firstUnreadMessageItem.id === delegateMsg.messageItem.id);
-                        verticalAlignment: Text.AlignBottom;
-                        horizontalAlignment: Text.AlignHCenter;
-                        font.bold: true;
-                        font.pixelSize: Theme.fontSizeSmall;
-                        ExtraAnchors.horizontalFill: parent;
-
-                        Rectangle {
-                            opacity: 0.15;
-                            gradient: Gradient {
-                                GradientStop { position: 0; color: Theme.highlightColor; }
-                                GradientStop { position: 1; color: "transparent"; }
-                            }
-                            anchors.fill: parent;
-                        }
-                        Rectangle {
+                    Loader {
+                        active: (delegateMsg.messageItem && currentChat && currentChat.firstUnreadMessageItem && currentChat.firstUnreadMessageItem.id === delegateMsg.messageItem.id);
+                        visible: active;
+                        sourceComponent: LabelFixed {
+                            text: qsTr ("New messages");
                             color: Theme.highlightColor;
-                            implicitHeight: 1;
-                            ExtraAnchors.topDock: parent;
+                            verticalAlignment: Text.AlignBottom;
+                            horizontalAlignment: Text.AlignHCenter;
+                            font.bold: true;
+                            font.pixelSize: Theme.fontSizeSmall;
+
+                            Rectangle {
+                                opacity: 0.15;
+                                gradient: Gradient {
+                                    GradientStop { position: 0; color: Theme.highlightColor; }
+                                    GradientStop { position: 1; color: "transparent"; }
+                                }
+                                anchors.fill: parent;
+                            }
+                            Rectangle {
+                                color: Theme.highlightColor;
+                                implicitHeight: 1;
+                                ExtraAnchors.topDock: parent;
+                            }
                         }
+                        ExtraAnchors.horizontalFill: parent;
                     }
                     Item {
-                        implicitHeight: (layoutMsgContent.height + layoutMsgContent.anchors.margins * 1.5);
-                        anchors {
-                            leftMargin: (!delegateMsg.messageItem.isOutgoing ? Theme.paddingLarge * 5 : Theme.paddingMedium);
-                            rightMargin: (delegateMsg.messageItem.isOutgoing ? Theme.paddingLarge * 5 : Theme.paddingMedium);
-                        }
+                        Container.forcedHeight: Theme.paddingSmall;
+                    }
+                    RowContainer {
+                        id: room;
+                        anchors.margins: Theme.paddingMedium;
                         ExtraAnchors.horizontalFill: parent;
 
-                        Rectangle {
-                            color: Theme.highlightColor;
-                            radius: Theme.paddingSmall;
-                            opacity: 0.05;
-                            antialiasing: true;
-                            anchors.fill: parent;
-                            anchors.margins: Theme.paddingMedium;
+                        Item {
+                            visible: delegateMsg.messageItem.isOutgoing;
+                            Container.horizontalStretch: 1;
                         }
-                        RowContainer {
-                            id: layoutMsgContent;
-                            spacing: Theme.paddingLarge;
-                            anchors.margins: Theme.paddingLarge;
-                            ExtraAnchors.topDock: parent;
+                        Item {
+                            id: content;
+                            implicitWidth: ((lblReply.visible
+                                             ? maxWidth
+                                             : (optWidth > 0
+                                                ? Helpers.clamp (optWidth, minWidth, maxWidth)
+                                                : maxWidth)) + layoutMsgContent.anchors.margins * 2);
+                            implicitHeight: (layoutMsgContent.height + layoutMsgContent.anchors.margins * 2);
 
-                            DelegateAvatar {
-                                size: Theme.iconSizeMedium;
-                                fileItem: (!delegateMsg.messageItem.isChannelPost
-                                           ? (delegateMsg.userItem && delegateMsg.userItem.profilePhoto ? delegateMsg.userItem.profilePhoto.big : null)
-                                           : (currentChat && currentChat.photo ? currentChat.photo.big : null));
+                            readonly property int maxWidth : (room.width - Theme.paddingLarge * 3.65);
+                            readonly property int minWidth : (Math.max (layoutMsgAuthor.implicitWidth, layoutMsgStatus.implicitWidth));
+                            readonly property int optWidth : (loaderMsgContent.messageContentDelegate
+                                                              ? (loaderMsgContent.messageContentDelegate.optimalWidth)
+                                                              : 0);
 
-                                MouseArea {
-                                    anchors.fill: parent;
-                                    onClicked: {
-                                        pageStack.push (compoPageUserInfo, {
-                                                            "userItem" : delegateMsg.userItem,
-                                                        });
-                                    }
-                                }
+                            Rectangle {
+                                color: (delegateMsg.messageItem.isOutgoing ? Theme.primaryColor : Theme.highlightColor);
+                                radius: Theme.paddingMedium;
+                                opacity: 0.10;
+                                antialiasing: true;
+                                anchors.fill: parent;
                             }
                             ColumnContainer {
-                                spacing: 1;
-                                Container.horizontalStretch: 1;
+                                id: layoutMsgContent;
+                                spacing: Theme.paddingSmall;
+                                anchors.margins: Theme.paddingMedium;
+                                ExtraAnchors.topDock: parent;
 
-                                LabelFixed {
-                                    text: (delegateMsg.userItem ? delegateMsg.userItem.firstName + " " + delegateMsg.userItem.lastName : "");
-                                    color: Theme.highlightColor;
-                                    visible: !delegateMsg.messageItem.isChannelPost;
-                                    ExtraAnchors.horizontalFill: parent;
+                                RowContainer {
+                                    id: layoutMsgAuthor;
+                                    spacing: Theme.paddingMedium;
+
+                                    MouseArea {
+                                        anchors.fill: parent;
+                                        Container.ignored: true;
+                                        onClicked: {
+                                            pageStack.push (compoPageUserInfo, {
+                                                                "userItem" : delegateMsg.userItem,
+                                                            });
+                                        }
+                                    }
+                                    DelegateAvatar {
+                                        size: Theme.iconSizeSmall;
+                                        fileItem: (!delegateMsg.messageItem.isChannelPost
+                                                   ? (delegateMsg.userItem && delegateMsg.userItem.profilePhoto ? delegateMsg.userItem.profilePhoto.big : null)
+                                                   : (currentChat && currentChat.photo ? currentChat.photo.big : null));
+                                        anchors.verticalCenter: parent.verticalCenter;
+                                    }
+                                    LabelFixed {
+                                        text: (delegateMsg.userItem ? delegateMsg.userItem.firstName + " " + delegateMsg.userItem.lastName : "");
+                                        color: Theme.highlightColor;
+                                        elide: Text.ElideRight;
+                                        visible: !delegateMsg.messageItem.isChannelPost;
+                                        font.bold: true;
+                                        font.pixelSize: Theme.fontSizeSmall;
+                                        anchors.verticalCenter: parent.verticalCenter;
+                                        Container.horizontalStretch: 1;
+                                    }
                                 }
                                 LabelFixed {
-                                    text: qsTr ("<b>Reply</b>: %1").arg (originalMessageItem ? originalMessageItem.preview (TD_Message.SHOW_TITLE | TD_Message.MULTILINE).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
+                                    id: lblReply;
+                                    text: qsTr ("<b>Reply to</b>: %1").arg (originalMessageItem ? originalMessageItem.preview (TD_Message.SHOW_TITLE | TD_Message.MULTILINE).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
                                     color: Theme.secondaryHighlightColor;
                                     elide: Text.ElideRight;
                                     visible: originalMsgRefWatcher;
@@ -463,8 +412,30 @@ Page {
                                         return compoMsgUnsupported;
                                     }
                                     ExtraAnchors.horizontalFill: parent;
+
+                                    readonly property DelegateAbstractMessageContent messageContentDelegate : item;
+
+                                    Binding {
+                                        target: loaderMsgContent.item;
+                                        property: "messageContentItem";
+                                        value: delegateMsg.messageItem.content;
+                                        when: (loaderMsgContent.item && delegateMsg.messageItem && delegateMsg.messageItem.content);
+                                    }
+                                    Binding {
+                                        target: loaderMsgContent.item;
+                                        property: "messageItem";
+                                        value: delegateMsg.messageItem;
+                                        when: (loaderMsgContent.item && delegateMsg.messageItem);
+                                    }
+                                    Binding {
+                                        target: loaderMsgContent.item;
+                                        property: "chatItem";
+                                        value: currentChat;
+                                        when: (loaderMsgContent.item && currentChat);
+                                    }
                                 }
                                 RowContainer {
+                                    id: layoutMsgStatus;
                                     spacing: Theme.paddingMedium;
                                     anchors.right: parent.right;
 
@@ -485,6 +456,13 @@ Page {
                                 }
                             }
                         }
+                        Item {
+                            visible: !delegateMsg.messageItem.isOutgoing;
+                            Container.horizontalStretch: 1;
+                        }
+                    }
+                    Item {
+                        Container.forcedHeight: Theme.paddingSmall;
                     }
                 }
             }
@@ -496,7 +474,7 @@ Page {
 
             MenuItem {
                 text: qsTr ("Load older messages...");
-                onDelayedClick: {
+                onClicked: {
                     centerOnMsg (currentChat.messagesModel.firstItem.id);
                     TD_Global.loadOlderMessages (currentChat);
                 }
@@ -509,14 +487,14 @@ Page {
 
             MenuItem {
                 text: qsTr ("Load newer messages...");
-                onDelayedClick: {
+                onClicked: {
                     centerOnMsg (currentChat.messagesModel.lastItem.id);
                     TD_Global.loadNewerMessages (currentChat);
                 }
             }
             MenuItem {
                 text: qsTr ("Mark all read in chat");
-                onDelayedClick: {
+                onClicked: {
                     longJumpToMsg (currentChat.lastReceivedMessageId);
                     TD_Global.loadNewerMessages (currentChat);
                     scrollToBottom ();
@@ -587,10 +565,10 @@ Page {
             }
         ]
         anchors {
-            topMargin: (viewMessages.spaceBefore + flickerMessages.anchors.topMargin + headerChat.anchors.topMargin);
-            bottomMargin: (viewMessages.spaceAfter + flickerMessages.anchors.bottomMargin);
+            top: layoutTop.bottom;
+            right: parent.right;
+            bottom: layoutBottom.top;
         }
-        ExtraAnchors.rightDock: parent;
 
         Behavior on opacity { NumberAnimation { duration: 650; } }
         Rectangle {
@@ -638,199 +616,212 @@ Page {
             }
         }
     }
-    Item {
-        id: stripReplyTo;
-        visible: (replyingToMessageItem !== null);
-        implicitHeight: (layoutReplyTo.height + layoutReplyTo.anchors.margins * 2);
-        anchors.bottomMargin: footerChat.height;
-        ExtraAnchors.bottomDock: parent;
-
-        Rectangle {
-            color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
-            anchors.fill: parent;
-
-            Rectangle {
-                color: Theme.secondaryHighlightColor;
-                opacity: 0.15;
-                anchors.fill: parent;
-            }
-        }
-        RowContainer {
-            id: layoutReplyTo;
-            spacing: Theme.paddingMedium;
-            anchors {
-                margins: Theme.paddingMedium;
-                verticalCenter: parent.verticalCenter;
-            }
-            ExtraAnchors.horizontalFill: parent;
-
-            LabelFixed {
-                text: qsTr ("<b>Reply</b>: %1").arg (replyingToMessageItem ? replyingToMessageItem.preview (TD_Message.SHOW_TITLE | TD_Message.MULTILINE).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
-                color: Theme.secondaryHighlightColor;
-                elide: Text.ElideRight;
-                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
-                textFormat: Text.StyledText;
-                maximumLineCount: 3;
-                font.pixelSize: Theme.fontSizeSmall;
-                anchors.verticalCenter: parent.verticalCenter;
-                Container.horizontalStretch: 1;
-            }
-            RectangleButton {
-                icon: "icon-m-clear";
-                anchors.verticalCenter: parent.verticalCenter;
-                onClicked: {
-                    TD_Global.replyingToMessageId = "";
-                }
-            }
-        }
-    }
-    MouseArea {
-        id: stripPinned;
-        visible: (pinnedMessageItem !== null);
-        implicitHeight: (lblPinned.height + lblPinned.anchors.margins * 2);
-        anchors.top: headerChat.bottom;
-        ExtraAnchors.horizontalFill: parent;
-        onClicked: {
-            longJumpToMsg (pinnedMessageItem.id);
-        }
-
-        Rectangle {
-            color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
-            anchors.fill: parent;
-
-            Rectangle {
-                color: Theme.secondaryHighlightColor;
-                opacity: 0.15;
-                anchors.fill: parent;
-            }
-        }
-        LabelFixed {
-            id: lblPinned;
-            text: qsTr ("<b>Pinned</b>: %1").arg (pinnedMessageItem ? pinnedMessageItem.preview (TD_Message.MINIMAL) : qsTr ("<i>deleted message</i>"));
-            color: Theme.secondaryHighlightColor;
-            elide: Text.ElideRight;
-            textFormat: Text.StyledText;
-            font.pixelSize: Theme.fontSizeExtraSmall;
-            anchors {
-                margins: Theme.paddingSmall;
-                verticalCenter: parent.verticalCenter;
-            }
-            ExtraAnchors.horizontalFill: parent;
-        }
-    }
-    MouseArea {
-        id: headerChat;
+    ColumnContainer {
+        id: layoutTop;
         opacity: (pulleyTop.active ? 0.65 : 1.0);
-        implicitHeight: (layoutHeader.height + layoutHeader.anchors.margins * 2);
         anchors.topMargin: Math.max (-flickerMessages.contentY, 0);
         ExtraAnchors.topDock: parent;
-        onPressed: { }
-        onReleased: { }
 
         Behavior on opacity { NumberAnimation { duration: 150; } }
-        Rectangle {
-            color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
-            anchors.fill: parent;
+        MouseArea {
+            id: headerChat;
+            visible: !Helpers.hideChatHeader;
+            implicitHeight: (layoutHeader.height + layoutHeader.anchors.margins * 2);
+            ExtraAnchors.horizontalFill: parent;
+            onPressed: { }
+            onReleased: { }
 
             Rectangle {
-                color: Theme.secondaryHighlightColor;
-                opacity: 0.65;
-                visible: flickerMessages.atYBeginning;
-                implicitHeight: Theme.paddingSmall;
-                ExtraAnchors.topDock: parent;
-            }
-        }
-        RowContainer {
-            id: layoutHeader;
-            spacing: Theme.paddingMedium;
-            anchors {
-                left: parent.left;
-                right: parent.right;
-                margins: Theme.paddingMedium;
-                leftMargin: (Theme.paddingLarge * 2);
-                rightMargin: (Theme.paddingLarge * 2);
-                verticalCenter: parent.verticalCenter;
-            }
+                color: Helpers.panelColor;
+                anchors.fill: parent;
 
-            ColumnContainer {
-                Container.horizontalStretch: 1;
-                anchors.verticalCenter: parent.verticalCenter;
-
-                LabelFixed {
-                    text: (currentChat ? currentChat.title : "");
-                    color: Theme.highlightColor;
-                    elide: Text.ElideRight;
-                    horizontalAlignment: Text.AlignRight;
-                    font {
-                        family: Theme.fontFamilyHeading;
-                        pixelSize: Theme.fontSizeLarge;
-                    }
-                    ExtraAnchors.horizontalFill: parent;
+                Rectangle {
+                    color: Theme.secondaryHighlightColor;
+                    opacity: 0.65;
+                    visible: flickerMessages.atYBeginning;
+                    implicitHeight: Theme.paddingSmall;
+                    ExtraAnchors.topDock: parent;
                 }
-                LabelFixed {
-                    color: Theme.secondaryColor;
-                    elide: Text.ElideRight;
-                    visible: (text !== "");
-                    text: {
-                        if (currentChat) {
-                            switch (currentChat.type.typeOf) {
-                            case TD_ObjectType.CHAT_TYPE_SECRET:
-                            case TD_ObjectType.CHAT_TYPE_PRIVATE:
-                                if (currentChatUserItem && currentChatUserItem.status) {
-                                    switch (currentChatUserItem.status.typeOf) {
-                                    case TD_ObjectType.USER_STATUS_ONLINE:     return qsTr ("Online");
-                                    case TD_ObjectType.USER_STATUS_OFFLINE:    return qsTr ("Offline since %1").arg (Qt.formatDateTime (currentChatUserItem.status.wasOnline));
-                                    case TD_ObjectType.USER_STATUS_LAST_MONTH: return qsTr ("Seen last month");
-                                    case TD_ObjectType.USER_STATUS_LAST_WEEK:  return qsTr ("Seen last week");
-                                    case TD_ObjectType.USER_STATUS_RECENTLY:   return qsTr ("Recently");
-                                    case TD_ObjectType.USER_STATUS_EMPTY:      return qsTr ("");
+            }
+            RowContainer {
+                id: layoutHeader;
+                spacing: Theme.paddingMedium;
+                anchors {
+                    left: parent.left;
+                    right: parent.right;
+                    margins: Theme.paddingMedium;
+                    leftMargin: (Theme.paddingLarge * 2);
+                    rightMargin: (Theme.paddingLarge * 2);
+                    verticalCenter: parent.verticalCenter;
+                }
+
+                ColumnContainer {
+                    Container.horizontalStretch: 1;
+                    anchors.verticalCenter: parent.verticalCenter;
+
+                    LabelFixed {
+                        text: (currentChat ? currentChat.title : "");
+                        color: Theme.highlightColor;
+                        elide: Text.ElideRight;
+                        horizontalAlignment: Text.AlignRight;
+                        font {
+                            family: Theme.fontFamilyHeading;
+                            pixelSize: Theme.fontSizeLarge;
+                        }
+                        ExtraAnchors.horizontalFill: parent;
+                    }
+                    LabelFixed {
+                        color: Theme.secondaryColor;
+                        elide: Text.ElideRight;
+                        visible: (text !== "");
+                        text: {
+                            if (currentChat) {
+                                switch (currentChat.type.typeOf) {
+                                case TD_ObjectType.CHAT_TYPE_SECRET:
+                                case TD_ObjectType.CHAT_TYPE_PRIVATE:
+                                    if (currentChatUserItem && currentChatUserItem.status) {
+                                        switch (currentChatUserItem.status.typeOf) {
+                                        case TD_ObjectType.USER_STATUS_ONLINE:     return qsTr ("Online");
+                                        case TD_ObjectType.USER_STATUS_OFFLINE:    return qsTr ("Offline since %1").arg (Qt.formatDateTime (currentChatUserItem.status.wasOnline));
+                                        case TD_ObjectType.USER_STATUS_LAST_MONTH: return qsTr ("Seen last month");
+                                        case TD_ObjectType.USER_STATUS_LAST_WEEK:  return qsTr ("Seen last week");
+                                        case TD_ObjectType.USER_STATUS_RECENTLY:   return qsTr ("Recently");
+                                        case TD_ObjectType.USER_STATUS_EMPTY:      return qsTr ("");
+                                        }
                                     }
+                                    break;
+                                case TD_ObjectType.CHAT_TYPE_BASIC_GROUP:
+                                    var basicGroupItem = TD_Global.getBasicGroupItemById (currentChat.type.basicGroupId);
+                                    if (basicGroupItem) {
+                                        return qsTr ("%1 members").arg (basicGroupItem.memberCount);
+                                    }
+                                    break;
+                                case TD_ObjectType.CHAT_TYPE_SUPERGROUP:
+                                    var supergroupItem = TD_Global.getSupergroupItemById (currentChat.type.supergroupId);
+                                    if (supergroupItem) {
+                                        return qsTr ("%1 members").arg (supergroupItem.memberCount);
+                                    }
+                                    break;
                                 }
-                                break;
-                            case TD_ObjectType.CHAT_TYPE_BASIC_GROUP:
-                                var basicGroupItem = TD_Global.getBasicGroupItemById (currentChat.type.basicGroupId);
-                                if (basicGroupItem) {
-                                    return qsTr ("%1 members").arg (basicGroupItem.memberCount);
-                                }
-                                break;
-                            case TD_ObjectType.CHAT_TYPE_SUPERGROUP:
-                                var supergroupItem = TD_Global.getSupergroupItemById (currentChat.type.supergroupId);
-                                if (supergroupItem) {
-                                    return qsTr ("%1 members").arg (supergroupItem.memberCount);
-                                }
-                                break;
+                            }
+                            return "";
+                        }
+                        font {
+                            family: Theme.fontFamilyHeading;
+                            pixelSize: Theme.fontSizeExtraSmall;
+                        }
+                        anchors.right: parent.right;
+
+                        Rectangle {
+                            color: "lime";
+                            radius: (Theme.paddingMedium * 0.5);
+                            visible: (currentChatUserItem &&
+                                      currentChatUserItem.status &&
+                                      currentChatUserItem.status.typeOf === TD_ObjectType.USER_STATUS_ONLINE);
+                            antialiasing: true;
+                            implicitWidth: Theme.paddingMedium;
+                            implicitHeight: Theme.paddingMedium;
+                            anchors {
+                                right: parent.left;
+                                margins: Theme.paddingMedium;
+                                verticalCenter: parent.verticalCenter;
                             }
                         }
-                        return "";
                     }
-                    font {
-                        family: Theme.fontFamilyHeading;
-                        pixelSize: Theme.fontSizeExtraSmall;
-                    }
-                    anchors.right: parent.right;
+                }
+                DelegateAvatar {
+                    size: Theme.iconSizeMedium;
+                    fileItem: (currentChat && currentChat.photo ? currentChat.photo.big : null);
+                    anchors.verticalCenter: parent.verticalCenter;
+                }
+            }
+        }
+        MouseArea {
+            id: stripPinned;
+            visible: (pinnedMessageItem !== null);
+            implicitHeight: (lblPinned.height + lblPinned.anchors.margins * 2);
+            ExtraAnchors.horizontalFill: parent;
+            onClicked: {
+                longJumpToMsg (pinnedMessageItem.id);
+            }
 
-                    Rectangle {
-                        color: "lime";
-                        radius: (Theme.paddingMedium * 0.5);
-                        visible: (currentChatUserItem &&
-                                  currentChatUserItem.status &&
-                                  currentChatUserItem.status.typeOf === TD_ObjectType.USER_STATUS_ONLINE);
-                        antialiasing: true;
-                        implicitWidth: Theme.paddingMedium;
-                        implicitHeight: Theme.paddingMedium;
-                        anchors {
-                            right: parent.left;
-                            margins: Theme.paddingMedium;
-                            verticalCenter: parent.verticalCenter;
-                        }
+            Rectangle {
+                color: Helpers.panelColor;
+                anchors.fill: parent;
+
+                Rectangle {
+                    color: Theme.secondaryHighlightColor;
+                    opacity: 0.15;
+                    anchors.fill: parent;
+                }
+            }
+            LabelFixed {
+                id: lblPinned;
+                text: qsTr ("<b>Pinned</b>: %1").arg (pinnedMessageItem ? pinnedMessageItem.preview (TD_Message.MINIMAL) : qsTr ("<i>deleted message</i>"));
+                color: Theme.secondaryHighlightColor;
+                elide: Text.ElideRight;
+                textFormat: Text.StyledText;
+                font.pixelSize: Theme.fontSizeExtraSmall;
+                anchors {
+                    margins: Theme.paddingSmall;
+                    verticalCenter: parent.verticalCenter;
+                }
+                ExtraAnchors.horizontalFill: parent;
+            }
+        }
+    }
+    ColumnContainer {
+        id: layoutBottom;
+        ExtraAnchors.bottomDock: parent;
+
+        Item {
+            id: stripReplyTo;
+            visible: (replyingToMessageItem !== null);
+            implicitHeight: (layoutReplyTo.height + layoutReplyTo.anchors.margins * 2);
+            ExtraAnchors.horizontalFill: parent;
+
+            Rectangle {
+                color: Helpers.panelColor;
+                anchors.fill: parent;
+
+                Rectangle {
+                    color: Theme.secondaryHighlightColor;
+                    opacity: 0.15;
+                    anchors.fill: parent;
+                }
+            }
+            RowContainer {
+                id: layoutReplyTo;
+                spacing: Theme.paddingMedium;
+                anchors {
+                    margins: Theme.paddingMedium;
+                    verticalCenter: parent.verticalCenter;
+                }
+                ExtraAnchors.horizontalFill: parent;
+
+                LabelFixed {
+                    text: qsTr ("<b>Reply</b>: %1").arg (replyingToMessageItem ? replyingToMessageItem.preview (TD_Message.SHOW_TITLE | TD_Message.MULTILINE).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
+                    color: Theme.secondaryHighlightColor;
+                    elide: Text.ElideRight;
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                    textFormat: Text.StyledText;
+                    maximumLineCount: 3;
+                    font.pixelSize: Theme.fontSizeSmall;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    Container.horizontalStretch: 1;
+                }
+                RectangleButton {
+                    icon: "icon-m-clear";
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        TD_Global.replyingToMessageId = "";
                     }
                 }
             }
-            DelegateAvatar {
-                size: Theme.iconSizeMedium;
-                fileItem: (currentChat && currentChat.photo ? currentChat.photo.big : null);
-                anchors.verticalCenter: parent.verticalCenter;
-            }
+        }
+        Item {
+            Container.forcedHeight: footerChat.height;
+            ExtraAnchors.horizontalFill: parent;
         }
     }
 }

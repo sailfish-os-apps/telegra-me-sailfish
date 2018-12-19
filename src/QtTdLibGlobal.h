@@ -114,11 +114,11 @@ public:
     Q_INVOKABLE void refreshSupergroupMembers  (QtTdLibSupergroup * supergroupItem, const int count, const int offset = 0);
 
     Q_INVOKABLE void sendMessageText      (QtTdLibChat * chatItem, const QString & text);
-    Q_INVOKABLE void sendMessagePhoto     (QtTdLibChat * chatItem, const bool groupInAlbum = true);
-    Q_INVOKABLE void sendMessageVideo     (QtTdLibChat * chatItem, const bool groupInAlbum = true);
+    Q_INVOKABLE void sendMessagePhoto     (QtTdLibChat * chatItem, const bool groupInAlbum = true, const QString & caption = "");
+    Q_INVOKABLE void sendMessageVideo     (QtTdLibChat * chatItem, const bool groupInAlbum = true, const QString & caption = "");
+    Q_INVOKABLE void sendMessageDocument  (QtTdLibChat * chatItem, const QString & path, const QString & caption = "");
     Q_INVOKABLE void sendMessageVoiceNote (QtTdLibChat * chatItem, const QString & recording);
     Q_INVOKABLE void sendMessageSticker   (QtTdLibChat * chatItem, QtTdLibSticker * stickerItem);
-    Q_INVOKABLE void sendMessageDocument  (QtTdLibChat * chatItem, const QString & path);
 
     Q_INVOKABLE bool    startRecordingAudio  (void);
     Q_INVOKABLE QString stopRecordingAudio   (void);
@@ -127,8 +127,11 @@ public:
 signals:
     void showChatRequested (QtTdLibChat * chatItem);
 
-protected:
+protected slots:
     void onFrame (const QJsonObject & json);
+
+protected:
+    QJsonValue createFormattedTextJson (const QString & text);
 
 private:
     const QString DBUS_SERVICE_NAME;

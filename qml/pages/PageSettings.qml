@@ -1,38 +1,13 @@
-import QtQuick 2.1;
-import Sailfish.Silica 1.0;
-import Nemo.Configuration 1.0;
+import QtQuick 2.6;
 import QtQmlTricks 3.0;
+import Sailfish.Silica 1.0;
+import harbour.Telegrame 1.0;
 import "../components";
 
 Page {
     id: page;
     allowedOrientations: Orientation.All;
 
-    ConfigurationValue {
-        id: configSendTextMsgOnEnterKey;
-        key: "/apps/telegrame/send_text_msg_on_enter_key";
-        defaultValue: false;
-    }
-    ConfigurationValue {
-        id: configIncludeMutedChatsInUnreadCount;
-        key: "/apps/telegrame/include_muted_chats_in_unread_count";
-        defaultValue: false;
-    }
-    ConfigurationValue {
-        id: configKeepKeyboardOpenAfterMsgSend;
-        key: "/apps/telegrame/keep_kdb_open_after_msg_send";
-        defaultValue: true;
-    }
-    ConfigurationValue {
-        id: configLimitFilePickerToHome;
-        key: "/apps/telegrame/limit_file_picker_to_home";
-        defaultValue: true;
-    }
-    ConfigurationValue {
-        id: configAvatarShape;
-        key: "/apps/telegrame/avatar_shape";
-        defaultValue: "square";
-    }
     SilicaFlickable {
         id: flickerSettings;
         contentWidth: width;
@@ -50,43 +25,53 @@ Page {
             }
             TextSwitch {
                 text: qsTr ("Quick sending of text messages");
-                description: qsTr ("Press Enter to send text messages (single-line)")
+                description: qsTr ("Press Enter to send text messages (single-line)");
                 automaticCheck: true;
                 onCheckedChanged: {
-                    configSendTextMsgOnEnterKey.value = checked;
+                    Helpers.sendTextMsgOnEnterKey = checked;
                 }
 
-                Binding on checked { value: configSendTextMsgOnEnterKey.value; }
+                Binding on checked { value: Helpers.sendTextMsgOnEnterKey; }
             }
             TextSwitch {
                 text: qsTr ("Include muted chats in unread count");
-                description: qsTr ("Whether unread chats should be included in cover page")
+                description: qsTr ("Whether unread chats should be included in cover page");
                 automaticCheck: true;
                 onCheckedChanged: {
-                    configIncludeMutedChatsInUnreadCount.value = checked;
+                    Helpers.includeMutedChatsInUnreadCount = checked;
                 }
 
-                Binding on checked { value: configIncludeMutedChatsInUnreadCount.value; }
+                Binding on checked { value: Helpers.includeMutedChatsInUnreadCount; }
+            }
+            TextSwitch {
+                text: qsTr ("Hide the header in conversation page");
+                description: qsTr ("Normally, it displays title and status, but hiding it can save some space");
+                automaticCheck: true;
+                onCheckedChanged: {
+                    Helpers.hideChatHeader = checked;
+                }
+
+                Binding on checked { value: Helpers.hideChatHeader; }
             }
             TextSwitch {
                 text: qsTr ("Keep keyboard open after sending message");
-                description: qsTr ("By default Jolla keyboard auto-closes, but we can bypass this")
+                description: qsTr ("By default Jolla keyboard auto-closes, but we can bypass this");
                 automaticCheck: true;
                 onCheckedChanged: {
-                    configKeepKeyboardOpenAfterMsgSend.value = checked;
+                    Helpers.keepKeyboardOpenAfterMsgSend = checked;
                 }
 
-                Binding on checked { value: configKeepKeyboardOpenAfterMsgSend.value; }
+                Binding on checked { value: Helpers.keepKeyboardOpenAfterMsgSend; }
             }
             TextSwitch {
                 text: qsTr ("Limit file picker to home directory");
-                description: qsTr ("By default one can't navigate outside of home, but can be unlocked for advanced users")
+                description: qsTr ("By default one can't navigate outside of home, but can be unlocked for advanced users");
                 automaticCheck: true;
                 onCheckedChanged: {
-                    configLimitFilePickerToHome.value = checked;
+                    Helpers.limitFilePickerToHome = checked;
                 }
 
-                Binding on checked { value: configLimitFilePickerToHome.value; }
+                Binding on checked { value: Helpers.limitFilePickerToHome; }
             }
             LabelFixed {
                 text: qsTr ("Avatar shape");
@@ -108,14 +93,14 @@ Page {
                         implicitWidth: (Theme.iconSizeLarge + Theme.paddingLarge * 2);
                         implicitHeight: (implicitWidth * 1.65);
                         onClicked: {
-                            configAvatarShape.value = modelData ["shape"];
+                            Helpers.avatarShape = modelData ["shape"];
                         }
 
                         Rectangle {
                             color: Theme.secondaryHighlightColor;
                             radius: Theme.paddingMedium;
                             opacity: 0.15;
-                            visible: (modelData ["shape"] === configAvatarShape.value);
+                            visible: (modelData ["shape"] === Helpers.avatarShape);
                             antialiasing: true;
                             anchors.fill: parent;
                         }
@@ -131,7 +116,7 @@ Page {
                             }
                             LabelFixed {
                                 text: modelData ["label"].replace (/\s/g, "\n");
-                                color: (modelData ["shape"] === configAvatarShape.value ? Theme.highlightColor : Theme.secondaryColor);
+                                color: (modelData ["shape"] === Helpers.avatarShape ? Theme.highlightColor : Theme.secondaryColor);
                                 horizontalAlignment: Text.AlignHCenter;
                                 font.pixelSize: Theme.fontSizeExtraSmall;
                                 anchors.horizontalCenter: parent.horizontalCenter;
@@ -150,7 +135,7 @@ Page {
     }
     Rectangle {
         id: headerSettings;
-        color: Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
+        color: Helpers.panelColor;
         implicitHeight: (titleSettings.height + titleSettings.anchors.margins * 2);
         ExtraAnchors.topDock: parent;
 

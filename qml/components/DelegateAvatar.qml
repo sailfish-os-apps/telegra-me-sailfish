@@ -5,6 +5,7 @@ import harbour.Telegrame 1.0;
 import QtGraphicalEffects 1.0;
 
 Item {
+    id: self;
     implicitWidth: size;
     implicitHeight: size;
 

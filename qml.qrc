@@ -2,7 +2,6 @@
     <qresource prefix="/">
         <file>qml/harbour-telegrame.qml</file>
         <file>qml/cover/CoverPage.qml</file>
-        <file>qml/InternationalPhoneCodes.js</file>
         <file>qml/pages/PageMain.qml</file>
         <file>qml/pages/PageChat.qml</file>
         <file>qml/components/DelegateDownloadableImage.qml</file>
@@ -15,5 +14,35 @@
         <file>qml/pages/PageAbout.qml</file>
         <file>qml/pages/PageContacts.qml</file>
         <file>qml/components/DelegateAvatar.qml</file>
+        <file>qml/components/Helpers.qml</file>
+        <file>qml/components/DelegateMessageAnimation.qml</file>
+        <file>qml/components/DelegateMessageAudio.qml</file>
+        <file>qml/components/DelegateMessageDocument.qml</file>
+        <file>qml/components/DelegateMessagePhoto.qml</file>
+        <file>qml/components/DelegateMessageSticker.qml</file>
+        <file>qml/components/DelegateMessageText.qml</file>
+        <file>qml/components/DelegateMessageVideo.qml</file>
+        <file>qml/pages/PageChatInfoBasicGroup.qml</file>
+        <file>qml/pages/PageChatInfoPrivate.qml</file>
+        <file>qml/pages/PageChatInfoSupergroup.qml</file>
+        <file>qml/pages/PageUserInfo.qml</file>
+        <file>qml/components/DelegateMessageChatJoinByLink.qml</file>
+        <file>qml/components/DelegateMessageVoiceNote.qml</file>
+        <file>qml/components/DelegateMessageUnsupported.qml</file>
+        <file>qml/components/DelegateMessageChatChangePhoto.qml</file>
+        <file>qml/components/DelegateMessageCall.qml</file>
+        <file>qml/components/DelegateMessageSupergroupChatCreate.qml</file>
+        <file>qml/components/DelegateMessageBasicGroupChatCreate.qml</file>
+        <file>qml/components/DelegateMessagePinMessage.qml</file>
+        <file>qml/components/DelegateMessageChatContactRegistered.qml</file>
+        <file>qml/components/DelegateMessageChatUpgradeTo.qml</file>
+        <file>qml/components/DelegateMessageChatUpgradeFrom.qml</file>
+        <file>qml/components/DelegateMessageChatChangeTitle.qml</file>
+        <file>qml/components/DelegateMessageChatDeleteMember.qml</file>
+        <file>qml/components/DelegateMessageChatAddMembers.qml</file>
+        <file>qml/components/InternationalPhoneCodes.js</file>
+        <file>qml/components/DialogCountrySelector.qml</file>
+        <file>qml/components/DelegateFormattedText.qml</file>
+        <file>qml/components/DelegateAbstractMessageContent.qml</file>
     </qresource>
 </RCC>
