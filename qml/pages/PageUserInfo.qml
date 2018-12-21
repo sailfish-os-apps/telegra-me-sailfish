@@ -116,9 +116,8 @@ Page {
                     }
 
                     Rectangle {
-                        color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                        color: Theme.rgba ((parent.pressed ? Theme.highlightColor : Theme.primaryColor), 0.15);
                         radius: Theme.paddingSmall;
-                        opacity: 0.15;
                         antialiasing: true;
                         anchors.fill: parent;
                     }
@@ -140,9 +139,8 @@ Page {
                     }
 
                     Rectangle {
-                        color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                        color: Theme.rgba ((parent.pressed ? Theme.highlightColor : Theme.primaryColor), 0.15);
                         radius: Theme.paddingSmall;
-                        opacity: 0.15;
                         antialiasing: true;
                         anchors.fill: parent;
                     }

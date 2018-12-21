@@ -44,6 +44,16 @@ Page {
                 Binding on checked { value: Helpers.includeMutedChatsInUnreadCount; }
             }
             TextSwitch {
+                text: qsTr ("Show bubbles around messages");
+                description: qsTr ("Colored rounded rectangles that delimit messages, can be hidden");
+                automaticCheck: true;
+                onCheckedChanged: {
+                    Helpers.showBubblesAroundMessages = checked;
+                }
+
+                Binding on checked { value: Helpers.showBubblesAroundMessages; }
+            }
+            TextSwitch {
                 text: qsTr ("Hide the header in conversation page");
                 description: qsTr ("Normally, it displays title and status, but hiding it can save some space");
                 automaticCheck: true;
@@ -97,9 +107,8 @@ Page {
                         }
 
                         Rectangle {
-                            color: Theme.secondaryHighlightColor;
+                            color: Theme.rgba (Theme.secondaryHighlightColor, 0.15);
                             radius: Theme.paddingMedium;
-                            opacity: 0.15;
                             visible: (modelData ["shape"] === Helpers.avatarShape);
                             antialiasing: true;
                             anchors.fill: parent;

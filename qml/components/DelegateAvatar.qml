@@ -13,6 +13,7 @@ Item {
     property alias fileItem : img.fileItem;
 
     OpacityMask {
+        cached: true;
         source: ShaderEffectSource {
             hideSource: true;
             sourceItem: DelegateDownloadableImage {

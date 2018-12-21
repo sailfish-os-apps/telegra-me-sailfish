@@ -440,8 +440,7 @@ ApplicationWindow {
                                 autoDownload: true;
                             }
                             Rectangle {
-                                color: (delegateSelectorStickerSet.active || pressed ? Theme.highlightColor : Theme.primaryColor);
-                                opacity: (delegateSelectorStickerSet.active ? 0.35 : 0.15);
+                                color: Theme.rgba ((delegateSelectorStickerSet.active || pressed ? Theme.highlightColor : Theme.primaryColor), (delegateSelectorStickerSet.active ? 0.35 : 0.15));
                                 anchors.fill: parent;
                             }
                             Image {
@@ -538,8 +537,7 @@ ApplicationWindow {
                             }
 
                             Rectangle {
-                                color: Theme.highlightColor;
-                                opacity: (currentDocument === model.filePath ? 0.35 : 0.15);
+                                color: Theme.rgba (Theme.highlightColor, (currentDocument === model.filePath ? 0.35 : 0.15));
                                 visible: (currentDocument === model.filePath || parent.pressed);
                                 anchors.fill: parent;
                             }

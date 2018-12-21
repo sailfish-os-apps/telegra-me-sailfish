@@ -27,6 +27,7 @@ QtObject {
     property alias avatarShape                    : configAvatarShape.value;
     property alias lastUsedStickersetName         : configLastUsedStickersetName.value;
     property alias hideChatHeader                 : configHideChatHeader.value;
+    property alias showBubblesAroundMessages      : configShowBubblesAroundMessages.value;
 
     property list<ConfigurationValue> _configurationItems_ : [
         ConfigurationValue {
@@ -73,6 +74,11 @@ QtObject {
             id: configHideChatHeader;
             key: "/apps/telegrame/hide_chat_header";
             defaultValue: false;
+        },
+        ConfigurationValue {
+            id: configShowBubblesAroundMessages;
+            key: "/apps/telegrame/show_bubbles_around_messages";
+            defaultValue: true;
         }
     ]
 

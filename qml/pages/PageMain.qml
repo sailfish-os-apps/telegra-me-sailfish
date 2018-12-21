@@ -66,9 +66,8 @@ Page {
                 }
 
                 Rectangle {
-                    color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                    color: Theme.rgba ((parent.pressed ? Theme.highlightColor : Theme.primaryColor), 0.15);
                     radius: Theme.paddingSmall;
-                    opacity: 0.15;
                     anchors.fill: parent;
                 }
                 RowContainer {
@@ -129,9 +128,8 @@ Page {
                 }
 
                 Rectangle {
-                    color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                    color: Theme.rgba ((parent.pressed ? Theme.highlightColor : Theme.primaryColor), 0.15);
                     radius: Theme.paddingSmall;
-                    opacity: 0.15;
                     anchors.fill: parent;
                 }
                 LabelFixed {
@@ -218,9 +216,8 @@ Page {
                 }
 
                 Rectangle {
-                    color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                    color: Theme.rgba ((parent.pressed ? Theme.highlightColor : Theme.primaryColor), 0.15);
                     radius: Theme.paddingSmall;
-                    opacity: 0.15;
                     anchors.fill: parent;
                 }
                 LabelFixed {
@@ -335,13 +332,10 @@ Page {
                                             PageStackAction.Animated);
                         }
 
-                        readonly property TD_Chat           chatItem           : modelData;
-                        readonly property TD_ChatPhoto      chatPhotoItem      : (chatItem ? chatItem.photo : null);
-                        readonly property TD_Message        lastMsgItem        : (chatItem ? chatItem.getMessageItemById (chatItem.lastReceivedMessageId) : null);
-                        readonly property TD_User           lastMsgUserItem    : (lastMsgItem ? TD_Global.getUserItemById (lastMsgItem.senderUserId) : null);
-                        readonly property TD_MessageContent lastMsgContentItem : (lastMsgItem ? lastMsgItem.content : null);
-                        readonly property int               unreadCount        : (chatItem.notificationSettings && chatItem.notificationSettings.muteFor === 0 ? chatItem.unreadCount : 0);
-                        readonly property string            description        : (lastMsgItem ? lastMsgItem.preview (TD_Message.SHOW_TITLE) : "");
+                        readonly property TD_Chat      chatItem      : modelData;
+                        readonly property TD_ChatPhoto chatPhotoItem : (chatItem ? chatItem.photo : null);
+                        readonly property TD_Message   lastMsgItem   : (chatItem ? chatItem.getMessageItemById (chatItem.lastReceivedMessageId) : null);
+                        readonly property string       description   : (lastMsgItem ? lastMsgItem.preview (TD_Message.SHOW_TITLE) : "");
 
                         Connections {
                             target: delegateChat.chatItem;
@@ -359,7 +353,9 @@ Page {
                             DelegateAvatar {
                                 id: avatarChat;
                                 size: Theme.iconSizeMedium;
-                                fileItem: (delegateChat.chatPhotoItem ? delegateChat.chatPhotoItem.big : null);
+                                fileItem: (delegateChat.chatPhotoItem
+                                           ? delegateChat.chatPhotoItem.big
+                                           : null);
                                 anchors.verticalCenter: parent.verticalCenter;
                             }
                             ColumnContainer {
@@ -394,65 +390,55 @@ Page {
                                     }
                                 }
                             }
+                            Rectangle {
+                                color: Theme.rgba (Theme.secondaryColor, 0.35);
+                                radius: (Theme.iconSizeMedium * 0.5);
+                                visible: (delegateChat.chatItem.unreadMentionCount > 0);
+                                implicitWidth: Theme.iconSizeMedium;
+                                implicitHeight: Theme.iconSizeMedium;
+                                anchors.verticalCenter: parent.verticalCenter;
+
+                                LabelFixed {
+                                    text: "@";
+                                    color: ((delegateChat.chatItem &&
+                                             delegateChat.chatItem.notificationSettings &&
+                                             delegateChat.chatItem.notificationSettings.muteFor > 0)
+                                            ? Theme.secondaryColor
+                                            : Theme.highlightColor);
+                                    anchors.centerIn: parent;
+                                }
+                            }
+                            Rectangle {
+                                color: Theme.rgba (Theme.secondaryColor, 0.35);
+                                radius: (Theme.iconSizeMedium * 0.5);
+                                visible: (delegateChat.chatItem.unreadCount > 0);
+                                implicitWidth: Theme.iconSizeMedium;
+                                implicitHeight: Theme.iconSizeMedium;
+                                anchors.verticalCenter: parent.verticalCenter;
+
+                                LabelFixed {
+                                    text: delegateChat.chatItem.unreadCount;
+                                    color: ((delegateChat.chatItem &&
+                                             delegateChat.chatItem.notificationSettings &&
+                                             delegateChat.chatItem.notificationSettings.muteFor > 0)
+                                            ? Theme.secondaryColor
+                                            : Theme.highlightColor);
+                                    anchors.centerIn: parent;
+                                }
+                            }
                             Image {
-                                source: "image://theme/icon-s-task?#808080";
+                                source: "image://theme/icon-s-task?%1".arg (Theme.secondaryColor);
                                 visible: (delegateChat.chatItem && delegateChat.chatItem.isPinned);
                                 sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
                                 anchors.verticalCenter: parent.verticalCenter;
                             }
                             Image {
-                                source: "image://theme/icon-m-speaker-mute?#808080";
-                                visible: (delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0);
+                                source: "image://theme/icon-m-speaker-mute?%1".arg (Theme.secondaryColor);
+                                visible: (delegateChat.chatItem &&
+                                          delegateChat.chatItem.notificationSettings &&
+                                          delegateChat.chatItem.notificationSettings.muteFor > 0);
                                 sourceSize: Qt.size (Theme.iconSizeSmall, Theme.iconSizeSmall);
                                 anchors.verticalCenter: parent.verticalCenter;
-                            }
-                            Item {
-                                visible: (delegateChat.chatItem.unreadMentionCount > 0);
-                                Container.forcedWidth: Theme.paddingMedium;
-                            }
-                            LabelFixed {
-                                text: "@";
-                                color: ((delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0)
-                                        ? Theme.secondaryColor
-                                        : Theme.highlightColor);
-                                visible: (delegateChat.chatItem.unreadMentionCount > 0);
-                                anchors.verticalCenter: parent.verticalCenter;
-
-                                Rectangle {
-                                    z: -1;
-                                    color: Theme.secondaryColor;
-                                    radius: (height * 0.5);
-                                    opacity: 0.35;
-                                    implicitWidth: Math.max (parent.width + Theme.paddingMedium * 2, implicitHeight);
-                                    implicitHeight: (parent.height + Theme.paddingSmall * 2);
-                                    anchors.centerIn: parent;
-                                }
-                            }
-                            Item {
-                                visible: (delegateChat.chatItem.unreadCount > 0);
-                                Container.forcedWidth: Theme.paddingMedium;
-                            }
-                            LabelFixed {
-                                text: delegateChat.chatItem.unreadCount;
-                                color: ((delegateChat.chatItem && delegateChat.chatItem.notificationSettings && delegateChat.chatItem.notificationSettings.muteFor > 0)
-                                        ? Theme.secondaryColor
-                                        : Theme.highlightColor);
-                                visible: (delegateChat.chatItem.unreadCount > 0);
-                                anchors.verticalCenter: parent.verticalCenter;
-
-                                Rectangle {
-                                    z: -1;
-                                    color: Theme.secondaryColor;
-                                    radius: (height * 0.5);
-                                    opacity: 0.35;
-                                    implicitWidth: Math.max (parent.width + Theme.paddingMedium * 2, implicitHeight);
-                                    implicitHeight: (parent.height + Theme.paddingSmall * 2);
-                                    anchors.centerIn: parent;
-                                }
-                            }
-                            Item {
-                                visible: (delegateChat.chatItem.unreadCount > 0 || delegateChat.chatItem.unreadMentionCount > 0);
-                                Container.forcedWidth: Theme.paddingMedium;
                             }
                         }
                     }
@@ -477,8 +463,7 @@ Page {
                 anchors.fill: parent;
 
                 Rectangle {
-                    color: Theme.secondaryHighlightColor;
-                    opacity: 0.65;
+                    color: Theme.rgba (Theme.secondaryHighlightColor, 0.65);
                     visible: flickerChats.atYBeginning;
                     implicitHeight: Theme.paddingSmall;
                     ExtraAnchors.topDock: parent;

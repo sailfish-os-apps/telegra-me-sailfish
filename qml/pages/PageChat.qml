@@ -251,8 +251,7 @@ Page {
 
                 RemorseItem { id: remorse; }
                 Rectangle {
-                    color: Theme.secondaryHighlightColor;
-                    opacity: (delegateMsg.messageItem.containsUnreadMention ? 0.35 : 0.10);
+                    color: Theme.rgba (Theme.secondaryHighlightColor, (delegateMsg.messageItem.containsUnreadMention ? 0.35 : 0.10));
                     visible: (delegateMsg.messageItem.id === currentMessageId || delegateMsg.messageItem.containsUnreadMention);
                     anchors.fill: parent;
                 }
@@ -272,9 +271,8 @@ Page {
                             font.pixelSize: Theme.fontSizeSmall;
 
                             Rectangle {
-                                opacity: 0.15;
                                 gradient: Gradient {
-                                    GradientStop { position: 0; color: Theme.highlightColor; }
+                                    GradientStop { position: 0; color: Theme.rgba (Theme.highlightColor, 0.15); }
                                     GradientStop { position: 1; color: "transparent"; }
                                 }
                                 anchors.fill: parent;
@@ -315,9 +313,9 @@ Page {
                                                               : 0);
 
                             Rectangle {
-                                color: (delegateMsg.messageItem.isOutgoing ? Theme.primaryColor : Theme.highlightColor);
+                                color: Theme.rgba (delegateMsg.messageItem.isOutgoing ? Theme.primaryColor : Theme.highlightColor, 0.10);
                                 radius: Theme.paddingMedium;
-                                opacity: 0.10;
+                                visible: Helpers.showBubblesAroundMessages;
                                 antialiasing: true;
                                 anchors.fill: parent;
                             }
@@ -441,8 +439,8 @@ Page {
 
                                     LabelFixed {
                                         text: ((delegateMsg.messageItem.editDate.getFullYear () > 2000)
-                                               ? (qsTr ("edited") + " " + Qt.formatDateTime (delegateMsg.messageItem.editDate))
-                                               : Qt.formatDateTime (delegateMsg.messageItem.date));
+                                               ? (qsTr ("edited") + " " + Qt.formatDateTime (delegateMsg.messageItem.editDate, "ddd d MMM, hh:mm:ss"))
+                                               : Qt.formatDateTime (delegateMsg.messageItem.date, "ddd d MMM, hh:mm:ss"));
                                         color: Theme.secondaryColor;
                                         font.pixelSize: Theme.fontSizeExtraSmall;
                                         anchors.verticalCenter: parent.verticalCenter;
@@ -572,8 +570,7 @@ Page {
 
         Behavior on opacity { NumberAnimation { duration: 650; } }
         Rectangle {
-            color: Theme.highlightColor;
-            opacity: 0.15;
+            color: Theme.rgba (Theme.highlightColor, 0.15);
             anchors.fill: parent;
         }
         Rectangle {
@@ -636,8 +633,7 @@ Page {
                 anchors.fill: parent;
 
                 Rectangle {
-                    color: Theme.secondaryHighlightColor;
-                    opacity: 0.65;
+                    color: Theme.rgba (Theme.secondaryHighlightColor, 0.65);
                     visible: flickerMessages.atYBeginning;
                     implicitHeight: Theme.paddingSmall;
                     ExtraAnchors.topDock: parent;
@@ -750,8 +746,7 @@ Page {
                 anchors.fill: parent;
 
                 Rectangle {
-                    color: Theme.secondaryHighlightColor;
-                    opacity: 0.15;
+                    color: Theme.rgba (Theme.secondaryHighlightColor, 0.15);
                     anchors.fill: parent;
                 }
             }
@@ -785,8 +780,7 @@ Page {
                 anchors.fill: parent;
 
                 Rectangle {
-                    color: Theme.secondaryHighlightColor;
-                    opacity: 0.15;
+                    color: Theme.rgba (Theme.secondaryHighlightColor, 0.15);
                     anchors.fill: parent;
                 }
             }

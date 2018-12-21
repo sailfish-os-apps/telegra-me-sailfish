@@ -15,9 +15,8 @@ MouseArea {
     property string icon    : "";
 
     Rectangle {
-        color: (active || pressed ? Theme.highlightColor : Theme.primaryColor);
+        color: Theme.rgba ((active || pressed ? Theme.highlightColor : Theme.primaryColor), (active ? 0.35 : 0.15));
         radius: (rounded ? Theme.paddingSmall : 0);
-        opacity: (active ? 0.35 : 0.15);
         antialiasing: rounded;
         anchors.fill: parent;
     }

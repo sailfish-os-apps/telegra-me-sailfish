@@ -38,7 +38,7 @@ Page {
             }
             LabelFixed {
                 text: qsTr ("An unofficial client for Telegram messaging, using TDLIB API. It aims to provide all the main features of the official apps on other platforms, while integrating nicely into Sailfish UI that we all love.");
-                opacity: 0.65;
+                color: Theme.rgba (Theme.primaryColor, 0.65);
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 horizontalAlignment: Text.AlignJustify;
                 font.family: Theme.fontFamilyHeading;
@@ -50,8 +50,7 @@ Page {
             }
             LabelFixed {
                 text: qsTr ("Designed and developed by Thomas BOUTROUE");
-                color: Theme.secondaryHighlightColor;
-                opacity: 0.65;
+                color: Theme.rgba (Theme.secondaryHighlightColor, 0.65);
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 horizontalAlignment: Text.AlignHCenter;
                 font.family: Theme.fontFamilyHeading;
@@ -60,8 +59,7 @@ Page {
             }
             LabelFixed {
                 text: "thebootroo@gmail.com";
-                color: Theme.highlightColor;
-                opacity: 0.65;
+                color: Theme.rgba (Theme.highlightColor, 0.65);
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 horizontalAlignment: Text.AlignHCenter;
                 font.family: Theme.fontFamilyHeading;
@@ -92,8 +90,7 @@ Page {
             }
             LabelFixed {
                 text: "http://gitlab.unique-conception.org/sailfish-app/telegra-me";
-                color: Theme.highlightColor;
-                opacity: 0.65;
+                color: Theme.rgba (Theme.highlightColor, 0.65);
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 horizontalAlignment: Text.AlignHCenter;
                 font.family: Theme.fontFamilyHeading;
@@ -116,8 +113,7 @@ Page {
             }
             LabelFixed {
                 text: qsTr ("Kudos to BlackSailer for compiling tdlib-json on Sailfish OS !");
-                color: Theme.highlightColor;
-                opacity: 0.65;
+                color: Theme.rgba (Theme.highlightColor, 0.65);
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 horizontalAlignment: Text.AlignHCenter;
                 font.bold: true;
@@ -153,9 +149,8 @@ Page {
                 }
 
                 Rectangle {
-                    color: (parent.pressed ? Theme.highlightColor : Theme.primaryColor);
+                    color: Theme.rgba ((parent.pressed ? Theme.highlightColor : Theme.primaryColor), 0.15);
                     radius: Theme.paddingSmall;
-                    opacity: 0.15;
                     antialiasing: true;
                     anchors.fill: parent;
                 }

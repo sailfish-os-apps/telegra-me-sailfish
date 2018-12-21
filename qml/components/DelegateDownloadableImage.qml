@@ -24,8 +24,7 @@ Item {
     }
     Rectangle {
         id: rect;
-        color: "gray";
-        opacity: 0.35;
+        color: Theme.rgba (Theme.secondaryColor, 0.35);
         anchors.fill: parent;
     }
     Image {

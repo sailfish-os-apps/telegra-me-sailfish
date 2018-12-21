@@ -28,6 +28,7 @@ DelegateAbstractMessageContent {
 
         Text {
             id: metrics;
+            z: -1;
             text: formattedText.text;
             font: formattedText.font;
             color: "transparent";
@@ -41,6 +42,13 @@ DelegateAbstractMessageContent {
         sourceComponent: RowContainer {
             spacing: Theme.paddingMedium;
 
+            MouseArea {
+                anchors.fill: parent;
+                Container.ignored: true;
+                onClicked: {
+                    Qt.openUrlExternally (self.webPage.url);
+                }
+            }
             Rectangle {
                 color: Theme.secondaryColor;
                 implicitWidth: Theme.paddingSmall;

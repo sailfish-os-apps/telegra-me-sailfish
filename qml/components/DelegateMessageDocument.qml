@@ -46,8 +46,7 @@ DelegateAbstractMessageContent {
         }
 
         Rectangle {
-            color: Theme.secondaryHighlightColor;
-            opacity: 0.15;
+            color: Theme.rgba (Theme.secondaryHighlightColor, 0.15);
             border {
                 width: 1;
                 color: Theme.highlightColor;

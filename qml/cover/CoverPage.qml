@@ -44,8 +44,7 @@ CoverBackground {
         }
         LabelFixed {
             text: qsTr ("unread messages");
-            color: Theme.primaryColor;
-            opacity: (count > 0 ? 1.0 : 0.35);
+            color: Theme.rgba (Theme.primaryColor, (count > 0 ? 1.0 : 0.35));
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
             horizontalAlignment: Text.AlignHCenter;
             font.pixelSize: Theme.fontSizeLarge;

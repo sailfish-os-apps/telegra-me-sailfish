@@ -65,8 +65,7 @@ Page {
 
                 Rectangle {
                     z: -1;
-                    color: Theme.secondaryColor;
-                    opacity: 0.15;
+                    color: Theme.rgba (Theme.secondaryColor, 0.15);
                     anchors {
                         fill: parent;
                         margins: -Theme.paddingSmall;
@@ -134,8 +133,7 @@ Page {
                     ExtraAnchors.horizontalFill: parent;
 
                     Rectangle {
-                        color: Theme.secondaryColor;
-                        opacity: 0.35;
+                        color: Theme.rgba (Theme.secondaryColor, 0.35);
                         implicitHeight: 1;
                         anchors.verticalCenter: parent.verticalCenter;
                         Container.horizontalStretch: 1;
@@ -147,8 +145,7 @@ Page {
                         anchors.verticalCenter: parent.verticalCenter;
                     }
                     Rectangle {
-                        color: Theme.secondaryColor;
-                        opacity: 0.35;
+                        color: Theme.rgba (Theme.secondaryColor, 0.35);
                         implicitHeight: 1;
                         anchors.verticalCenter: parent.verticalCenter;
                         Container.horizontalStretch: 1;
