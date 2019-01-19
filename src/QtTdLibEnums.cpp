@@ -18,6 +18,7 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "authorizationStateReady", QtTdLibObjectType::AUTHORIZATION_STATE_READY },
         { "authorizationStateWaitCode", QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_CODE },
         { "authorizationStateWaitEncryptionKey", QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_ENCRYPTION_KEY },
+        { "authorizationStateWaitPassword", QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_PASSWORD },
         { "authorizationStateWaitPhoneNumber", QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_PHONE_NUMBER },
         { "authorizationStateWaitTdlibParameters", QtTdLibObjectType::AUTHORIZATION_STATE_WAIT_TDLIB_PARAMETERS },
         { "basicGroup", QtTdLibObjectType::BASIC_GROUP },

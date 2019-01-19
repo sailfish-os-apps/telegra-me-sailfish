@@ -232,6 +232,68 @@ Page {
         }
     }
     Item {
+        id: tabPassword;
+        enabled: (TD_Global.authorizationState && TD_Global.authorizationState.typeOf === TD_ObjectType.AUTHORIZATION_STATE_WAIT_PASSWORD);
+        opacity: (enabled ? 1.0 : 0.0);
+        anchors.fill: parent;
+
+        PageHeader {
+            id: headerPassword;
+            title: qsTr ("2FA");
+            ExtraAnchors.topDock: parent;
+        }
+        ColumnContainer {
+            spacing: Theme.paddingLarge;
+            anchors {
+                top: headerPassword.bottom;
+                margins: Theme.paddingLarge;
+            }
+            ExtraAnchors.horizontalFill: parent;
+
+            LabelFixed {
+                text: qsTr ("Enter your password :");
+                color: Theme.highlightColor;
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                font.family: Theme.fontFamilyHeading;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            TextField {
+                id: inputPassword2FA;
+                echoMode: TextInput.Password;
+                placeholderText: qsTr ("Password");
+                ExtraAnchors.horizontalFill: parent;
+            }
+            MouseArea {
+                id: btnPassword;
+                opacity: (enabled ? 1.0 : 0.35);
+                enabled: (inputPassword2FA.text !== "");
+                implicitWidth: (lblPassword.width + lblPassword.anchors.margins * 2);
+                implicitHeight: (lblPassword.height + lblPassword.anchors.margins * 2);
+                anchors.horizontalCenter: parent.horizontalCenter;
+                onClicked: {
+                    TD_Global.send ({
+                                        "@type" : "checkAuthenticationPassword",
+                                        "password" : inputPassword2FA.text.trim (),
+                                    });
+                }
+
+                Rectangle {
+                    color: Theme.rgba ((parent.pressed ? Theme.highlightColor : Theme.primaryColor), 0.15);
+                    radius: Theme.paddingSmall;
+                    anchors.fill: parent;
+                }
+                LabelFixed {
+                    id: lblPassword;
+                    text: qsTr ("Unlock");
+                    anchors {
+                        centerIn: parent;
+                        margins: Theme.paddingLarge;
+                    }
+                }
+            }
+        }
+    }
+    Item {
         id: tabConverstations;
         enabled: (TD_Global.authorizationState && TD_Global.authorizationState.typeOf === TD_ObjectType.AUTHORIZATION_STATE_READY);
         opacity: (enabled ? 1.0 : 0.0);
