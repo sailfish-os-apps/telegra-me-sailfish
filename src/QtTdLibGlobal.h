@@ -120,9 +120,9 @@ public:
     Q_INVOKABLE void sendMessageVoiceNote (QtTdLibChat * chatItem, const QString & recording);
     Q_INVOKABLE void sendMessageSticker   (QtTdLibChat * chatItem, QtTdLibSticker * stickerItem);
 
-    Q_INVOKABLE bool    startRecordingAudio  (void);
-    Q_INVOKABLE QString stopRecordingAudio   (void);
-    Q_INVOKABLE void    removeRecording      (const QString & path);
+    Q_INVOKABLE bool    startRecordingAudio (void);
+    Q_INVOKABLE QString stopRecordingAudio  (void);
+    Q_INVOKABLE void    removeRecording     (const QString & path);
 
 signals:
     void showChatRequested (QtTdLibChat * chatItem);

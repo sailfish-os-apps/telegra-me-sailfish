@@ -325,12 +325,13 @@ void QtTdLibGlobal::createPrivateChat (QtTdLibUser * userItem) {
 
 void QtTdLibGlobal::showChat (QtTdLibChat * chatItem) {
     if (chatItem != Q_NULLPTR) {
-        qWarning () << "SHOW CHAT" << chatItem->get_id () << chatItem->get_title ();
+        qWarning () << "SHOW CHAT" << chatItem << chatItem->get_id () << chatItem->get_title ();
         emit showChatRequested (chatItem);
     }
 }
 
 void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
+    qWarning () << "openChat" << chatItem;
     closeChat (m_currentChat);
     if (chatItem != Q_NULLPTR) {
         chatItem->set_isCurrentChat (true);
@@ -344,15 +345,16 @@ void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
 }
 
 void QtTdLibGlobal::closeChat (QtTdLibChat * chatItem) {
-    set_replyingToMessageId ("");
-    set_currentMessageContent (Q_NULLPTR);
-    if (chatItem != Q_NULLPTR) {
+    qWarning () << "closeChat" << chatItem;
+    if (chatItem != Q_NULLPTR && chatItem == m_currentChat) {
         chatItem->messagesModel.clear ();
         chatItem->set_oldestFetchedMessageId (0); // NOTE : reset lower boundary
         chatItem->set_newestFetchedMessageId (0); // NOTE : reset upper boundary
         chatItem->set_hasReachedFirst (false); // NOTE : reset start flag
         chatItem->set_hasReachedLast  (false); // NOTE : reset end flag
         chatItem->set_isCurrentChat   (false);
+        set_replyingToMessageId ("");
+        set_currentMessageContent (Q_NULLPTR);
         set_currentChat (Q_NULLPTR);
         send (QJsonObject {
                   { "@type", "closeChat" },
@@ -551,6 +553,7 @@ QJsonValue QtTdLibGlobal::createFormattedTextJson (const QString & text) {
 }
 
 void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & text) {
+    qWarning () << "sendMessageText" << chatItem << text;
     if (chatItem != Q_NULLPTR && !text.isEmpty ()) {
         send (QJsonObject {
                   { "@type", "sendMessage" },

@@ -64,7 +64,7 @@ ApplicationWindow {
         target: TD_Global;
         onShowChatRequested: {
             if (chatItem) {
-                console.log ("DISPLAY REQUESTED", chatItem.id);
+                console.log ("DISPLAY REQUESTED", chatItem, chatItem.id);
                 window.activate ();
                 while (pageStack.depth > 1) {
                     pageStack.navigateBack (PageStackAction.Immediate);

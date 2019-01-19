@@ -53,7 +53,7 @@ QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
         }
     });
     connect (&m_notif, &Notification::clicked, this, [this] (void) {
-        qWarning () << "CLICKED" << get_id ();
+        qWarning () << "CLICKED" << this << get_id ();
         emit displayRequested ();
     });
     connect (this,           &QtTdLibChat::lastReadInboxMessageIdChanged,  this, &QtTdLibChat::findFirstNewMessage);

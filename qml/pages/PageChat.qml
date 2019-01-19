@@ -8,6 +8,7 @@ Page {
     id: page;
     allowedOrientations: Orientation.All;
     Component.onCompleted: {
+        console.log ("CHAT PAGE completed", currentChat);
         TD_Global.openChat (currentChat);
         if (currentChat.unreadCount > 0) {
             // should wait for first unread msg to become valid and center on it
@@ -18,6 +19,7 @@ Page {
         }
     }
     Component.onDestruction: {
+        console.log ("CHAT PAGE destroyed", currentChat);
         TD_Global.closeChat (currentChat);
     }
     onContainsFirstUnreadMsgChanged: {
