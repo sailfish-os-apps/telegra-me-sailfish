@@ -75,6 +75,10 @@ ApplicationWindow {
                                 PageStackAction.Immediate);
             }
         }
+        onEditTextRequested: {
+            Helpers.currentMsgType = TD_ObjectType.MESSAGE_TEXT;
+            btnSendMsg.textBox.text = (formattedText ? formattedText.text : "");
+        }
     }
     ShaderEffectSource {
         id: maskAvatarCircle;
@@ -700,6 +704,7 @@ ApplicationWindow {
                     RectangleButton {
                         active: selectorMsgType.visible;
                         rounded: false;
+                        enabled: (TD_Global.editingMessageId === "");
                         icon: {
                             switch (Helpers.currentMsgType) {
                             case TD_ObjectType.MESSAGE_TEXT:       return "icon-m-text-input";
@@ -811,25 +816,30 @@ ApplicationWindow {
                                 textBox.focus = false;
                                 var tmp = textBox.text.trim ();
                                 /// SEND
-                                switch (Helpers.currentMsgType) {
-                                case TD_ObjectType.MESSAGE_TEXT:
-                                    TD_Global.sendMessageText (TD_Global.currentChat, tmp);
-                                    break;
-                                case TD_ObjectType.MESSAGE_PHOTO:
-                                    TD_Global.sendMessagePhoto (TD_Global.currentChat, (TD_Global.selectedPhotosCount > 0), tmp);
-                                    break;
-                                case TD_ObjectType.MESSAGE_VIDEO:
-                                    TD_Global.sendMessageVideo (TD_Global.currentChat, (TD_Global.selectedVideosCount > 0), tmp);
-                                    break;
-                                case TD_ObjectType.MESSAGE_DOCUMENT:
-                                    TD_Global.sendMessageDocument (TD_Global.currentChat, currentDocument, tmp);
-                                    break;
-                                case TD_ObjectType.MESSAGE_VOICE_NOTE:
-                                    TD_Global.sendMessageVoiceNote (TD_Global.currentChat, currentRecording);
-                                    break;
-                                case TD_ObjectType.MESSAGE_STICKER:
-                                    TD_Global.sendMessageSticker (TD_Global.currentChat, currentSticker);
-                                    break;
+                                if (TD_Global.editingMessageId !== "") {
+                                    TD_Global.sendMessageEdit (TD_Global.currentChat, tmp);
+                                }
+                                else {
+                                    switch (Helpers.currentMsgType) {
+                                    case TD_ObjectType.MESSAGE_TEXT:
+                                        TD_Global.sendMessageText (TD_Global.currentChat, tmp);
+                                        break;
+                                    case TD_ObjectType.MESSAGE_PHOTO:
+                                        TD_Global.sendMessagePhoto (TD_Global.currentChat, (TD_Global.selectedPhotosCount > 0), tmp);
+                                        break;
+                                    case TD_ObjectType.MESSAGE_VIDEO:
+                                        TD_Global.sendMessageVideo (TD_Global.currentChat, (TD_Global.selectedVideosCount > 0), tmp);
+                                        break;
+                                    case TD_ObjectType.MESSAGE_DOCUMENT:
+                                        TD_Global.sendMessageDocument (TD_Global.currentChat, currentDocument, tmp);
+                                        break;
+                                    case TD_ObjectType.MESSAGE_VOICE_NOTE:
+                                        TD_Global.sendMessageVoiceNote (TD_Global.currentChat, currentRecording);
+                                        break;
+                                    case TD_ObjectType.MESSAGE_STICKER:
+                                        TD_Global.sendMessageSticker (TD_Global.currentChat, currentSticker);
+                                        break;
+                                    }
                                 }
                                 /// RESET
                                 TD_Global.unselectAllPhotos ();

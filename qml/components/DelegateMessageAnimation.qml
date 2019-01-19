@@ -20,6 +20,10 @@ DelegateAbstractMessageContent {
         fileItem: (animationItem ? animationItem.animation : null);
         autoDownload: true;
     }
+    DelegateFormattedText {
+        formattedTextItem: captionItem;
+        ExtraAnchors.horizontalFill: parent;
+    }
     Item {
         id: placeholder;
         implicitWidth: (animationItem ? Math.min (animationItem.width, self.width) : 1);

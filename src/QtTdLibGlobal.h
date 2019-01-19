@@ -45,6 +45,7 @@ class QtTdLibGlobal : public QObject {
     QML_CONSTANT_PTR_PROPERTY    (sortedContactsList,     QSortFilterProxyModel)
     QML_WRITABLE_VAR_PROPERTY    (sendTextOnEnterKey,                      bool)
     QML_WRITABLE_CSTREF_PROPERTY (replyingToMessageId,                  QString)
+    QML_WRITABLE_CSTREF_PROPERTY (editingMessageId,                     QString)
 
 public:
     explicit QtTdLibGlobal (QObject * parent = Q_NULLPTR);
@@ -124,8 +125,13 @@ public:
     Q_INVOKABLE QString stopRecordingAudio  (void);
     Q_INVOKABLE void    removeRecording     (const QString & path);
 
+    Q_INVOKABLE void editFormattedText (QtTdLibFormattedText * formattedText);
+
+    Q_INVOKABLE void sendMessageEdit (QtTdLibChat * chatItem, const QString & text);
+
 signals:
     void showChatRequested (QtTdLibChat * chatItem);
+    void editTextRequested (QtTdLibFormattedText * formattedText);
 
 protected slots:
     void onFrame (const QJsonObject & json);

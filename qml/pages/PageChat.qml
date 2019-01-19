@@ -57,6 +57,14 @@ Page {
                                                           ? replyingToMessageRefWatcher.messageItem
                                                           : null);
 
+    readonly property TD_MessageRefWatcher editingMessageRefWatcher : (currentChat && TD_Global.editingMessageId !== ""
+                                                                       ? currentChat.getMessageRefById (TD_Global.editingMessageId)
+                                                                       : null);
+
+    readonly property TD_Message editingToMessageItem : (editingMessageRefWatcher
+                                                         ? editingMessageRefWatcher.messageItem
+                                                         : null);
+
     readonly property TD_MessageRefWatcher pinnedMessageRefWatcher : (currentChatSupergroupItem && currentChatSupergroupItem.pinnedMessageId
                                                                       ? currentChat.getMessageRefById (currentChatSupergroupItem.pinnedMessageId)
                                                                       : null);
@@ -218,12 +226,27 @@ Page {
                         }
                     }
                     MenuItem {
-                        text: qsTr ("Edit [TODO]");
-                        visible: delegateMsg.messageItem.canBeEdited;
-                        enabled: false;
+                        text: (textItem
+                               ? qsTr ("Edit text")
+                               : (captionItem
+                                  ? qsTr ("Edit caption")
+                                  : ""));
+                        visible: (delegateMsg.messageItem.canBeEdited && (textItem || captionItem));
                         onClicked: {
-                            // TODO
+                            TD_Global.editingMessageId = delegateMsg.messageItem.id;
+                            TD_Global.editFormattedText (textItem || captionItem);
                         }
+
+                        readonly property TD_FormattedText textItem : (delegateMsg.messageItem &&
+                                                                       delegateMsg.messageItem.content &&
+                                                                       "text" in delegateMsg.messageItem.content
+                                                                       ? delegateMsg.messageItem.content ["text"]
+                                                                       : null);
+                        readonly property TD_FormattedText captionItem : (delegateMsg.messageItem &&
+                                                                          delegateMsg.messageItem.content &&
+                                                                          "caption" in delegateMsg.messageItem.content
+                                                                          ? delegateMsg.messageItem.content ["caption"]
+                                                                          : null);
                     }
                     MenuItem {
                         text: qsTr ("Delete only for me");
@@ -811,6 +834,51 @@ Page {
                     anchors.verticalCenter: parent.verticalCenter;
                     onClicked: {
                         TD_Global.replyingToMessageId = "";
+                    }
+                }
+            }
+        }
+        Item {
+            id: stripEdit;
+            visible: (editingToMessageItem !== null);
+            implicitHeight: (layoutEdit.height + layoutEdit.anchors.margins * 2);
+            ExtraAnchors.horizontalFill: parent;
+
+            Rectangle {
+                color: Helpers.panelColor;
+                anchors.fill: parent;
+
+                Rectangle {
+                    color: Theme.rgba (Theme.secondaryHighlightColor, 0.15);
+                    anchors.fill: parent;
+                }
+            }
+            RowContainer {
+                id: layoutEdit;
+                spacing: Theme.paddingMedium;
+                anchors {
+                    margins: Theme.paddingMedium;
+                    verticalCenter: parent.verticalCenter;
+                }
+                ExtraAnchors.horizontalFill: parent;
+
+                LabelFixed {
+                    text: qsTr ("<b>Edit</b>: %1").arg (editingToMessageItem ? editingToMessageItem.preview (TD_Message.SHOW_TITLE | TD_Message.MULTILINE).replace (/\n/g, "<br>") : qsTr ("<i>deleted message</i>"));
+                    color: Theme.secondaryHighlightColor;
+                    elide: Text.ElideRight;
+                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                    textFormat: Text.StyledText;
+                    maximumLineCount: 3;
+                    font.pixelSize: Theme.fontSizeSmall;
+                    anchors.verticalCenter: parent.verticalCenter;
+                    Container.horizontalStretch: 1;
+                }
+                RectangleButton {
+                    icon: "icon-m-clear";
+                    anchors.verticalCenter: parent.verticalCenter;
+                    onClicked: {
+                        TD_Global.editFormattedText (null);
+                        TD_Global.editingMessageId = "";
                     }
                 }
             }

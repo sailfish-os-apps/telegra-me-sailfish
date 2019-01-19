@@ -353,6 +353,7 @@ void QtTdLibGlobal::closeChat (QtTdLibChat * chatItem) {
         chatItem->set_hasReachedFirst (false); // NOTE : reset start flag
         chatItem->set_hasReachedLast  (false); // NOTE : reset end flag
         chatItem->set_isCurrentChat   (false);
+        set_editingMessageId ("");
         set_replyingToMessageId ("");
         set_currentMessageContent (Q_NULLPTR);
         set_currentChat (Q_NULLPTR);
@@ -553,7 +554,6 @@ QJsonValue QtTdLibGlobal::createFormattedTextJson (const QString & text) {
 }
 
 void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & text) {
-    qWarning () << "sendMessageText" << chatItem << text;
     if (chatItem != Q_NULLPTR && !text.isEmpty ()) {
         send (QJsonObject {
                   { "@type", "sendMessage" },
@@ -572,6 +572,47 @@ void QtTdLibGlobal::sendMessageText (QtTdLibChat * chatItem, const QString & tex
               });
     }
     set_replyingToMessageId ("");
+}
+
+void QtTdLibGlobal::sendMessageEdit (QtTdLibChat * chatItem, const QString & text) {
+    if (chatItem != Q_NULLPTR && !text.isEmpty ()) {
+        if (QtTdLibMessage * messageItem = { chatItem->getMessageItemById (m_editingMessageId) }) {
+            switch (messageItem->get_content ()->get_typeOf ()) {
+                case QtTdLibObjectType::MESSAGE_TEXT: {
+                    send (QJsonObject {
+                              { "@type", "editMessageText" },
+                              { "chat_id" , chatItem->get_id_asJSON () },
+                              { "message_id", messageItem->get_id_asJSON () },
+                              { "reply_markup", QJsonValue::Null },
+                              { "input_message_content", QJsonObject {
+                                    { "@type", "inputMessageText" },
+                                    { "disable_web_page_preview", false },
+                                    { "clear_draft", false },
+                                    { "text", createFormattedTextJson (text) },
+                                }
+                              }
+                          });
+                    break;
+                }
+                case QtTdLibObjectType::MESSAGE_PHOTO:
+                case QtTdLibObjectType::MESSAGE_AUDIO:
+                case QtTdLibObjectType::MESSAGE_VIDEO:
+                case QtTdLibObjectType::MESSAGE_DOCUMENT:
+                case QtTdLibObjectType::MESSAGE_ANIMATION:
+                case QtTdLibObjectType::MESSAGE_VOICE_NOTE: {
+                    send (QJsonObject {
+                              { "@type", "editMessageCaption" },
+                              { "chat_id" , chatItem->get_id_asJSON () },
+                              { "message_id", messageItem->get_id_asJSON () },
+                              { "reply_markup", QJsonValue::Null },
+                              { "caption", createFormattedTextJson (text) },
+                          });
+                    break;
+                }
+            }
+        }
+    }
+    set_editingMessageId (QString { });
 }
 
 void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupInAlbum, const QString & caption) {
@@ -792,6 +833,10 @@ QString QtTdLibGlobal::stopRecordingAudio (void) {
 
 void QtTdLibGlobal::removeRecording (const QString & path) {
     QFile::remove (path);
+}
+
+void QtTdLibGlobal::editFormattedText (QtTdLibFormattedText * formattedText) {
+    emit editTextRequested (formattedText);
 }
 
 void QtTdLibGlobal::onFrame (const QJsonObject & json) {
