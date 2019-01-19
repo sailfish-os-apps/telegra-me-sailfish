@@ -10,10 +10,11 @@ DelegateAbstractMessageContent {
     optimalWidth: vid.width;
     additionalContextMenuItems: ObjectModel {
         MenuItem {
-            text: qsTr ("Open video with player");
+            text: qsTr ("Save video to gallery");
             enabled: (videoItem && videoItem.video && videoItem.video.local && videoItem.video.local.isDownloadingCompleted);
             onClicked: {
-                Qt.openUrlExternally (TD_Global.urlFromLocalPath (videoItem.video.local.path));
+                TD_Global.saveVideoToGallery (videoItem.video);
+                emblem.visible = true;
             }
         }
     }
@@ -113,5 +114,14 @@ DelegateAbstractMessageContent {
             implicitWidth: (parent.width * player.progress);
             ExtraAnchors.leftDock: parent;
         }
+    }
+    LabelFixed {
+        id: emblem;
+        text: qsTr ("(saved in gallery)");
+        opacity: 0.65;
+        visible: TD_Global.isVideoSavedToGallery (videoItem.video);
+        horizontalAlignment: Text.AlignHCenter;
+        font.pixelSize: Theme.fontSizeExtraSmall;
+        ExtraAnchors.horizontalFill: vid;
     }
 }

@@ -2,10 +2,26 @@ import QtQuick 2.6;
 import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
+import QtQml.Models 2.2;
 
 DelegateAbstractMessageContent {
     id: self;
     spacing: Theme.paddingMedium;
+    additionalContextMenuItems: ObjectModel {
+        MenuItem {
+            text: qsTr ("Save a copy in 'Downloads'");
+            visible: (documentItem !== null);
+            enabled: (documentItem &&
+                      documentItem.document &&
+                      documentItem.document.local &&
+                      documentItem.document.local.isDownloadingCompleted);
+            onClicked: {
+                TD_Global.downloadDocument (documentItem);
+                emblem.visible = true;
+            }
+        }
+    }
+
 
     property TD_MessageDocument messageContentItem : null;
 
@@ -125,5 +141,14 @@ DelegateAbstractMessageContent {
                 }
             }
         }
+    }
+    LabelFixed {
+        id: emblem;
+        text: qsTr ("(copied in 'Downloads')");
+        opacity: 0.65;
+        visible: TD_Global.isDocumentDownloaded (documentItem);
+        horizontalAlignment: Text.AlignHCenter;
+        font.pixelSize: Theme.fontSizeExtraSmall;
+        ExtraAnchors.horizontalFill: parent;
     }
 }

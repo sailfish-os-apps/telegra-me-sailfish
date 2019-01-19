@@ -617,7 +617,9 @@ void QtTdLibGlobal::sendMessageEdit (QtTdLibChat * chatItem, const QString & tex
     set_editingMessageId (QString { });
 }
 
-static const QString DIR_PHOTOS { QStringLiteral ("/home/nemo/Pictures/Telegrame") };
+static const QString DIR_PHOTOS    { QStringLiteral ("/home/nemo/Pictures/Telegrame") };
+static const QString DIR_VIDEOS    { QStringLiteral ("/home/nemo/Videos/Telegrame") };
+static const QString DIR_DOWNLOADS { QStringLiteral ("/home/nemo/Downloads/Telegrame") };
 
 void QtTdLibGlobal::savePhotoToGallery (QtTdLibFile * fileItem) {
     if (fileItem != Q_NULLPTR) {
@@ -632,6 +634,38 @@ bool QtTdLibGlobal::isPhotoSavedToGallery (QtTdLibFile * fileItem) const {
     if (fileItem != Q_NULLPTR) {
         QFileInfo info { fileItem->get_local ()->get_path () };
         ret = QFile::exists (DIR_PHOTOS % '/' % info.fileName ());
+    }
+    return ret;
+}
+
+void QtTdLibGlobal::saveVideoToGallery (QtTdLibFile * fileItem) {
+    if (fileItem != Q_NULLPTR) {
+        QDir ().mkpath (DIR_VIDEOS);
+        QFileInfo info { fileItem->get_local ()->get_path () };
+        QFile::copy (info.absoluteFilePath (), (DIR_VIDEOS % '/' % info.fileName ()));
+    }
+}
+
+bool QtTdLibGlobal::isVideoSavedToGallery (QtTdLibFile * fileItem) const {
+    bool ret { false };
+    if (fileItem != Q_NULLPTR) {
+        QFileInfo info { fileItem->get_local ()->get_path () };
+        ret = QFile::exists (DIR_VIDEOS % '/' % info.fileName ());
+    }
+    return ret;
+}
+
+void QtTdLibGlobal::downloadDocument (QtTdLibDocument * documentItem) {
+    if (documentItem != Q_NULLPTR) {
+        QDir ().mkpath (DIR_DOWNLOADS);
+        QFile::copy (documentItem->get_document ()->get_local ()->get_path (), (DIR_DOWNLOADS % '/' % documentItem->get_fileName ()));
+    }
+}
+
+bool QtTdLibGlobal::isDocumentDownloaded (QtTdLibDocument * documentItem) const {
+    bool ret { false };
+    if (documentItem != Q_NULLPTR) {
+        ret = QFile::exists ((DIR_DOWNLOADS % '/' % documentItem->get_fileName ()));
     }
     return ret;
 }

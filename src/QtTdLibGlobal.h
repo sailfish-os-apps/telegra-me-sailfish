@@ -132,6 +132,12 @@ public:
     Q_INVOKABLE void savePhotoToGallery    (QtTdLibFile * fileItem);
     Q_INVOKABLE bool isPhotoSavedToGallery (QtTdLibFile * fileItem) const;
 
+    Q_INVOKABLE void saveVideoToGallery    (QtTdLibFile * fileItem);
+    Q_INVOKABLE bool isVideoSavedToGallery (QtTdLibFile * fileItem) const;
+
+    Q_INVOKABLE void downloadDocument     (QtTdLibDocument * documentItem);
+    Q_INVOKABLE bool isDocumentDownloaded (QtTdLibDocument * documentItem) const;
+
 signals:
     void showChatRequested (QtTdLibChat * chatItem);
     void editTextRequested (QtTdLibFormattedText * formattedText);
