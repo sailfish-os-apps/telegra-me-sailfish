@@ -10,11 +10,15 @@ DelegateAbstractMessageContent {
     optimalWidth: img.width;
     additionalContextMenuItems: ObjectModel {
         MenuItem {
-            text: qsTr ("Open image in viewer");
+            text: qsTr ("Save image in gallery");
             visible: (photoSizeItem !== null);
-            enabled: (photoSizeItem && photoSizeItem.photo && photoSizeItem.photo.local && photoSizeItem.photo.local.isDownloadingCompleted);
+            enabled: (photoSizeItem &&
+                      photoSizeItem.photo &&
+                      photoSizeItem.photo.local &&
+                      photoSizeItem.photo.local.isDownloadingCompleted);
             onClicked: {
-                Qt.openUrlExternally (TD_Global.urlFromLocalPath (photoSizeItem.photo.local.path));
+                TD_Global.savePhotoToGallery (photoSizeItem.photo);
+                emblem.visible = true;
             }
         }
     }
@@ -47,10 +51,18 @@ DelegateAbstractMessageContent {
             visible: img.valid;
             anchors.fill: parent;
             onClicked: {
-                compoImgViewer.createObject (window, {
+                compoImgViewer.createObject (overlay, {
                                                  "source" : img.url,
                                              });
             }
         }
+    }
+    LabelFixed {
+        id: emblem;
+        text: qsTr ("(Saved in gallery)");
+        opacity: 0.65;
+        visible: TD_Global.isPhotoSavedToGallery (photoSizeItem.photo);
+        font.pixelSize: Theme.fontSizeExtraSmall;
+        ExtraAnchors.horizontalFill: img;
     }
 }

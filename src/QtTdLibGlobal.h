@@ -129,6 +129,9 @@ public:
 
     Q_INVOKABLE void sendMessageEdit (QtTdLibChat * chatItem, const QString & text);
 
+    Q_INVOKABLE void savePhotoToGallery    (QtTdLibFile * fileItem);
+    Q_INVOKABLE bool isPhotoSavedToGallery (QtTdLibFile * fileItem) const;
+
 signals:
     void showChatRequested (QtTdLibChat * chatItem);
     void editTextRequested (QtTdLibFormattedText * formattedText);

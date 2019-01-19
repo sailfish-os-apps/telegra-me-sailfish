@@ -34,13 +34,16 @@ ApplicationWindow {
 
     property TD_Sticker currentSticker : null;
     property TD_StickerSet currentStickerSet : {
-        var ret = TD_Global.stickerSetsList.getFirst ();
-        if (TD_Global.stickerSetsList.count > 0 && Helpers.lastUsedStickersetName !== "") {
-            for (var idx = 0; idx < TD_Global.stickerSetsList.count; ++idx) {
-                var tmp = TD_Global.stickerSetsList.get (idx);
-                if (tmp ["name"] === Helpers.lastUsedStickersetName) {
-                    ret = tmp;
-                    break;
+        var ret = null;
+        if (TD_Global.stickerSetsList.count > 0) {
+            ret = TD_Global.stickerSetsList.getFirst ();
+            if (TD_Global.stickerSetsList.count > 0 && Helpers.lastUsedStickersetName !== "") {
+                for (var idx = 0; idx < TD_Global.stickerSetsList.count; ++idx) {
+                    var tmp = TD_Global.stickerSetsList.get (idx);
+                    if (tmp ["name"] === Helpers.lastUsedStickersetName) {
+                        ret = tmp;
+                        break;
+                    }
                 }
             }
         }
@@ -912,6 +915,10 @@ ApplicationWindow {
                     }
                 }
             }
+        }
+        Item {
+            id: overlay;
+            anchors.fill: parent;
         }
     }
     Component { id: compoPageCover; CoverPage { } }

@@ -1,6 +1,8 @@
 
 #include "QtTdLibGlobal.h"
 
+#include <QDir>
+
 QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     : QObject { parent }
     , m_chatsList { new QQmlObjectListModel<QtTdLibChat> { this } }
@@ -613,6 +615,25 @@ void QtTdLibGlobal::sendMessageEdit (QtTdLibChat * chatItem, const QString & tex
         }
     }
     set_editingMessageId (QString { });
+}
+
+static const QString DIR_PHOTOS { QStringLiteral ("/home/nemo/Pictures/Telegrame") };
+
+void QtTdLibGlobal::savePhotoToGallery (QtTdLibFile * fileItem) {
+    if (fileItem != Q_NULLPTR) {
+        QDir ().mkpath (DIR_PHOTOS);
+        QFileInfo info { fileItem->get_local ()->get_path () };
+        QFile::copy (info.absoluteFilePath (), (DIR_PHOTOS % '/' % info.fileName ()));
+    }
+}
+
+bool QtTdLibGlobal::isPhotoSavedToGallery (QtTdLibFile * fileItem) const {
+    bool ret { false };
+    if (fileItem != Q_NULLPTR) {
+        QFileInfo info { fileItem->get_local ()->get_path () };
+        ret = QFile::exists (DIR_PHOTOS % '/' % info.fileName ());
+    }
+    return ret;
 }
 
 void QtTdLibGlobal::sendMessagePhoto (QtTdLibChat * chatItem, const bool groupInAlbum, const QString & caption) {
