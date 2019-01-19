@@ -42,5 +42,15 @@ DelegateAbstractMessageContent {
         fileItem: (self.photoSizeItem ? self.photoSizeItem.photo : null);
         autoDownload: true;
         Container.forcedHeight: (self.photoSizeItem ? self.photoSizeItem.height * width / self.photoSizeItem.width : 1);
+
+        MouseArea {
+            visible: img.valid;
+            anchors.fill: parent;
+            onClicked: {
+                compoImgViewer.createObject (window, {
+                                                 "source" : img.url,
+                                             });
+            }
+        }
     }
 }

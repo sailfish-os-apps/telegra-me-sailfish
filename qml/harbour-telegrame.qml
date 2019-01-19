@@ -2,6 +2,7 @@ import QtQuick 2.6;
 import QtMultimedia 5.6;
 import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
+import Sailfish.Gallery 1.0;
 import Qt.labs.folderlistmodel 2.1;
 import QtDocGallery 5.0;
 import QtFeedback 5.0;
@@ -944,4 +945,30 @@ ApplicationWindow {
     Component { id: compoMsgCall; DelegateMessageCall { } }
     Component { id: compoMsgChatChangePhoto; DelegateMessageChatChangePhoto { } }
     Component { id: compoMsgUnsupported; DelegateMessageUnsupported { } }
+    Component {
+        id: compoImgViewer;
+
+        TouchBlocker {
+            id: blocker;
+            anchors.fill: parent;
+
+            property alias source : imgViewer.source;
+
+            Rectangle {
+                color: Helpers.panelColor;
+                anchors.fill: parent;
+            }
+            ImageViewer {
+                id: imgViewer;
+                source: "";
+                active: true;
+                anchors.fill: parent;
+                onClicked: {
+                    blocker.destroy ();
+                }
+
+                property var root : window; // NOTE : to avoid QML warnings because it' baldy coded...
+            }
+        }
+    }
 }
