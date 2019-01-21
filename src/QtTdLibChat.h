@@ -10,6 +10,7 @@
 #include "QtTdLibCommon.h"
 #include "QtTdLibFile.h"
 #include "QtTdLibMessage.h"
+#include "QtTdLibChatAction.h"
 
 class QtTdLibChatMemberStatus : public QtTdLibAbstractObject {
     Q_OBJECT
@@ -261,6 +262,8 @@ class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<Q
     Q_TDLIB_PROPERTY_ID53      (newestFetchedMessageId)
 
     QML_READONLY_PTR_PROPERTY  (firstUnreadMessageItem, QtTdLibMessage)
+
+    QML_OBJMODEL_PROPERTY      (chatActions, QtTdLibChatAction)
 
 public:
     explicit QtTdLibChat (const qint64 id = 0, QObject * parent = Q_NULLPTR);

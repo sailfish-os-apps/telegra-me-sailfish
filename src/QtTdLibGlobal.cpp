@@ -622,41 +622,56 @@ static const QString DIR_VIDEOS    { QStringLiteral ("/home/nemo/Videos/Telegram
 static const QString DIR_DOWNLOADS { QStringLiteral ("/home/nemo/Downloads/Telegrame") };
 
 void QtTdLibGlobal::savePhotoToGallery (QtTdLibFile * fileItem) {
-    if (fileItem != Q_NULLPTR) {
+    if (fileItem != Q_NULLPTR &&
+        fileItem->get_remote () != Q_NULLPTR &&
+        fileItem->get_local ()  != Q_NULLPTR &&
+        fileItem->get_local ()->get_isDownloadingCompleted ()) {
         QDir ().mkpath (DIR_PHOTOS);
-        QFileInfo info { fileItem->get_local ()->get_path () };
-        QFile::copy (info.absoluteFilePath (), (DIR_PHOTOS % '/' % info.fileName ()));
+        const QFileInfo info { fileItem->get_local ()->get_path () };
+        QFile::copy (info.absoluteFilePath (), (DIR_PHOTOS % '/' % fileItem->get_remote ()->get_id () % '.' % info.suffix ()));
     }
 }
 
 bool QtTdLibGlobal::isPhotoSavedToGallery (QtTdLibFile * fileItem) const {
     bool ret { false };
-    if (fileItem != Q_NULLPTR) {
-        QFileInfo info { fileItem->get_local ()->get_path () };
-        ret = QFile::exists (DIR_PHOTOS % '/' % info.fileName ());
+    if (fileItem != Q_NULLPTR &&
+        fileItem->get_remote () != Q_NULLPTR &&
+        fileItem->get_local ()  != Q_NULLPTR &&
+        fileItem->get_local ()->get_isDownloadingCompleted ()) {
+        const QFileInfo info { fileItem->get_local ()->get_path () };
+        ret = QFile::exists (DIR_PHOTOS % '/' % fileItem->get_remote ()->get_id () % '.' % info.suffix ());
     }
     return ret;
 }
 
 void QtTdLibGlobal::saveVideoToGallery (QtTdLibFile * fileItem) {
-    if (fileItem != Q_NULLPTR) {
+    if (fileItem != Q_NULLPTR &&
+        fileItem->get_remote () != Q_NULLPTR &&
+        fileItem->get_local ()  != Q_NULLPTR &&
+        fileItem->get_local ()->get_isDownloadingCompleted ()) {
         QDir ().mkpath (DIR_VIDEOS);
-        QFileInfo info { fileItem->get_local ()->get_path () };
-        QFile::copy (info.absoluteFilePath (), (DIR_VIDEOS % '/' % info.fileName ()));
+        const QFileInfo info { fileItem->get_local ()->get_path () };
+        QFile::copy (info.absoluteFilePath (), (DIR_VIDEOS % '/' % fileItem->get_remote ()->get_id () % '.' % info.suffix ()));
     }
 }
 
 bool QtTdLibGlobal::isVideoSavedToGallery (QtTdLibFile * fileItem) const {
     bool ret { false };
-    if (fileItem != Q_NULLPTR) {
-        QFileInfo info { fileItem->get_local ()->get_path () };
-        ret = QFile::exists (DIR_VIDEOS % '/' % info.fileName ());
+    if (fileItem != Q_NULLPTR &&
+        fileItem->get_remote () != Q_NULLPTR &&
+        fileItem->get_local ()  != Q_NULLPTR &&
+        fileItem->get_local ()->get_isDownloadingCompleted ()) {
+        const QFileInfo info { fileItem->get_local ()->get_path () };
+        ret = QFile::exists (DIR_VIDEOS % '/' % fileItem->get_remote ()->get_id () % '.' % info.suffix ());
     }
     return ret;
 }
 
 void QtTdLibGlobal::downloadDocument (QtTdLibDocument * documentItem) {
-    if (documentItem != Q_NULLPTR) {
+    if (documentItem != Q_NULLPTR &&
+        documentItem->get_document () != Q_NULLPTR &&
+        documentItem->get_document ()->get_local () != Q_NULLPTR &&
+        documentItem->get_document ()->get_local ()->get_isDownloadingCompleted ()) {
         QDir ().mkpath (DIR_DOWNLOADS);
         QFile::copy (documentItem->get_document ()->get_local ()->get_path (), (DIR_DOWNLOADS % '/' % documentItem->get_fileName ()));
     }
@@ -1345,6 +1360,25 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             for (const QJsonValue & tmp : stickerSetIds) {
                 const QString setId { tmp.toString () };
                 Q_UNUSED (setId)
+            }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_USER_CHAT_ACTION: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (json ["user_id"]) };
+                const QJsonObject chatActionJson { json ["action"].toObject () };
+                const QtTdLibObjectType::Type typeOfChatAction { QtTdLibEnums::objectTypeEnumFromJson (chatActionJson) };
+                if (QtTdLibChatAction * chatActionItem = { chatItem->get_chatActions ()->getByUid (QString::number (userId)) }) {
+                    chatItem->get_chatActions ()->remove (chatActionItem);
+                }
+                if (typeOfChatAction != QtTdLibObjectType::INVALID &&
+                    typeOfChatAction != QtTdLibObjectType::CHAT_ACTION_CANCEL) {
+                    if (QtTdLibChatAction * chatAction = { QtTdLibChatAction::createAbstract (chatActionJson) }) {
+                        chatAction->set_userId (userId);
+                        chatItem->get_chatActions ()->append (chatAction);
+                    }
+                }
             }
             break;
         }

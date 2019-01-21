@@ -55,6 +55,20 @@ int main (int argc, char * argv []) {
     qmlRegisterType<QtTdLibCallDiscardReasonHungUp>               ("harbour.Telegrame", 1, 0, "TD_CallDiscardReasonHungUp");
     qmlRegisterType<QtTdLibCallDiscardReasonMissed>               ("harbour.Telegrame", 1, 0, "TD_CallDiscardReasonMissed");
     qmlRegisterType<QtTdLibChat>                                  ("harbour.Telegrame", 1, 0, "TD_Chat");
+    qmlRegisterType<QtTdLibChatAction>                            ("harbour.Telegrame", 1, 0, "TD_ChatAction");
+    qmlRegisterType<QtTdLibChatActionCancel>                      ("harbour.Telegrame", 1, 0, "TD_ChatActionCancel");
+    qmlRegisterType<QtTdLibChatActionChoosingContact>             ("harbour.Telegrame", 1, 0, "TD_ChatActionChoosingContact");
+    qmlRegisterType<QtTdLibChatActionChoosingLocation>            ("harbour.Telegrame", 1, 0, "TD_ChatActionChoosingLocation");
+    qmlRegisterType<QtTdLibChatActionRecordingVideo>              ("harbour.Telegrame", 1, 0, "TD_ChatActionRecordingVideo");
+    qmlRegisterType<QtTdLibChatActionRecordingVideoNote>          ("harbour.Telegrame", 1, 0, "TD_ChatActionRecordingVideoNote");
+    qmlRegisterType<QtTdLibChatActionRecordingVoiceNote>          ("harbour.Telegrame", 1, 0, "TD_ChatActionRecordingVoiceNote");
+    qmlRegisterType<QtTdLibChatActionStartPlayingGame>            ("harbour.Telegrame", 1, 0, "TD_ChatActionStartPlayingGame");
+    qmlRegisterType<QtTdLibChatActionTyping>                      ("harbour.Telegrame", 1, 0, "TD_ChatActionTyping");
+    qmlRegisterType<QtTdLibChatActionUploadingDocument>           ("harbour.Telegrame", 1, 0, "TD_ChatActionUploadingDocument");
+    qmlRegisterType<QtTdLibChatActionUploadingPhoto>              ("harbour.Telegrame", 1, 0, "TD_ChatActionUploadingPhoto");
+    qmlRegisterType<QtTdLibChatActionUploadingVideo>              ("harbour.Telegrame", 1, 0, "TD_ChatActionUploadingVideo");
+    qmlRegisterType<QtTdLibChatActionUploadingVideoNote>          ("harbour.Telegrame", 1, 0, "TD_ChatActionUploadingVideoNote");
+    qmlRegisterType<QtTdLibChatActionUploadingVoiceNote>          ("harbour.Telegrame", 1, 0, "TD_ChatActionUploadingVoiceNote");
     qmlRegisterType<QtTdLibChatNotificationSettings>              ("harbour.Telegrame", 1, 0, "TD_ChatNotificationSettings");
     qmlRegisterType<QtTdLibChatPhoto>                             ("harbour.Telegrame", 1, 0, "TD_ChatPhoto");
     qmlRegisterType<QtTdLibChatType>                              ("harbour.Telegrame", 1, 0, "TD_ChatType");
@@ -136,8 +150,8 @@ int main (int argc, char * argv []) {
     qmlRegisterUncreatableType<QtTdLibObjectType>                 ("harbour.Telegrame", 1, 0, "TD_ObjectType", "Enum class !");
     qmlRegisterSingletonType<QtTdLibGlobal>                       ("harbour.Telegrame", 1, 0, "TD_Global", &QtTdLibGlobal::qmlSingletonFactory);
     qmlRegisterSingletonType (QUrl { "qrc:///qml/components/Helpers.qml" }, "harbour.Telegrame", 1, 0, "Helpers");
-    QGuiApplication * app { SailfishApp::application (argc, argv) };
-    app->setApplicationName ("harbour-telegrame");
+    SailfishApp::application (argc, argv);
+    QGuiApplication::setApplicationName ("harbour-telegrame");
     const QList<QObject *> oldNoticationsList { Notification::notifications () };
     for (QObject * tmp : oldNoticationsList) {
         if (Notification * notification = { qobject_cast<Notification *> (tmp) }) {
@@ -148,5 +162,5 @@ int main (int argc, char * argv []) {
     QQuickView * view { SailfishApp::createView () };
     view->setSource (QUrl { "qrc:///qml/harbour-telegrame.qml" });
     view->show ();
-    return app->exec ();
+    return QGuiApplication::exec ();
 }

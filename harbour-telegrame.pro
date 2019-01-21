@@ -38,7 +38,8 @@ SOURCES += \
     $$PWD/src/QtTdLibFile.cpp \
     $$PWD/src/QtTdLibMessage.cpp \
     $$PWD/src/QtTdLibUser.cpp \
-    $$PWD/src/TextFormatter.cpp
+    $$PWD/src/TextFormatter.cpp \
+    src/QtTdLibChatAction.cpp
 
 HEADERS += \
     $$PWD/src/QtTdLibJsonWrapper.h \
@@ -52,7 +53,8 @@ HEADERS += \
     $$PWD/src/QtTdLibFile.h \
     $$PWD/src/QtTdLibMessage.h \
     $$PWD/src/QtTdLibUser.h \
-    $$PWD/src/TextFormatter.h
+    $$PWD/src/TextFormatter.h \
+    src/QtTdLibChatAction.h
 
 RESOURCES += \
     $$PWD/qml.qrc \
