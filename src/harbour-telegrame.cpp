@@ -24,6 +24,8 @@
 #include "TextFormatter.h"
 
 int main (int argc, char * argv []) {
+    SailfishApp::application (argc, argv);
+    QGuiApplication::setApplicationName (QStringLiteral ("harbour-telegrame"));
     QtQmlTricks::registerComponents ();
     qmlRegisterType<TextFormatter>                                ("harbour.Telegrame", 1, 0, "TextFormatter");
     qmlRegisterType<QSortFilterProxyModel>                        ("harbour.Telegrame", 1, 0, "SortFilterProxyModel");
@@ -150,8 +152,6 @@ int main (int argc, char * argv []) {
     qmlRegisterUncreatableType<QtTdLibObjectType>                 ("harbour.Telegrame", 1, 0, "TD_ObjectType", "Enum class !");
     qmlRegisterSingletonType<QtTdLibGlobal>                       ("harbour.Telegrame", 1, 0, "TD_Global", &QtTdLibGlobal::qmlSingletonFactory);
     qmlRegisterSingletonType (QUrl { "qrc:///qml/components/Helpers.qml" }, "harbour.Telegrame", 1, 0, "Helpers");
-    SailfishApp::application (argc, argv);
-    QGuiApplication::setApplicationName ("harbour-telegrame");
     const QList<QObject *> oldNoticationsList { Notification::notifications () };
     for (QObject * tmp : oldNoticationsList) {
         if (Notification * notification = { qobject_cast<Notification *> (tmp) }) {

@@ -39,16 +39,17 @@ void QtTdLibJsonWrapper::run (void) {
 }
 
 QJsonObject QtTdLibJsonWrapper::exec (const QJsonObject & json) {
-    qWarning () << "EXEC" << json;
+    qWarning () << "EXEC [IN]" << json;
     const QByteArray  tmp { (QJsonDocument (json).toJson (QJsonDocument::Compact) % '\0') };
     const QByteArray  str { QByteArray (td_json_client_execute (m_tdJsonClientHandle, tmp.constData ())) };
     const QJsonObject ret { QJsonDocument::fromJson (str).object () };
-    qWarning () << "RESULT" << ret;
+    qWarning () << "EXEC [OUT]" << ret;
     return ret;
 }
 
 void QtTdLibJsonWrapper::send (const QJsonObject & json) {
-    qWarning () << "SEND" << json;
+    qWarning () << "SEND [IN]" << json;
     const QByteArray tmp { (QJsonDocument (json).toJson (QJsonDocument::Compact) % '\0') };
     td_json_client_send (m_tdJsonClientHandle, tmp.constData ());
+    qWarning () << "SEND [OUT]";
 }

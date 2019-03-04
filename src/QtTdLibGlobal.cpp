@@ -103,11 +103,12 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
             set_recordingDuration (int (m_audioRecorder->duration ()));
         }
     });
-    connect (m_tdLibJsonWrapper, &QtTdLibJsonWrapper::recv, this, &QtTdLibGlobal::onFrame);
+    connect (m_tdLibJsonWrapper, &QtTdLibJsonWrapper::recv, this, &QtTdLibGlobal::onFrame, Qt::QueuedConnection);
     m_tdLibJsonWrapper->start ();
 }
 
 QtTdLibGlobal::~QtTdLibGlobal (void) {
+    setUserOnlineState (false);
     m_tdLibJsonWrapper->send (QJsonObject {
                                   { "@type", "close" }
                               });
@@ -929,11 +930,11 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                                         { "system_language_code", "en" },
                                         { "device_model", "Jolla Sailfish OS" },
                                         { "system_version", "3.x" },
-                                        { "application_version", "0.9" },
+                                        { "application_version", "0.9.xx" },
                                         { "enable_storage_optimizer", true },
                                         { "database_directory", QString (QDir::homePath () % "/.telegrame") },
                                         { "files_directory", QString (QDir::homePath () % "/.telegrame") },
-                                        //{ "ignore_file_names", false },
+                                        { "ignore_file_names", false },
                                     }
                                   }
                               });
@@ -947,6 +948,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                         break;
                     }
                     case QtTdLibObjectType::AUTHORIZATION_STATE_READY: {
+                        setUserOnlineState (true);
                         send (QJsonObject {
                                   { "@type",       "getChats" },
                                   { "offset_order", "1000000" },
@@ -961,9 +963,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                                   { "@type", "getSavedAnimations" },
                               });
                         send (QJsonObject {
-                                  { "@type", "searchContacts" },
-                                  { "query", "" },
-                                  { "limit", 1000 },
+                                  { "@type", "getContacts" },
                               });
                         break;
                     }

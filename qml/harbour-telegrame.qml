@@ -19,15 +19,6 @@ ApplicationWindow {
     cover: compoPageCover;
     initialPage: compoPageMain;
     allowedOrientations: Orientation.All;
-    onActiveChanged: {
-        TD_Global.setUserOnlineState (active);
-    }
-    Component.onCompleted: {
-        TD_Global.setUserOnlineState (true);
-    }
-    Component.onDestruction: {
-        TD_Global.setUserOnlineState (false);
-    }
 
     property string currentRecording : "";
     property string currentDocument  : "";
