@@ -105,7 +105,6 @@ Page {
                     implicitHeight: Math.max (Theme.itemSizeSmall, lbl.height + Theme.paddingMedium * 2);
                     ExtraAnchors.horizontalFill: parent;
                     onClicked: {
-                        console.log ("PRIVATE CHAT REQUESTED", pageUserInfo.userItem.id);
                         var chatItem = TD_Global.getChatItemById (userItem.id);
                         if (chatItem) {
                             TD_Global.showChat (chatItem);

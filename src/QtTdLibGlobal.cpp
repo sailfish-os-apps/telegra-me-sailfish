@@ -79,7 +79,7 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
 { "application/x-executable", "executable" },
 { "application/x-ms-dos-executable", "executable" },
           }
-    , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { this } }
+    , m_tdLibJsonWrapper { new QtTdLibJsonWrapper { (qgetenv ("DEBUG_TDLIB") == QByteArrayLiteral ("1")), this } }
     , m_audioRecorder { new QAudioRecorder { this } }
 {
     m_sortedChatsList->setSourceModel (m_chatsList);
@@ -97,7 +97,6 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     audioEncoderSettings.setSampleRate   (22050);
     m_audioRecorder->setEncodingSettings (audioEncoderSettings);
     m_audioRecorder->setContainerFormat  ("wav"); // "ogg"
-    qWarning () << "VOLUME" << m_audioRecorder->volume () << m_audioRecorder->audioInput () << m_audioRecorder->audioInputDescription (m_audioRecorder->audioInput ());
     connect (m_audioRecorder, &QAudioRecorder::durationChanged, [this] (void) {
         if (m_audioRecorder->status () == QMediaRecorder::RecordingStatus || m_audioRecorder->status () == QMediaRecorder::FinalizingStatus) {
             set_recordingDuration (int (m_audioRecorder->duration ()));
@@ -328,13 +327,11 @@ void QtTdLibGlobal::createPrivateChat (QtTdLibUser * userItem) {
 
 void QtTdLibGlobal::showChat (QtTdLibChat * chatItem) {
     if (chatItem != Q_NULLPTR) {
-        qWarning () << "SHOW CHAT" << chatItem << chatItem->get_id () << chatItem->get_title ();
         emit showChatRequested (chatItem);
     }
 }
 
 void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
-    qWarning () << "openChat" << chatItem;
     closeChat (m_currentChat);
     if (chatItem != Q_NULLPTR) {
         chatItem->set_isCurrentChat (true);
@@ -348,7 +345,6 @@ void QtTdLibGlobal::openChat (QtTdLibChat * chatItem) {
 }
 
 void QtTdLibGlobal::closeChat (QtTdLibChat * chatItem) {
-    qWarning () << "closeChat" << chatItem;
     if (chatItem != Q_NULLPTR && chatItem == m_currentChat) {
         chatItem->messagesModel.clear ();
         chatItem->set_oldestFetchedMessageId (0); // NOTE : reset lower boundary
@@ -407,7 +403,6 @@ void QtTdLibGlobal::togglePinChat (QtTdLibChat * chatItem) {
 void QtTdLibGlobal::loadSingleMessageRef (QtTdLibChat * chatItem, const qint64 messageId) {
     if (chatItem != Q_NULLPTR) {
         if (messageId != 0) {
-            qWarning () << "LOAD SINGLE MESSAGE..." << messageId;
             send (QJsonObject {
                       { "@type", "getMessage" },
                       { "chat_id", chatItem->get_id_asJSON () },
@@ -420,7 +415,6 @@ void QtTdLibGlobal::loadSingleMessageRef (QtTdLibChat * chatItem, const qint64 m
 void QtTdLibGlobal::loadInitialMessage (QtTdLibChat * chatItem, const qint64 messageId) {
     if (chatItem != Q_NULLPTR) {
         if (messageId != 0) {
-            qWarning () << "LOAD INITIAL MESSAGE..." << messageId;
             if (messageId < chatItem->get_oldestFetchedMessageId () || messageId > chatItem->get_newestFetchedMessageId ()) {
                 chatItem->messagesModel.clear (); // NOTE : need to clean current model
                 chatItem->set_oldestFetchedMessageId (0); // NOTE : reset lower boundary
@@ -456,7 +450,6 @@ void QtTdLibGlobal::loadInitialMessage (QtTdLibChat * chatItem, const qint64 mes
 
 void QtTdLibGlobal::loadOlderMessages (QtTdLibChat * chatItem, const int count) {
     if (chatItem != Q_NULLPTR && chatItem->get_oldestFetchedMessageId () != 0 && count > 0) {
-        qWarning () << "LOAD" << count << "OLDER MESSAGES...";
         send (QJsonObject {
                   { "@type", "getChatHistory" },
                   { "chat_id",  chatItem->get_id_asJSON () },
@@ -475,7 +468,6 @@ void QtTdLibGlobal::loadOlderMessages (QtTdLibChat * chatItem, const int count) 
 
 void QtTdLibGlobal::loadNewerMessages (QtTdLibChat * chatItem, const int count) {
     if (chatItem != Q_NULLPTR && chatItem->get_newestFetchedMessageId () != 0 && count > 0) {
-        qWarning () << "LOAD" << count << "NEWER MESSAGES...";
         send (QJsonObject {
                   { "@type", "getChatHistory" },
                   { "chat_id",  chatItem->get_id_asJSON () },
@@ -1157,7 +1149,6 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                 const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (tmpJson) };
                 if (QtTdLibUser * userItem = { getUserItemById (userId) }) {
                     m_contactsList->append (userItem);
-                    qWarning () << "CONTACT" << userItem->get_firstName () << userItem->get_lastName ();
                 }
             }
             break;
@@ -1236,7 +1227,6 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                                 (chatItem->get_newestFetchedMessageId () == 0)) {
                                 chatItem->set_newestFetchedMessageId (newestMsgId);
                             }
-                            qWarning () << "GOT" << newMessagesCounter << "MESSAGES" << mode << chatItem->get_oldestFetchedMessageId () << chatItem->get_newestFetchedMessageId ();
                         }
                         else {
                             if (mode == LOAD_OLDER) {
@@ -1246,7 +1236,6 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                                 chatItem->set_hasReachedLast (true);
                             }
                             else { }
-                            qWarning () << "GOT NO MESSAGES" << mode << chatItem->get_hasReachedFirst () << chatItem->get_hasReachedLast ();
                         }
                         if ((chatItem->get_oldestFetchedMessageId () <= chatItem->get_lastReceivedMessageId ()) &&
                             (chatItem->get_newestFetchedMessageId () >= chatItem->get_lastReceivedMessageId ())) {
@@ -1426,7 +1415,6 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             break;
         }
         default: {
-            qWarning () << "UNHANDLED";
             break;
         }
     }
