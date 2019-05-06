@@ -4,17 +4,50 @@
 
 #include <QStringBuilder>
 #include <QJsonDocument>
+#include <QJsonArray>
 #include <QDebug>
 
-#include <td/telegram/td_json_client.h>
-#include <td/telegram/td_log.h>
+#include "td/telegram/td_json_client.h"
 
 QtTdLibJsonWrapper::QtTdLibJsonWrapper (const bool debug, QObject * parent)
     : QThread              { parent }
     , m_debug              { debug }
     , m_tdJsonClientHandle { td_json_client_create () }
 {
-    td_set_log_verbosity_level (m_debug ? 2 : 1);
+    exec (QJsonObject {
+              { "@type", "setLogStream" },
+              { "log_stream", QJsonObject {
+                    { "@type", "logStreamDefault" },
+                }
+              },
+          });
+    exec (QJsonObject {
+              { "@type", "setLogVerbosityLevel" },
+              { "new_verbosity_level", (m_debug ? 2 : 0) },
+          });
+    const QJsonObject json =  exec (QJsonObject {
+                                        { "@type", "getLogTags" },
+                                    });
+    const QJsonArray list = json.value ("tags").toArray ();
+    for (const QJsonValue & tmp : list) {
+        const QString tag { tmp.toString () };
+        int level { 0 };
+        if (tag == QStringLiteral ("td_init")) {
+            level = (m_debug ? 2 : 0);
+        }
+        else if (tag == QStringLiteral ("td_requests")) {
+            level = (m_debug ? 2 : 0);
+        }
+        else if (tag == QStringLiteral ("notifications")) {
+            level = (m_debug ? 2 : 0);
+        }
+        else { }
+        exec (QJsonObject {
+                  { "@type", "setLogTagVerbosityLevel" },
+                  { "tag", tag },
+                  { "new_verbosity_level", level },
+              });
+    }
 }
 
 QtTdLibJsonWrapper::~QtTdLibJsonWrapper (void) {

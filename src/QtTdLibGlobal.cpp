@@ -98,7 +98,8 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     m_audioRecorder->setEncodingSettings (audioEncoderSettings);
     m_audioRecorder->setContainerFormat  ("wav"); // "ogg"
     connect (m_audioRecorder, &QAudioRecorder::durationChanged, [this] (void) {
-        if (m_audioRecorder->status () == QMediaRecorder::RecordingStatus || m_audioRecorder->status () == QMediaRecorder::FinalizingStatus) {
+        if (m_audioRecorder->status () == QMediaRecorder::RecordingStatus ||
+            m_audioRecorder->status () == QMediaRecorder::FinalizingStatus) {
             set_recordingDuration (int (m_audioRecorder->duration ()));
         }
     });
@@ -415,8 +416,8 @@ void QtTdLibGlobal::loadSingleMessageRef (QtTdLibChat * chatItem, const qint64 m
 void QtTdLibGlobal::loadInitialMessage (QtTdLibChat * chatItem, const qint64 messageId) {
     if (chatItem != Q_NULLPTR) {
         if (messageId != 0) {
-            if (messageId < chatItem->get_oldestFetchedMessageId () || messageId > chatItem->get_newestFetchedMessageId ()) {
-                chatItem->messagesModel.clear (); // NOTE : need to clean current model
+            if (messageId < chatItem->get_oldestFetchedMessageId () || messageId > chatItem->get_newestFetchedMessageId ()) { // NOTE : need to clean current model
+                chatItem->messagesModel.clear ();
                 chatItem->set_oldestFetchedMessageId (0); // NOTE : reset lower boundary
                 chatItem->set_newestFetchedMessageId (0); // NOTE : reset upper boundary
                 chatItem->set_hasReachedFirst (false); // NOTE : reset start flag
@@ -428,19 +429,19 @@ void QtTdLibGlobal::loadInitialMessage (QtTdLibChat * chatItem, const qint64 mes
                     loadOlderMessages (chatItem); // NOTE : load older messages
                     loadNewerMessages (chatItem); // NOTE : load newer messages
                 }
-                else {
-                    send (QJsonObject { // NOTE : need to get message from TDLIB call
-                                        { "@type", "getChatHistory" },
-                                        { "chat_id",  chatItem->get_id_asJSON () },
-                                        { "from_message_id", QtTdLibId53Helper::fromCppToJson (messageId) },
-                                        { "offset", -1 }, // must be negative to fetch newer messages
-                                        { "limit", 2 }, //  must be higher than -offset
-                                        { "only_local", false }, // allow to request on network not only database
-                                        { "@extra", QJsonObject {
-                                              { "chat_id",  chatItem->get_id_asJSON () },
-                                              { "load_mode", LOAD_INIT },
-                                          }
-                                        }
+                else { // NOTE : need to get message from TDLIB call
+                    send (QJsonObject {
+                              { "@type", "getChatHistory" },
+                              { "chat_id",  chatItem->get_id_asJSON () },
+                              { "from_message_id", QtTdLibId53Helper::fromCppToJson (messageId) },
+                              { "offset", -1 }, // must be negative to fetch newer messages
+                              { "limit", 2 }, //  must be higher than -offset
+                              { "only_local", false }, // allow to request on network not only database
+                              { "@extra", QJsonObject {
+                                    { "chat_id",  chatItem->get_id_asJSON () },
+                                    { "load_mode", LOAD_INIT },
+                                }
+                              }
                           });
                 }
             }

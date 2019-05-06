@@ -1,11 +1,10 @@
 
 include ($$PWD/libQtQmlTricks/libQtQmlTricks-3.0.pri)
+include ($$PWD/TDLIB-lite/libTD.pri)
 
 TARGET = harbour-telegrame
 
 TEMPLATE = app
-
-CONFIG += c++11
 
 QT += core network gui qml quick multimedia dbus
 
@@ -15,8 +14,27 @@ RCC_DIR     = _rcc
 
 CONFIG += link_pkgconfig
 
+QMAKE_CXXFLAGS -= -g
+QMAKE_CXXFLAGS_DEBUG -= -g
+QMAKE_CXXFLAGS_RELEASE -= -g
+QMAKE_CXXFLAGS_RELEASE_WITH_DEBUGINFO -= -g
+
+QMAKE_CFLAGS -= -g
+QMAKE_CFLAGS_DEBUG -= -g
+QMAKE_CFLAGS_RELEASE -= -g
+QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO -= -g
+
+QMAKE_CXXFLAGS += -g0
+QMAKE_CXXFLAGS_DEBUG += -g0
+QMAKE_CXXFLAGS_RELEASE += -g0
+QMAKE_CXXFLAGS_RELEASE_WITH_DEBUGINFO += -g0
+
+QMAKE_CFLAGS += -g0
+QMAKE_CFLAGS_DEBUG += -g0
+QMAKE_CFLAGS_RELEASE += -g0
+QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO += -g0
+
 PKGCONFIG += sailfishapp
-PKGCONFIG += tdlibjson
 PKGCONFIG += nemonotifications-qt5
 PKGCONFIG += mlite5
 
