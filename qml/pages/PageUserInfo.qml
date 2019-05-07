@@ -6,7 +6,7 @@ import "../components";
 
 Page {
     id: pageUserInfo;
-    allowedOrientations: Orientation.Portrait;
+    allowedOrientations: Orientation.All;
 
     property TD_User userItem : null;
 

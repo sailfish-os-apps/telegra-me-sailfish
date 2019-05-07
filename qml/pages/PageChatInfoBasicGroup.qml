@@ -6,7 +6,7 @@ import "../components";
 
 Page {
     id: pageChatInfoBasicGroup;
-    allowedOrientations: Orientation.Portrait;
+    allowedOrientations: Orientation.All;
 
     property TD_Chat       chatItem       : null;
     property TD_BasicGroup basicGroupItem : null;

@@ -29,10 +29,19 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter;
             }
             LabelFixed {
-                text: "Telegra'me";
+                text: "Telegra'me v0.10.19";
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.family: Theme.fontFamilyHeading;
                 font.pixelSize: Theme.fontSizeExtraLarge;
+                horizontalAlignment: Text.AlignHCenter;
+                ExtraAnchors.horizontalFill: parent;
+            }
+            LabelFixed {
+                text: "using TDLIB v1.4";
+                opacity: 0.65;
+                wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
+                font.family: Theme.fontFamilyHeading;
+                font.pixelSize: Theme.fontSizeLarge;
                 horizontalAlignment: Text.AlignHCenter;
                 ExtraAnchors.horizontalFill: parent;
             }
@@ -81,7 +90,7 @@ Page {
                 ExtraAnchors.horizontalFill: parent;
             }
             LabelFixed {
-                text: qsTr ("The app is open-source and the code is hosted on my Gitlab instance (no account required to get sources) :");
+                text: qsTr ("The app is open-source and the code is hosted on my Gitlab instance :");
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 horizontalAlignment: Text.AlignHCenter;
                 font.family: Theme.fontFamilyHeading;
@@ -106,19 +115,13 @@ Page {
                     }
                 }
             }
-            Rectangle {
-                color: Theme.secondaryColor;
-                implicitHeight: 1;
-                ExtraAnchors.horizontalFill: parent;
-            }
             LabelFixed {
-                text: qsTr ("Kudos to BlackSailer for compiling tdlib-json on Sailfish OS !");
-                color: Theme.rgba (Theme.highlightColor, 0.65);
+                text: qsTr ("(no account required to get sources, but you can request an account if you want to contribute)");
+                opacity: 0.65;
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 horizontalAlignment: Text.AlignHCenter;
-                font.bold: true;
                 font.family: Theme.fontFamilyHeading;
-                font.pixelSize: Theme.fontSizeMedium;
+                font.pixelSize: Theme.fontSizeSmall;
                 ExtraAnchors.horizontalFill: parent;
             }
             Rectangle {
