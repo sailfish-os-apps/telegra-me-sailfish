@@ -58,7 +58,7 @@ SOURCES += \
     $$PWD/src/QtTdLibUser.cpp \
     $$PWD/src/TextFormatter.cpp \
     $$PWD/src/QtTdLibChatAction.cpp \
-    src/CountryCodes.cpp
+    $$PWD/src/CountryCodes.cpp
 
 HEADERS += \
     $$PWD/src/QtTdLibJsonWrapper.h \
@@ -74,7 +74,7 @@ HEADERS += \
     $$PWD/src/QtTdLibUser.h \
     $$PWD/src/TextFormatter.h \
     $$PWD/src/QtTdLibChatAction.h \
-    src/CountryCodes.h
+    $$PWD/src/CountryCodes.h
 
 RESOURCES += \
     $$PWD/qml.qrc \
