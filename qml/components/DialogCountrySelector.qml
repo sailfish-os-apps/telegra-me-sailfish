@@ -62,7 +62,7 @@ Dialog {
             ExtraAnchors.topDock: parent;
 
             Repeater {
-                model: countriesModel;
+                model: countriesModel; // use now TD_Global.countryCodes.list
                 delegate: ListItem {
                     visible: (modelData ["name"].toLowerCase ().indexOf (inputFilter.value) >= 0 || modelData ["code"].indexOf (inputFilter.value) >= 0);
                     highlighted: (dlgCountries.code === modelData ["code"]);
