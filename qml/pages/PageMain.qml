@@ -50,7 +50,7 @@ Page {
             ExtraAnchors.horizontalFill: parent;
 
             LabelFixed {
-                text: qsTr ("Choose a country and enter phone number :");
+                text: qsTr ("Choose a country and enter your phone number:");
                 color: Theme.highlightColor;
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.family: Theme.fontFamilyHeading;
@@ -109,6 +109,7 @@ Page {
                     placeholderText: qsTr ("Phone number");
                     anchors.verticalCenter: parent.verticalCenter;
                     Container.horizontalStretch: 1;
+                    inputMethodHints: Qt.ImhDialableCharactersOnly;
                 }
             }
             MouseArea {
@@ -185,6 +186,7 @@ Page {
             TextField {
                 id: inputCode;
                 placeholderText: (new Array (authCodeSize +1).join ("X"));
+                inputMethodHints: Qt.ImhDigitsOnly;
                 ExtraAnchors.horizontalFill: parent;
             }
             TextField {
