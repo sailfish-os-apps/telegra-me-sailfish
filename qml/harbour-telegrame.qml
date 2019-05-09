@@ -518,7 +518,7 @@ ApplicationWindow {
                             }
 
                             readonly property string pathRoot  : "file:///";
-                            readonly property string pathHome  : "file:///home/nemo";
+                            readonly property string pathHome  : FileSystem.urlFromPath (FileSystem.homePath);
                             readonly property string limitedTo : (Helpers.limitFilePickerToHome ? pathHome : pathRoot);
                         }
                         delegate: MouseArea {

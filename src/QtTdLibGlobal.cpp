@@ -611,9 +611,9 @@ void QtTdLibGlobal::sendMessageEdit (QtTdLibChat * chatItem, const QString & tex
     set_editingMessageId (QString { });
 }
 
-static const QString DIR_PHOTOS    { QStringLiteral ("/home/nemo/Pictures/Telegrame") };
-static const QString DIR_VIDEOS    { QStringLiteral ("/home/nemo/Videos/Telegrame") };
-static const QString DIR_DOWNLOADS { QStringLiteral ("/home/nemo/Downloads/Telegrame") };
+static const QString DIR_PHOTOS    { QDir::homePath () % QStringLiteral ("/Pictures/Telegrame") };
+static const QString DIR_VIDEOS    { QDir::homePath () % QStringLiteral ("/Videos/Telegrame") };
+static const QString DIR_DOWNLOADS { QDir::homePath () % QStringLiteral ("/Downloads/Telegrame") };
 
 void QtTdLibGlobal::savePhotoToGallery (QtTdLibFile * fileItem) {
     if (fileItem != Q_NULLPTR &&
@@ -875,8 +875,8 @@ void QtTdLibGlobal::sendMessageDocument (QtTdLibChat * chatItem, const QString &
 
 bool QtTdLibGlobal::startRecordingAudio (void) {
     if (m_audioRecorder->status () == QMediaRecorder::LoadedStatus) {
-        QDir ().mkpath ("/home/nemo/.telegrame/recordings");
-        m_audioRecorder->setOutputLocation (QUrl ("file:///home/nemo/.telegrame/recordings/rec_" % QDateTime::currentDateTimeUtc ().toString ("yyyy-MM-dd_hh-mm-ss-zzz") % ".wav"));
+        QDir ().mkpath (QDir::homePath () % QStringLiteral ("/.telegrame/recordings"));
+        m_audioRecorder->setOutputLocation (QUrl::fromLocalFile (QDir::homePath () % QStringLiteral ("/.telegrame/recordings/rec_") % QDateTime::currentDateTimeUtc ().toString ("yyyy-MM-dd_hh-mm-ss-zzz") % ".wav"));
         m_audioRecorder->record ();
         return true;
     }

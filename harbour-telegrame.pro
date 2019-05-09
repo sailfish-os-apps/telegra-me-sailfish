@@ -96,28 +96,28 @@ DISTFILES += \
     $$PWD/dist/telegrame_im_exists.ini \
     $$PWD/dist/telegrame_im_fg.ini
 
-target.files  = $${TARGET}
-target.path   = /usr/bin
+target.files    = $${TARGET}
+target.path     = /usr/bin
 
-desktop.files = $$PWD/$${TARGET}.desktop
-desktop.path  = /usr/share/applications
+desktop.files    = $$PWD/$${TARGET}.desktop
+desktop.path     = /usr/share/applications
 
-icon86.files  = $$PWD/icons/86x86/$${TARGET}.png
-icon86.path   = /usr/share/icons/hicolor/86x86/apps
+icon86.files    = $$PWD/icons/86x86/$${TARGET}.png
+icon86.path     = /usr/share/icons/hicolor/86x86/apps
 
-icon108.files = $$PWD/icons/108x108/$${TARGET}.png
-icon108.path  = /usr/share/icons/hicolor/108x108/apps
+icon108.files    = $$PWD/icons/108x108/$${TARGET}.png
+icon108.path     = /usr/share/icons/hicolor/108x108/apps
 
-icon128.files = $$PWD/icons/128x128/$${TARGET}.png
-icon128.path  = /usr/share/icons/hicolor/128x128/apps
+icon128.files    = $$PWD/icons/128x128/$${TARGET}.png
+icon128.path     = /usr/share/icons/hicolor/128x128/apps
 
-icon256.files = $$PWD/icons/256x256/$${TARGET}.png
-icon256.path  = /usr/share/icons/hicolor/256x256/apps
+icon172.files    = $$PWD/icons/172x172/$${TARGET}.png
+icon172.path     = /usr/share/icons/hicolor/172x172/apps
 
-notificationcategories.files = $$PWD/dist/x-telegrame.im.conf $$PWD/dist/x-telegrame.im.fg.conf
-notificationcategories.path  = /usr/share/lipstick/notificationcategories
+notificationcategories.files    = $$PWD/dist/x-telegrame.im.conf $$PWD/dist/x-telegrame.im.fg.conf
+notificationcategories.path     = /usr/share/lipstick/notificationcategories
 
-events.files = $$PWD/dist/telegrame_im.ini $$PWD/dist/telegrame_im_exists.ini $$PWD/dist/telegrame_im_fg.ini
-events.path  = /usr/share/ngfd/events.d
+events.files    = $$PWD/dist/telegrame_im.ini $$PWD/dist/telegrame_im_exists.ini $$PWD/dist/telegrame_im_fg.ini
+events.path     = /usr/share/ngfd/events.d
 
-INSTALLS += target desktop icon86 icon108 icon128 icon256 notificationcategories events
+INSTALLS += target desktop icon86 icon108 icon128 icon172 notificationcategories events
