@@ -40,7 +40,6 @@
         <file>qml/components/DelegateMessageChatChangeTitle.qml</file>
         <file>qml/components/DelegateMessageChatDeleteMember.qml</file>
         <file>qml/components/DelegateMessageChatAddMembers.qml</file>
-        <file>qml/components/InternationalPhoneCodes.js</file>
         <file>qml/components/DialogCountrySelector.qml</file>
         <file>qml/components/DelegateFormattedText.qml</file>
         <file>qml/components/DelegateAbstractMessageContent.qml</file>

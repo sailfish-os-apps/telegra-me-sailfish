@@ -4,7 +4,6 @@ import Sailfish.Silica 1.0;
 import Nemo.Notifications 1.0;
 import harbour.Telegrame 1.0;
 import QtGraphicalEffects 1.0;
-import "../components/InternationalPhoneCodes.js" as InternationalPhoneCodes;
 import "../components";
 
 Dialog {
@@ -18,20 +17,6 @@ Dialog {
     property string code  : "";
     property string flag  : "";
     property string name  : "";
-
-    readonly property var countriesModel : {
-        var ret = ([]);
-        for (var i = 0; i < InternationalPhoneCodes.allCountries.length; ++i) {
-            var tmp  = InternationalPhoneCodes.allCountries [i];
-            ret.push ({
-                          "name" : tmp [0].replace (/\s+\(.+\)/, ""),
-                          "iso2" : tmp [1],
-                          "code" : tmp [2],
-                          "flag" : "qrc:///RegionFlags/png/%1.png".arg (tmp [1].toUpperCase ()),
-                      });
-        }
-        return ret;
-    }
 
     DialogHeader {
         id: headerDialCode;
@@ -62,17 +47,20 @@ Dialog {
             ExtraAnchors.topDock: parent;
 
             Repeater {
-                model: countriesModel; // use now TD_Global.countryCodes.list
+                model: TD_Global.countryCodes.list
                 delegate: ListItem {
-                    visible: (modelData ["name"].toLowerCase ().indexOf (inputFilter.value) >= 0 || modelData ["code"].indexOf (inputFilter.value) >= 0);
-                    highlighted: (dlgCountries.code === modelData ["code"]);
+                    id: delegate;
+                    visible: country.match (inputFilter.value);
+                    highlighted: (dlgCountries.code === country.code);
                     implicitHeight: (layoutItem.height + layoutItem.anchors.margins * 2);
                     ExtraAnchors.horizontalFill: parent;
                     onClicked: {
-                        dlgCountries.code = modelData ["code"];
-                        dlgCountries.name = modelData ["name"];
-                        dlgCountries.flag = modelData ["flag"];
+                        dlgCountries.code = country.code
+                        dlgCountries.name = country.name;
+                        dlgCountries.flag = country.flag;
                     }
+
+                    readonly property CountryCodesModelItem country : modelData;
 
                     RowContainer {
                         id: layoutItem;
@@ -90,22 +78,22 @@ Dialog {
 
                             Image {
                                 cache: true;
-                                source: modelData ["flag"];
+                                source: delegate.country.flag;
                                 fillMode: Image.PreserveAspectFit;
                                 sourceSize: Qt.size (width, height);
-                                asynchronous: false;
+                                asynchronous: true;
                                 verticalAlignment: Image.AlignVCenter;
                                 horizontalAlignment: Image.AlignHCenter;
                                 anchors.fill: parent;
                             }
                         }
                         LabelFixed {
-                            text: modelData ["name"];
+                            text: delegate.country.name;
                             anchors.verticalCenter: parent.verticalCenter;
                             Container.horizontalStretch: 1;
                         }
                         LabelFixed {
-                            text: ("+" + modelData ["code"]);
+                            text: ("+" + delegate.country.code);
                             opacity: 0.65;
                             anchors.verticalCenter: parent.verticalCenter;
                         }

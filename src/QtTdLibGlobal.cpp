@@ -18,7 +18,7 @@ QtTdLibGlobal::QtTdLibGlobal (QObject * parent)
     , m_currentMessageContent { Q_NULLPTR }
     , m_sortedChatsList { new QSortFilterProxyModel { this } }
     , m_sortedContactsList { new QSortFilterProxyModel { this } }
-    , m_countryCodest { new CountryCodes { this } }
+    , m_countryCodes { new CountryCodes { this } }
     , m_sendTextOnEnterKey { false }
     , SVG_ICON_FOR_MIMETYPE {
 { "image/png", "image" },
