@@ -152,9 +152,8 @@ Page {
             }
         }
     }
-    Rectangle {
+    PanelFixed {
         id: headerUserInfo;
-        color: Helpers.panelColor;
         implicitHeight: (title.height + title.anchors.margins * 2);
         ExtraAnchors.topDock: parent;
 

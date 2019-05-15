@@ -16,7 +16,7 @@ QtObject {
 
     property bool showInputPanel : false;
 
-    readonly property color panelColor : Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b, 0.85);
+    readonly property color panelColor : Qt.rgba (1.0 - Theme.primaryColor.r, 1.0 - Theme.primaryColor.g, 1.0 - Theme.primaryColor.b);
 
     property alias groupImagesInAlbums            : configGroupImagesInAlbum.value;
     property alias groupVideosInAlbums            : configGroupVideosInAlbum.value;

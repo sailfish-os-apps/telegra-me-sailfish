@@ -6,7 +6,6 @@ QtTdLibChat::QtTdLibChat (const qint64 id, QObject * parent)
     : QtTdLibAbstractInt53IdObject { QtTdLibObjectType::CHAT, id, parent }
     , m_isCurrentChat { false }
     , m_firstUnreadMessageItem { Q_NULLPTR }
-    , m_chatActions { new QQmlObjectListModel<QtTdLibChatAction> { this, { }, "userId" } }
 {
     QtTdLibCollection::allChats.insert (id, this);
     static const QString ICON { "/usr/share/icons/hicolor/128x128/apps/harbour-telegrame.png" };

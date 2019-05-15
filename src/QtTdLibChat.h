@@ -173,7 +173,8 @@ public:
 
 class QtTdLibChatTypePrivate : public QtTdLibChatType, public FactoryNoId<QtTdLibChatTypePrivate> {
     Q_OBJECT
-    Q_TDLIB_PROPERTY_ID32 (userId)
+    Q_TDLIB_PROPERTY_ID32      (userId)
+    Q_TDLIB_PROPERTY_SUBOBJECT (currentChatAction, QtTdLibChatAction)
 
 public:
     explicit QtTdLibChatTypePrivate (QObject * parent = Q_NULLPTR);
@@ -262,8 +263,6 @@ class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<Q
     Q_TDLIB_PROPERTY_ID53      (newestFetchedMessageId)
 
     QML_READONLY_PTR_PROPERTY  (firstUnreadMessageItem, QtTdLibMessage)
-
-    QML_OBJMODEL_PROPERTY      (chatActions, QtTdLibChatAction)
 
 public:
     explicit QtTdLibChat (const qint64 id = 0, QObject * parent = Q_NULLPTR);

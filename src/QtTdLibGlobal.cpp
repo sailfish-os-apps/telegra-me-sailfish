@@ -1357,20 +1357,12 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
         case QtTdLibObjectType::UPDATE_USER_CHAT_ACTION: {
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
             if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
-                const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (json ["user_id"]) };
-                const QJsonObject chatActionJson { json ["action"].toObject () };
-                const QtTdLibObjectType::Type typeOfChatAction { QtTdLibEnums::objectTypeEnumFromJson (chatActionJson) };
-                if (QtTdLibChatAction * chatActionItem = { chatItem->get_chatActions ()->getByUid (QString::number (userId)) }) {
-                    chatItem->get_chatActions ()->remove (chatActionItem);
+                if (QtTdLibChatTypePrivate * privateChatItem = qobject_cast<QtTdLibChatTypePrivate *> (chatItem->get_type ())) {
+                    privateChatItem->set_currentChatAction_withJSON (json ["action"], &QtTdLibChatAction::createAbstract);
                 }
-                if (typeOfChatAction != QtTdLibObjectType::INVALID &&
-                    typeOfChatAction != QtTdLibObjectType::CHAT_ACTION_CANCEL) {
-                    if (QtTdLibChatAction * chatAction = { QtTdLibChatAction::createAbstract (chatActionJson) }) {
-                        chatAction->set_userId (userId);
-                        chatItem->get_chatActions ()->append (chatAction);
-                    }
-                }
+                else { }
             }
+            else { }
             break;
         }
         case QtTdLibObjectType::STICKER_SETS: {

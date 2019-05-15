@@ -109,20 +109,15 @@ ApplicationWindow {
         implicitHeight: (rotation % 180 !== 0 ? parent.width : parent.height);
         anchors.centerIn: parent;
 
-        MouseArea {
+        PanelFixed {
             id: footerChat;
             visible: enabled;
             enabled: Helpers.showInputPanel;
-            opacity: (enabled ? 1.0 : 0.0);
             implicitHeight: (layoutFooter.height + layoutFooter.anchors.margins * 2);
             ExtraAnchors.bottomDock: parent;
             onPressed: { }
             onReleased: { }
 
-            Rectangle {
-                color: Helpers.panelColor;
-                anchors.fill: parent;
-            }
             ColumnContainer {
                 id: layoutFooter;
                 spacing: 1;
@@ -141,17 +136,6 @@ ApplicationWindow {
                         ExtraAnchors.horizontalFill: parent;
                         Container.forcedHeight: Math.ceil (implicitHeight + anchors.margins * 2);
 
-                        RectangleButton {
-                            icon: "icon-m-clear";
-                            size: (Theme.iconSizeMedium * 0.65);
-                            enabled: (TD_Global.selectedPhotosCount > 0);
-                            implicitWidth: Theme.itemSizeExtraSmall;
-                            implicitHeight: Theme.itemSizeExtraSmall;
-                            anchors.verticalCenter: parent.verticalCenter;
-                            onClicked: {
-                                TD_Global.unselectAllPhotos ();
-                            }
-                        }
                         LabelFixed {
                             text: (TD_Global.selectedPhotosCount > 0
                                    ? (TD_Global.selectedPhotosCount > 1
@@ -161,6 +145,18 @@ ApplicationWindow {
                             color: (TD_Global.selectedPhotosCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
                             anchors.verticalCenter: parent.verticalCenter;
                             Container.horizontalStretch: 1;
+                        }
+                        RectangleButton {
+                            flat: true;
+                            icon: "icon-m-clear";
+                            size: (Theme.iconSizeMedium * 0.65);
+                            enabled: (TD_Global.selectedPhotosCount > 0);
+                            implicitWidth: Theme.itemSizeExtraSmall;
+                            implicitHeight: Theme.itemSizeExtraSmall;
+                            anchors.verticalCenter: parent.verticalCenter;
+                            onClicked: {
+                                TD_Global.unselectAllPhotos ();
+                            }
                         }
                     }
                     SilicaListView {
@@ -226,17 +222,6 @@ ApplicationWindow {
                         ExtraAnchors.horizontalFill: parent;
                         Container.forcedHeight: Math.ceil (implicitHeight + anchors.margins * 2);
 
-                        RectangleButton {
-                            icon: "icon-m-clear";
-                            size: (Theme.iconSizeMedium * 0.65);
-                            enabled: (TD_Global.selectedVideosCount > 0);
-                            implicitWidth: Theme.itemSizeExtraSmall;
-                            implicitHeight: Theme.itemSizeExtraSmall;
-                            anchors.verticalCenter: parent.verticalCenter;
-                            onClicked: {
-                                TD_Global.unselectAllVideos ();
-                            }
-                        }
                         LabelFixed {
                             text: (TD_Global.selectedVideosCount > 0
                                    ? (TD_Global.selectedVideosCount > 1
@@ -246,6 +231,18 @@ ApplicationWindow {
                             color: (TD_Global.selectedVideosCount > 0 ? Theme.highlightColor : Theme.secondaryColor);
                             anchors.verticalCenter: parent.verticalCenter;
                             Container.horizontalStretch: 1;
+                        }
+                        RectangleButton {
+                            icon: "icon-m-clear";
+                            flat: true;
+                            size: (Theme.iconSizeMedium * 0.65);
+                            enabled: (TD_Global.selectedVideosCount > 0);
+                            implicitWidth: Theme.itemSizeExtraSmall;
+                            implicitHeight: Theme.itemSizeExtraSmall;
+                            anchors.verticalCenter: parent.verticalCenter;
+                            onClicked: {
+                                TD_Global.unselectAllVideos ();
+                            }
                         }
                     }
                     SilicaListView {
@@ -478,6 +475,7 @@ ApplicationWindow {
 
                         RectangleButton {
                             icon: "icon-m-back";
+                            flat: true;
                             size: (Theme.iconSizeMedium * 0.65);
                             enabled: (modelDocuments.folder.toString () !== modelDocuments.limitedTo);
                             implicitWidth: Theme.itemSizeExtraSmall;
@@ -596,14 +594,15 @@ ApplicationWindow {
                         Container.ignored: true;
 
                         RowContainer {
-                            spacing: Theme.paddingSmall;
+                            spacing: Theme.paddingMedium;
                             anchors.centerIn: parent;
 
                             RectangleButton {
                                 id: btnRecord;
+                                flat: true;
                                 icon: "icon-m-call-recording-on";
+                                size: Theme.iconSizeMedium;
                                 enabled: !btnReplay.active;
-                                size: (Theme.iconSizeMedium * 0.65);
                                 implicitWidth: Theme.itemSizeExtraSmall;
                                 implicitHeight: Theme.itemSizeExtraSmall;
                                 anchors.verticalCenter: parent.verticalCenter;
@@ -625,9 +624,10 @@ ApplicationWindow {
                             RectangleButton {
                                 id: btnReplay;
                                 icon: "icon-m-play";
+                                flat: true;
+                                size: Theme.iconSizeMedium;
                                 active: (playerRecording.playbackState === MediaPlayer.PlayingState);
                                 enabled: (currentRecording !== "");
-                                size: (Theme.iconSizeMedium * 0.65);
                                 implicitWidth: Theme.itemSizeExtraSmall;
                                 implicitHeight: Theme.itemSizeExtraSmall;
                                 anchors.verticalCenter: parent.verticalCenter;
@@ -656,9 +656,10 @@ ApplicationWindow {
                             }
                             RectangleButton {
                                 id: btnReset;
+                                flat: true;
                                 icon: "icon-m-delete";
+                                size: Theme.iconSizeMedium;
                                 enabled: (currentRecording !== "" && !btnRecord.active && !btnReplay.active);
-                                size: (Theme.iconSizeMedium * 0.65);
                                 implicitWidth: Theme.itemSizeExtraSmall;
                                 implicitHeight: Theme.itemSizeExtraSmall;
                                 anchors.verticalCenter: parent.verticalCenter;
@@ -696,6 +697,8 @@ ApplicationWindow {
                     ExtraAnchors.horizontalFill: parent;
 
                     RectangleButton {
+                        id: btnSelect;
+                        flat: true;
                         active: selectorMsgType.visible;
                         rounded: false;
                         enabled: (TD_Global.editingMessageId === "");
@@ -711,6 +714,7 @@ ApplicationWindow {
                             case TD_ObjectType.MESSAGE_VIDEO_NOTE: return "icon-m-play";
                             case TD_ObjectType.MESSAGE_DOCUMENT:   return "icon-m-attach";
                             }
+                            return "";
                         }
                         anchors.bottom: parent.bottom;
                         onClicked: {
@@ -781,8 +785,9 @@ ApplicationWindow {
                     }
                     RectangleButton {
                         id: btnSendMsg;
+                        flat: true;
                         icon: "icon-m-enter";
-                        size: (Theme.iconSizeMedium * 0.65);
+                        size: (Theme.iconSizeMedium * 0.85);
                         enabled: {
                             switch (Helpers.currentMsgType) {
                             case TD_ObjectType.MESSAGE_TEXT:       return (textBox.text.trim () !== "");
@@ -796,7 +801,7 @@ ApplicationWindow {
                         }
                         implicitWidth: Theme.itemSizeExtraSmall;
                         implicitHeight: Theme.itemSizeExtraSmall;
-                        anchors.bottom: parent.bottom;
+                        anchors.verticalCenter: btnSelect.verticalCenter;
                         onClicked: {
                             execute ();
                         }

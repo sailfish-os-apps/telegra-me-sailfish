@@ -75,6 +75,14 @@ Page {
                                                      ? TD_Global.getUserItemById (currentChat.type ["userId"])
                                                      : null);
 
+    readonly property TD_ChatTypePrivate currentChatTypePrivateItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_PRIVATE
+                                                                       ? currentChat.type
+                                                                       : null);
+
+    readonly property TD_ChatAction currentChatActionItem : (currentChatTypePrivateItem
+                                                             ? currentChatTypePrivateItem.currentChatAction
+                                                             : null);
+
     readonly property TD_BasicGroup currentChatBasicGroupItem : (currentChat && currentChat.type.typeOf === TD_ObjectType.CHAT_TYPE_BASIC_GROUP
                                                                  ? TD_Global.getBasicGroupItemById (currentChat.type ["basicGroupId"])
                                                                  : null);
@@ -651,8 +659,7 @@ Page {
             onPressed: { }
             onReleased: { }
 
-            Rectangle {
-                color: Helpers.panelColor;
+            PanelFixed {
                 anchors.fill: parent;
 
                 Rectangle {
@@ -689,46 +696,8 @@ Page {
                         }
                         ExtraAnchors.horizontalFill: parent;
                     }
-                    LabelFixed {
-                        color: Theme.secondaryColor;
-                        elide: Text.ElideRight;
-                        visible: (text !== "");
-                        text: {
-                            if (currentChat) {
-                                switch (currentChat.type.typeOf) {
-                                case TD_ObjectType.CHAT_TYPE_SECRET:
-                                case TD_ObjectType.CHAT_TYPE_PRIVATE:
-                                    if (currentChatUserItem && currentChatUserItem.status) {
-                                        switch (currentChatUserItem.status.typeOf) {
-                                        case TD_ObjectType.USER_STATUS_ONLINE:     return qsTr ("Online");
-                                        case TD_ObjectType.USER_STATUS_OFFLINE:    return qsTr ("Offline since %1").arg (Qt.formatDateTime (currentChatUserItem.status.wasOnline));
-                                        case TD_ObjectType.USER_STATUS_LAST_MONTH: return qsTr ("Seen last month");
-                                        case TD_ObjectType.USER_STATUS_LAST_WEEK:  return qsTr ("Seen last week");
-                                        case TD_ObjectType.USER_STATUS_RECENTLY:   return qsTr ("Recently");
-                                        case TD_ObjectType.USER_STATUS_EMPTY:      return qsTr ("");
-                                        }
-                                    }
-                                    break;
-                                case TD_ObjectType.CHAT_TYPE_BASIC_GROUP:
-                                    var basicGroupItem = TD_Global.getBasicGroupItemById (currentChat.type.basicGroupId);
-                                    if (basicGroupItem) {
-                                        return qsTr ("%1 members").arg (basicGroupItem.memberCount);
-                                    }
-                                    break;
-                                case TD_ObjectType.CHAT_TYPE_SUPERGROUP:
-                                    var supergroupItem = TD_Global.getSupergroupItemById (currentChat.type.supergroupId);
-                                    if (supergroupItem) {
-                                        return qsTr ("%1 members").arg (supergroupItem.memberCount);
-                                    }
-                                    break;
-                                }
-                            }
-                            return "";
-                        }
-                        font {
-                            family: Theme.fontFamilyHeading;
-                            pixelSize: Theme.fontSizeExtraSmall;
-                        }
+                    RowContainer {
+                        spacing: Theme.paddingMedium;
                         anchors.right: parent.right;
 
                         Rectangle {
@@ -740,12 +709,89 @@ Page {
                             antialiasing: true;
                             implicitWidth: Theme.paddingMedium;
                             implicitHeight: Theme.paddingMedium;
-                            anchors {
-                                right: parent.left;
-                                margins: Theme.paddingMedium;
-                                verticalCenter: parent.verticalCenter;
+                            anchors.verticalCenter: parent.verticalCenter;
+                        }
+                        LabelFixed {
+                            color: Theme.secondaryColor;
+                            elide: Text.ElideRight;
+                            visible: (text !== "");
+                            text: {
+                                if (currentChat) {
+                                    switch (currentChat.type.typeOf) {
+                                    case TD_ObjectType.CHAT_TYPE_SECRET:
+                                    case TD_ObjectType.CHAT_TYPE_PRIVATE:
+                                        if (currentChatUserItem && currentChatUserItem.status) {
+                                            switch (currentChatUserItem.status.typeOf) {
+                                            case TD_ObjectType.USER_STATUS_ONLINE:     return qsTr ("Online");
+                                            case TD_ObjectType.USER_STATUS_OFFLINE:    return qsTr ("Offline since %1").arg (Qt.formatDateTime (currentChatUserItem.status.wasOnline, "d MMM, hh:mm"));
+                                            case TD_ObjectType.USER_STATUS_LAST_MONTH: return qsTr ("Seen last month");
+                                            case TD_ObjectType.USER_STATUS_LAST_WEEK:  return qsTr ("Seen last week");
+                                            case TD_ObjectType.USER_STATUS_RECENTLY:   return qsTr ("Recently");
+                                            case TD_ObjectType.USER_STATUS_EMPTY:      return qsTr ("");
+                                            }
+                                        }
+                                        break;
+                                    case TD_ObjectType.CHAT_TYPE_BASIC_GROUP:
+                                        var basicGroupItem = TD_Global.getBasicGroupItemById (currentChat.type.basicGroupId);
+                                        if (basicGroupItem) {
+                                            return qsTr ("%1 members").arg (basicGroupItem.memberCount);
+                                        }
+                                        break;
+                                    case TD_ObjectType.CHAT_TYPE_SUPERGROUP:
+                                        var supergroupItem = TD_Global.getSupergroupItemById (currentChat.type.supergroupId);
+                                        if (supergroupItem) {
+                                            return qsTr ("%1 members").arg (supergroupItem.memberCount);
+                                        }
+                                        break;
+                                    }
+                                }
+                                return "";
+                            }
+                            font {
+                                family: Theme.fontFamilyHeading;
+                                pixelSize: Theme.fontSizeExtraSmall;
                             }
                         }
+                        LabelFixed {
+                            color: Theme.secondaryColor;
+                            elide: Text.ElideRight;
+                            visible: (text !== "");
+                            text: {
+                                if (currentChat) {
+                                    switch (currentChat.type.typeOf) {
+                                    case TD_ObjectType.CHAT_TYPE_PRIVATE:
+                                        if (currentChatActionItem) {
+                                            switch (currentChatActionItem.typeOf) {
+                                            case TD_ObjectType.CHAT_ACTION_TYPING:               return qsTr ("(Typing...)");
+                                            case TD_ObjectType.CHAT_ACTION_CHOOSING_CONTACT:     return qsTr ("(Choosing contact...)");
+                                            case TD_ObjectType.CHAT_ACTION_CHOOSING_LOCATION:    return qsTr ("(Choosing location...)");
+                                            case TD_ObjectType.CHAT_ACTION_RECORDING_VIDEO:      return qsTr ("(Recording video...)");
+                                            case TD_ObjectType.CHAT_ACTION_RECORDING_VIDEO_NOTE: return qsTr ("(Recording video-note...)");
+                                            case TD_ObjectType.CHAT_ACTION_RECORDING_VOICE_NOTE: return qsTr ("(Recording voice-note...)");
+                                            case TD_ObjectType.CHAT_ACTION_START_PLAYING_GAME:   return qsTr ("(Playing...)");
+                                            case TD_ObjectType.CHAT_ACTION_UPLOADING_DOCUMENT:   return qsTr ("(Uploading file...)");
+                                            case TD_ObjectType.CHAT_ACTION_UPLOADING_PHOTO:      return qsTr ("(Uploading photo...)");
+                                            case TD_ObjectType.CHAT_ACTION_UPLOADING_VIDEO:      return qsTr ("(Uploading video...)");
+                                            case TD_ObjectType.CHAT_ACTION_UPLOADING_VIDEO_NOTE: return qsTr ("(Uploading video-note...)");
+                                            case TD_ObjectType.CHAT_ACTION_UPLOADING_VOICE_NOTE: return qsTr ("(Uploading voice-note...)");
+                                            case TD_ObjectType.CHAT_ACTION_CANCEL:               return "";
+                                            }
+                                        }
+                                        break;
+                                    case TD_ObjectType.CHAT_TYPE_SECRET:
+                                    case TD_ObjectType.CHAT_TYPE_BASIC_GROUP:
+                                    case TD_ObjectType.CHAT_TYPE_SUPERGROUP:
+                                       break;
+                                    }
+                                }
+                                return "";
+                            }
+                            font {
+                                family: Theme.fontFamilyHeading;
+                                pixelSize: Theme.fontSizeExtraSmall;
+                            }
+                        }
+
                     }
                 }
                 DelegateAvatar {
@@ -764,8 +810,7 @@ Page {
                 longJumpToMsg (pinnedMessageItem.id);
             }
 
-            Rectangle {
-                color: Helpers.panelColor;
+            PanelFixed {
                 anchors.fill: parent;
 
                 Rectangle {
@@ -798,8 +843,7 @@ Page {
             implicitHeight: (layoutReplyTo.height + layoutReplyTo.anchors.margins * 2);
             ExtraAnchors.horizontalFill: parent;
 
-            Rectangle {
-                color: Helpers.panelColor;
+            PanelFixed {
                 anchors.fill: parent;
 
                 Rectangle {
@@ -842,8 +886,7 @@ Page {
             implicitHeight: (layoutEdit.height + layoutEdit.anchors.margins * 2);
             ExtraAnchors.horizontalFill: parent;
 
-            Rectangle {
-                color: Helpers.panelColor;
+            PanelFixed {
                 anchors.fill: parent;
 
                 Rectangle {

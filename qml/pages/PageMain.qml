@@ -529,8 +529,7 @@ Page {
             onReleased: { }
 
             Behavior on opacity { NumberAnimation { duration: 150; } }
-            Rectangle {
-                color: Helpers.panelColor;
+            PanelFixed {
                 anchors.fill: parent;
 
                 Rectangle {

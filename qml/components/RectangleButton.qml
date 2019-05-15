@@ -5,18 +5,20 @@ import harbour.Telegrame 1.0;
 
 MouseArea {
     id: btn;
-    opacity: (enabled ? 1.0 : 0.35);
+    opacity: (enabled ? 1.0 : 0.15);
     implicitWidth: Theme.itemSizeSmall;
     implicitHeight: Theme.itemSizeSmall;
 
     property int    size    : Theme.iconSizeMedium;
     property bool   active  : false;
     property bool   rounded : true;
+    property bool   flat    : false;
     property string icon    : "";
 
     Rectangle {
         color: Theme.rgba ((active || pressed ? Theme.highlightColor : Theme.primaryColor), (active ? 0.35 : 0.15));
         radius: (rounded ? Theme.paddingSmall : 0);
+        visible: (!flat || active);
         antialiasing: rounded;
         anchors.fill: parent;
     }

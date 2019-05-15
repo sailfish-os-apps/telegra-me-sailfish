@@ -142,9 +142,8 @@ Page {
     VerticalScrollDecorator {
         flickable: flickerSettings;
     }
-    Rectangle {
+    PanelFixed {
         id: headerSettings;
-        color: Helpers.panelColor;
         implicitHeight: (titleSettings.height + titleSettings.anchors.margins * 2);
         ExtraAnchors.topDock: parent;
 
