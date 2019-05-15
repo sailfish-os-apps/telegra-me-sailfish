@@ -22,6 +22,7 @@
 #include "QtTdLibFile.h"
 #include "QtTdLibChat.h"
 #include "QtTdLibMessage.h"
+#include "CountryCodes.h"
 
 #include "QmlPropertyHelpers.h"
 #include "QQmlObjectListModel.h"
@@ -43,6 +44,7 @@ class QtTdLibGlobal : public QObject {
     QML_WRITABLE_PTR_PROPERTY    (currentMessageContent,  QtTdLibMessageContent)
     QML_CONSTANT_PTR_PROPERTY    (sortedChatsList,        QSortFilterProxyModel)
     QML_CONSTANT_PTR_PROPERTY    (sortedContactsList,     QSortFilterProxyModel)
+    QML_CONSTANT_PTR_PROPERTY    (countryCodes,                    CountryCodes)
     QML_WRITABLE_VAR_PROPERTY    (sendTextOnEnterKey,                      bool)
     QML_WRITABLE_CSTREF_PROPERTY (replyingToMessageId,                  QString)
     QML_WRITABLE_CSTREF_PROPERTY (editingMessageId,                     QString)

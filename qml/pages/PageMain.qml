@@ -4,7 +4,6 @@ import Sailfish.Silica 1.0;
 import Nemo.Notifications 1.0;
 import harbour.Telegrame 1.0;
 import QtGraphicalEffects 1.0;
-import "../components/InternationalPhoneCodes.js" as InternationalPhoneCodes;
 import "../components";
 
 Page {

@@ -28,6 +28,8 @@ int main (int argc, char * argv []) {
     QGuiApplication::setApplicationName (QStringLiteral ("harbour-telegrame"));
     QtQmlTricks::registerComponents ();
     qmlRegisterType<TextFormatter>                                ("harbour.Telegrame", 1, 0, "TextFormatter");
+    qmlRegisterType<CountryCodes>                                 ("harbour.Telegrame", 1, 0, "CountryCodes");
+    qmlRegisterType<CountryCodesModelItem>                        ("harbour.Telegrame", 1, 0, "CountryCodesModelItem");
     qmlRegisterType<QSortFilterProxyModel>                        ("harbour.Telegrame", 1, 0, "SortFilterProxyModel");
     qmlRegisterType<QtTdLibMessageRefWatcher>                     ("harbour.Telegrame", 1, 0, "TD_MessageRefWatcher");
     qmlRegisterType<QtTdLibAbstractObject>                        ("harbour.Telegrame", 1, 0, "TD_AbstractObject");
