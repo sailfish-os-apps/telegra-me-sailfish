@@ -3,12 +3,10 @@ import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
 
-LabelFixed {
+DelegateMessageSimpleLabelBase {
     id: self;
-    text: qsTr ("<Unsupported>");
     color: "magenta";
+    label: qsTr ("<Unsupported>");
 
-    property TD_Chat           chatItem           : null;
-    property TD_Message        messageItem        : null;
     property TD_MessageContent messageContentItem : null;
 }

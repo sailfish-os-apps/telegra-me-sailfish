@@ -63,8 +63,8 @@ Page {
                                                          ? editingMessageRefWatcher.messageItem
                                                          : null);
 
-    readonly property TD_MessageRefWatcher pinnedMessageRefWatcher : (currentChatSupergroupItem && currentChatSupergroupItem.pinnedMessageId
-                                                                      ? currentChat.getMessageRefById (currentChatSupergroupItem.pinnedMessageId)
+    readonly property TD_MessageRefWatcher pinnedMessageRefWatcher : (currentChat && currentChat.pinnedMessageId
+                                                                      ? currentChat.getMessageRefById (currentChat.pinnedMessageId)
                                                                       : null);
 
     readonly property TD_Message pinnedMessageItem : (pinnedMessageRefWatcher
@@ -801,21 +801,20 @@ Page {
                 }
             }
         }
-        MouseArea {
+        PanelFixed {
             id: stripPinned;
             visible: (pinnedMessageItem !== null);
             implicitHeight: (lblPinned.height + lblPinned.anchors.margins * 2);
             ExtraAnchors.horizontalFill: parent;
-            onClicked: {
-                longJumpToMsg (pinnedMessageItem.id);
-            }
 
-            PanelFixed {
+            Rectangle {
+                color: Theme.rgba (Theme.secondaryHighlightColor, 0.15);
                 anchors.fill: parent;
-
-                Rectangle {
-                    color: Theme.rgba (Theme.secondaryHighlightColor, 0.15);
-                    anchors.fill: parent;
+            }
+            MouseArea {
+                anchors.fill: parent;
+                onClicked: {
+                    longJumpToMsg (pinnedMessageItem.id);
                 }
             }
             LabelFixed {

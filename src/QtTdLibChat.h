@@ -122,7 +122,6 @@ class QtTdLibSupergroup : public QtTdLibAbstractInt32IdObject, public FactoryInt
     Q_TDLIB_PROPERTY_BOOL      (isAllHistoryAvailable)
     Q_TDLIB_PROPERTY_ID64      (stickerSetId)
     Q_TDLIB_PROPERTY_STRING    (inviteLink)
-    Q_TDLIB_PROPERTY_ID53      (pinnedMessageId)
     Q_TDLIB_PROPERTY_ID32      (upgradedFromBasicGroupId)
     Q_TDLIB_PROPERTY_ID53      (upgradedFromMaxMessageId)
     Q_TDLIB_PROPERTY_SUBOBJECT (status, QtTdLibChatMemberStatus)
@@ -245,6 +244,7 @@ class QtTdLibChat : public QtTdLibAbstractInt53IdObject, public FactoryInt53Id<Q
     Q_TDLIB_PROPERTY_SUBOBJECT (type, QtTdLibChatType)
     Q_TDLIB_PROPERTY_SUBOBJECT (photo, QtTdLibChatPhoto)
     Q_TDLIB_PROPERTY_SUBOBJECT (notificationSettings, QtTdLibChatNotificationSettings)
+    Q_TDLIB_PROPERTY_ID53      (pinnedMessageId)
 
     //last_message:message
     //draft_message:draftMessage

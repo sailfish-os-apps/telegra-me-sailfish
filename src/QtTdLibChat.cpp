@@ -134,6 +134,7 @@ void QtTdLibChat::updateFromJson (const QJsonObject & json) {
     set_title_withJSON                   (json ["title"]);
     set_clientData_withJSON              (json ["client_data"]);
     set_order_withJSON                   (json ["order"]);
+    set_pinnedMessageId_withJSON         (json ["pinned_message_id"]);
     set_type_withJSON                    (json ["type"].toObject (),                  &QtTdLibChatType::createAbstract);
     set_photo_withJSON                   (json ["photo"].toObject (),                 &QtTdLibChatPhoto::create);
     set_notificationSettings_withJSON    (json ["notification_settings"].toObject (), &QtTdLibChatNotificationSettings::create);
@@ -236,7 +237,6 @@ void QtTdLibSupergroup::updateFromJson (const QJsonObject & json) {
     set_isAllHistoryAvailable_withJSON    (json ["is_all_history_available"]);
     set_stickerSetId_withJSON             (json ["sticker_set_id"]);
     set_inviteLink_withJSON               (json ["invite_link"]);
-    set_pinnedMessageId_withJSON          (json ["pinned_message_id"]);
     set_upgradedFromBasicGroupId_withJSON (json ["upgraded_from_basic_group_id"]);
     set_upgradedFromMaxMessageId_withJSON (json ["upgraded_from_max_message_id"]);
     set_status_withJSON                   (json ["status"], &QtTdLibChatMemberStatus::createAbstract);

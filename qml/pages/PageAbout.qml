@@ -29,7 +29,7 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter;
             }
             LabelFixed {
-                text: "Telegra'me v0.10.19";
+                text: "Telegra'me v21";
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.family: Theme.fontFamilyHeading;
                 font.pixelSize: Theme.fontSizeExtraLarge;

@@ -1346,6 +1346,13 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             }
             break;
         }
+        case QtTdLibObjectType::UPDATE_CHAT_PINNED_MESSAGE: {
+            const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["chat_id"]) };
+            if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
+                chatItem->set_pinnedMessageId_withJSON (json ["pinned_message_id"]);
+            }
+            break;
+        }
         case QtTdLibObjectType::UPDATE_INSTALLED_STICKER_SETS: {
             const QJsonArray stickerSetIds = json ["sticker_set_ids"].toArray ();
             for (const QJsonValue & tmp : stickerSetIds) {

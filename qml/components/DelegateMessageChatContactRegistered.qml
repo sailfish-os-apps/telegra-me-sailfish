@@ -3,15 +3,9 @@ import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
 
-LabelFixed {
+DelegateMessageSimpleLabelBase {
     id: self;
-    text: qsTr ("Registered in Telegram");
-    color: Theme.secondaryHighlightColor;
-    wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
-    font.italic: true;
-    font.pixelSize: Theme.fontSizeSmall;
+    label: qsTr ("Registered in Telegram");
 
-    property TD_Chat              chatItem           : null;
-    property TD_Message           messageItem        : null;
-    property TD_MessagePinMessage messageContentItem : null;
+    property TD_MessageContactRegistered messageContentItem : null;
 }

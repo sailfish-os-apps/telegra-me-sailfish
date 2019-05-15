@@ -3,15 +3,9 @@ import QtQmlTricks 3.0;
 import Sailfish.Silica 1.0;
 import harbour.Telegrame 1.0;
 
-LabelFixed {
+DelegateMessageSimpleLabelBase {
     id: self;
-    text: qsTr ("Upgraded from basic group");
-    color: Theme.secondaryHighlightColor;
-    wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
-    font.italic: true;
-    font.pixelSize: Theme.fontSizeSmall;
+    label: qsTr ("Upgraded from basic group");
 
-    property TD_Chat                   chatItem           : null;
-    property TD_Message                messageItem        : null;
     property TD_MessageChatUpgradeFrom messageContentItem : null;
 }
