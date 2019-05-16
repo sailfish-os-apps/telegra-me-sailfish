@@ -14,6 +14,16 @@ RCC_DIR     = _rcc
 
 CONFIG += link_pkgconfig
 
+YAML_LINES = $$cat($$PWD/rpm/harbour-telegrame.yaml, lines)
+for(LINE, YAML_LINES) {
+    YAML_KEY = $$section(LINE, ": ", 0, 0)
+    equals(YAML_KEY, "Version") {
+        YAML_VALUE = $$section(LINE, ": ", 1, 1)
+        message ("Extracted app version from YAML '" $$YAML_VALUE "' : OK !")
+        DEFINES += YAML_VERSION=$$YAML_VALUE
+    }
+}
+
 QMAKE_CXXFLAGS -= -g
 QMAKE_CXXFLAGS_DEBUG -= -g
 QMAKE_CXXFLAGS_RELEASE -= -g

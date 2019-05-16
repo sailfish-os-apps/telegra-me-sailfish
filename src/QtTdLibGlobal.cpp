@@ -924,7 +924,7 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                                         { "system_language_code", "en" },
                                         { "device_model", "Jolla Sailfish OS" },
                                         { "system_version", "3.x" },
-                                        { "application_version", "0.9.xx" },
+                                        { "application_version", "21" },
                                         { "enable_storage_optimizer", true },
                                         { "database_directory", QString (QDir::homePath () % "/.telegrame") },
                                         { "files_directory", QString (QDir::homePath () % "/.telegrame") },
@@ -964,6 +964,14 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                     default: break;
                 }
             }
+            break;
+        }
+        case QtTdLibObjectType::UPDATE_OPTION: {
+            static const QString VERSION { QStringLiteral ("version") };
+            if (json ["name"].toString () == VERSION) {
+                set_tdlibVersion (json ["value"].toObject () ["value"].toString ());
+            }
+            else { }
             break;
         }
         case QtTdLibObjectType::UPDATE_CONNECTION_STATE: {

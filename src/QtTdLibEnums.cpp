@@ -137,6 +137,7 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "updateNewChat", QtTdLibObjectType::UPDATE_NEW_CHAT },
         { "updateNewMessage", QtTdLibObjectType::UPDATE_NEW_MESSAGE },
         { "updateNotificationSettings", QtTdLibObjectType::UPDATE_NOTIFICATION_SETTINGS },
+        { "updateOption", QtTdLibObjectType::UPDATE_OPTION },
         { "updateSupergroup", QtTdLibObjectType::UPDATE_SUPERGROUP },
         { "updateSupergroupFullInfo", QtTdLibObjectType::UPDATE_SUPERGROUP_FULL_INFO },
         { "updateChatPinnedMessage", QtTdLibObjectType::UPDATE_CHAT_PINNED_MESSAGE },

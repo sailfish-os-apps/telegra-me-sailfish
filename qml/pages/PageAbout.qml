@@ -29,7 +29,7 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter;
             }
             LabelFixed {
-                text: "Telegra'me v21";
+                text: "Telegra'me v%1".arg (Qt.application.version);
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.family: Theme.fontFamilyHeading;
                 font.pixelSize: Theme.fontSizeExtraLarge;
@@ -37,7 +37,7 @@ Page {
                 ExtraAnchors.horizontalFill: parent;
             }
             LabelFixed {
-                text: "using TDLIB v1.4";
+                text: "using TDLIB v%1".arg (TD_Global.tdlibVersion);
                 opacity: 0.65;
                 wrapMode: Text.WrapAtWordBoundaryOrAnywhere;
                 font.family: Theme.fontFamilyHeading;

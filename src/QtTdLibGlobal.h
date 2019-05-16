@@ -48,6 +48,7 @@ class QtTdLibGlobal : public QObject {
     QML_WRITABLE_VAR_PROPERTY    (sendTextOnEnterKey,                      bool)
     QML_WRITABLE_CSTREF_PROPERTY (replyingToMessageId,                  QString)
     QML_WRITABLE_CSTREF_PROPERTY (editingMessageId,                     QString)
+    QML_READONLY_CSTREF_PROPERTY (tdlibVersion,                         QString)
 
 public:
     explicit QtTdLibGlobal (QObject * parent = Q_NULLPTR);
