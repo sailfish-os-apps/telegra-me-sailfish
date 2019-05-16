@@ -20,9 +20,11 @@ for(LINE, YAML_LINES) {
     equals(YAML_KEY, "Version") {
         YAML_VALUE = $$section(LINE, ": ", 1, 1)
         message ("Extracted app version from YAML '" $$YAML_VALUE "' : OK !")
-        DEFINES += YAML_VERSION=$$YAML_VALUE
+        APP_VERSION = $$YAML_VALUE
     }
 }
+QMAKE_SUBSTITUTES += \
+    $$PWD/src/buildconf.h.in
 
 QMAKE_CXXFLAGS -= -g
 QMAKE_CXXFLAGS_DEBUG -= -g
@@ -51,6 +53,7 @@ PKGCONFIG += mlite5
 INCLUDEPATH += \
     /usr/include \
     /usr/include/sailfishapp \
+    $$OUT_PWD/src \
     $$PWD/src
 
 SOURCES += \
@@ -84,7 +87,8 @@ HEADERS += \
     $$PWD/src/QtTdLibUser.h \
     $$PWD/src/TextFormatter.h \
     $$PWD/src/QtTdLibChatAction.h \
-    $$PWD/src/CountryCodes.h
+    $$PWD/src/CountryCodes.h \
+    src/buildconf.h.in
 
 RESOURCES += \
     $$PWD/qml.qrc \

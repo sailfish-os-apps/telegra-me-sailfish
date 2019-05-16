@@ -63,6 +63,7 @@ QtTdLibObjectType::Type QtTdLibEnums::objectTypeEnumFromString (const QString & 
         { "document", QtTdLibObjectType::DOCUMENT },
         { "file", QtTdLibObjectType::FILE },
         { "formattedText", QtTdLibObjectType::FORMATTED_TEXT },
+        { "importedContacts", QtTdLibObjectType::IMPORTED_CONTACTS },
         { "linkStateIsContact", QtTdLibObjectType::LINK_STATE_IS_CONTACT },
         { "linkStateKnowsPhoneNumber", QtTdLibObjectType::LINK_STATE_KNOWS_PHONE_NUMBER },
         { "linkStateNone", QtTdLibObjectType::LINK_STATE_NONE },

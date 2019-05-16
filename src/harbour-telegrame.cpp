@@ -23,10 +23,12 @@
 #include "QtTdLibChat.h"
 #include "TextFormatter.h"
 
+#include "buildconf.h"
+
 int main (int argc, char * argv []) {
     SailfishApp::application (argc, argv);
     QGuiApplication::setApplicationName    (QStringLiteral ("harbour-telegrame"));
-    QGuiApplication::setApplicationVersion (QString::number (int (YAML_VERSION)));
+    QGuiApplication::setApplicationVersion (QString::number (int (APP_VERSION)));
     QtQmlTricks::registerComponents ();
     qmlRegisterType<TextFormatter>                                ("harbour.Telegrame", 1, 0, "TextFormatter");
     qmlRegisterType<CountryCodes>                                 ("harbour.Telegrame", 1, 0, "CountryCodes");

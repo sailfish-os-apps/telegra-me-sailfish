@@ -106,9 +106,9 @@ Page {
                 TextField {
                     id: inputPhoneNumber;
                     placeholderText: qsTr ("Phone number");
+                    inputMethodHints: Qt.ImhDialableCharactersOnly;
                     anchors.verticalCenter: parent.verticalCenter;
                     Container.horizontalStretch: 1;
-                    inputMethodHints: Qt.ImhDialableCharactersOnly;
                 }
             }
             MouseArea {

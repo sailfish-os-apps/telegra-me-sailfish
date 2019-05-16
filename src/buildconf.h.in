@@ -1,0 +1,6 @@
+#ifndef BUILDCONF_H_IN
+#define BUILDCONF_H_IN
+
+#define APP_VERSION "$$APP_VERSION"
+
+#endif // BUILDCONF_H_IN

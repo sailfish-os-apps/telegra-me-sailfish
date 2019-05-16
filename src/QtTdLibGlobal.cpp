@@ -1163,6 +1163,28 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
             }
             break;
         }
+        case QtTdLibObjectType::USER: {
+            const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (json ["id"]) };
+            if (QtTdLibUser * userItem = { getUserItemById (userId) }) {
+                userItem->updateFromJson (json);
+                if (json ["@extra"].toObject () ["add_contact"].toBool ()) {
+                    if (!m_contactsList->contains (userItem)) {
+                        m_contactsList->append (userItem);
+                    }
+                }
+            }
+            else {
+                userItem = QtTdLibUser::create (json, this);
+                if (userItem != nullptr) {
+                    if (json ["@extra"].toObject () ["add_contact"].toBool ()) {
+                        if (!m_contactsList->contains (userItem)) {
+                            m_contactsList->append (userItem);
+                        }
+                    }
+                }
+            }
+            break;
+        }
         case QtTdLibObjectType::CHAT: {
             const qint64 chatId { QtTdLibId53Helper::fromJsonToCpp (json ["id"]) };
             if (QtTdLibChat * chatItem = { getChatItemById (chatId) }) {
@@ -1378,6 +1400,23 @@ void QtTdLibGlobal::onFrame (const QJsonObject & json) {
                 else { }
             }
             else { }
+            break;
+        }
+        case QtTdLibObjectType::IMPORTED_CONTACTS: {
+            const QJsonArray userIdsJson = json ["user_ids"].toArray ();
+            for (const QJsonValue & tmp : userIdsJson) {
+                const qint32 userId { QtTdLibId32Helper::fromJsonToCpp (tmp) };
+                if (userId != 0) {
+                    send (QJsonObject {
+                              { "@type", "getUser" },
+                              { "user_id", tmp },
+                              { "@extra", QJsonObject {
+                                    { "add_contact", true },
+                                }
+                              }
+                          });
+                }
+            }
             break;
         }
         case QtTdLibObjectType::STICKER_SETS: {

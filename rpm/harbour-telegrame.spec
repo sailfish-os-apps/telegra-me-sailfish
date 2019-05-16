@@ -13,7 +13,7 @@ Name:       harbour-telegrame
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    A native Telegram client for Sailfish OS
-Version:    22
+Version:    23
 Release:    1
 Group:      Qt/Qt
 License:    WTFPL

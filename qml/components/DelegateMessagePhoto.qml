@@ -61,7 +61,7 @@ DelegateAbstractMessageContent {
         id: emblem;
         text: qsTr ("(saved in gallery)");
         opacity: 0.65;
-        visible: TD_Global.isPhotoSavedToGallery (photoSizeItem.photo);
+        visible: (photoSizeItem && TD_Global.isPhotoSavedToGallery (photoSizeItem.photo));
         horizontalAlignment: Text.AlignHCenter;
         font.pixelSize: Theme.fontSizeExtraSmall;
         ExtraAnchors.horizontalFill: img;
